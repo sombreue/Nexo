@@ -149,6 +149,22 @@ app.get("/", (req, res) => {
 
 async function criarTabelas() {
     await pool.query(`
+        CREATE TABLE IF NOT EXISTS planilhas (
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+            nome VARCHAR(100) NOT NULL,
+            colunas JSONB NOT NULL DEFAULT '["Coluna 1", "Coluna 2"]'::jsonb,
+            linhas JSONB NOT NULL DEFAULT '[]'::jsonb,
+            criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+    `);
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS planilhas_usuario_idx
+        ON planilhas (usuario_id, atualizado_em DESC);
+    `);
+
+    await pool.query(`
         CREATE TABLE IF NOT EXISTS sessoes (
             sid TEXT PRIMARY KEY,
             sess JSONB NOT NULL,
@@ -875,6 +891,72 @@ app.delete("/api/feira/decoracoes/:id", exigirAdmin, async (req, res) => {
     } catch (erro) {
         console.error("Erro ao excluir decoração:", erro);
         res.status(500).json({ sucesso: false, mensagem: "Erro ao excluir decoração." });
+    }
+});
+
+
+/* =========================
+   PLANILHAS PESSOAIS
+========================= */
+app.get("/api/planilhas", exigirLogin, async (req, res) => {
+    try {
+        const resultado = await pool.query(
+            `SELECT id, nome, jsonb_array_length(colunas) AS total_colunas,
+                    jsonb_array_length(linhas) AS total_linhas, atualizado_em
+             FROM planilhas WHERE usuario_id = $1 ORDER BY atualizado_em DESC, id DESC`,
+            [req.session.usuario.id]
+        );
+        res.json({ sucesso: true, planilhas: resultado.rows });
+    } catch (erro) {
+        console.error("Erro ao listar planilhas:", erro);
+        res.status(500).json({ sucesso: false, mensagem: "Não foi possível carregar suas tabelas." });
+    }
+});
+
+app.post("/api/planilhas", exigirLogin, async (req, res) => {
+    try {
+        const nome = typeof req.body?.nome === "string" ? req.body.nome.trim() : "";
+        if (!nome) return res.status(400).json({ sucesso: false, mensagem: "Dê um nome para a tabela." });
+        if (nome.length > 100) return res.status(400).json({ sucesso: false, mensagem: "O nome pode ter no máximo 100 caracteres." });
+        const resultado = await pool.query(
+            "INSERT INTO planilhas (usuario_id, nome) VALUES ($1, $2) RETURNING id, nome",
+            [req.session.usuario.id, nome]
+        );
+        res.status(201).json({ sucesso: true, planilha: resultado.rows[0] });
+    } catch (erro) {
+        console.error("Erro ao criar planilha:", erro);
+        res.status(500).json({ sucesso: false, mensagem: "Não foi possível criar a tabela." });
+    }
+});
+
+app.patch("/api/planilhas/:id", exigirLogin, async (req, res) => {
+    try {
+        const nome = typeof req.body?.nome === "string" ? req.body.nome.trim() : "";
+        if (!nome) return res.status(400).json({ sucesso: false, mensagem: "Informe um nome válido." });
+        if (nome.length > 100) return res.status(400).json({ sucesso: false, mensagem: "O nome pode ter no máximo 100 caracteres." });
+        const resultado = await pool.query(
+            "UPDATE planilhas SET nome = $1, atualizado_em = NOW() WHERE id = $2 AND usuario_id = $3 RETURNING id, nome",
+            [nome, req.params.id, req.session.usuario.id]
+        );
+        if (!resultado.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Tabela não encontrada." });
+        res.json({ sucesso: true, planilha: resultado.rows[0] });
+    } catch (erro) {
+        console.error("Erro ao renomear planilha:", erro);
+        res.status(500).json({ sucesso: false, mensagem: "Não foi possível renomear a tabela." });
+    }
+});
+
+app.delete("/api/planilhas/:id", exigirLogin, async (req, res) => {
+    try {
+        const resultado = await pool.query(
+            "DELETE FROM planilhas WHERE id = $1 AND usuario_id = $2",
+            [req.params.id, req.session.usuario.id]
+        );
+        if (!resultado.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Tabela não encontrada." });
+        res.json({ sucesso: true });
+    } catch (erro) {
+        console.error("Erro ao excluir planilha:", erro);
+        res.status(500).json({ sucesso: false, mensagem: "Não foi possível excluir a tabela." });
     }
 });
 
