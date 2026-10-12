@@ -52,7 +52,7 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
 
     app.post('/api/roteiro-provas', exigirLogin, exigirAdmin, async (req, res) => {
         try {
-            await tabelaPronta;
+            await migracaoColunas;
             const d = validar(req.body);
             if (d.erro) return res.status(400).json({ sucesso: false, mensagem: d.erro });
             const r = await pool.query(`
@@ -69,7 +69,7 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
 
     app.put('/api/roteiro-provas/:id', exigirLogin, exigirAdmin, async (req, res) => {
         try {
-            await tabelaPronta;
+            await migracaoColunas;
             const id = Number(req.params.id);
             if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: 'Prova inválida.' });
             const d = validar(req.body);
@@ -89,7 +89,7 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
 
     app.delete('/api/roteiro-provas/:id', exigirLogin, exigirAdmin, async (req, res) => {
         try {
-            await tabelaPronta;
+            await migracaoColunas;
             const id = Number(req.params.id);
             if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: 'Prova inválida.' });
             const r = await pool.query('DELETE FROM roteiro_provas WHERE id=$1 RETURNING id', [id]);
