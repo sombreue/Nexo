@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/imagens/favicon.ico"><title>Tabela — O SITE</title>
+<link rel="stylesheet" href="/global-temas-estilos.css"><link rel="stylesheet" href="/navegacao-site.css"><link rel="stylesheet" href="/tabela.css">
+<script>document.documentElement.dataset.theme=localStorage.getItem('agenda-auruda-tema')||'ruby';</script>
+</head>
+<body>
+<header class="topo-editor">
+<a class="voltar-editor" href="/minhas-tabelas.html">← Minhas tabelas</a>
+<div class="titulo-editor"><input id="nomePlanilha" maxlength="100" aria-label="Nome da tabela" value="Carregando tabela…"><span id="statusSalvamento" role="status" aria-live="polite">Carregando…</span></div>
+<button id="renomearSalvar" class="botao-principal" type="button">Salvar nome</button>
+</header>
+<main class="principal-editor">
+<section class="barra-ferramentas" aria-label="Ferramentas da tabela">
+<button id="adicionarColuna" class="botao-principal" type="button">＋ Coluna</button>
+<button id="adicionarLinha" class="botao-secundario" type="button">＋ Linha</button>
+<button id="removerColuna" class="botao-secundario" type="button">− Última coluna</button>
+<button id="removerLinha" class="botao-secundario" type="button">− Última linha</button>
+<span class="dica-editor">Clique nos nomes das colunas ou nas células para editar.</span>
+</section>
+<div id="erroEditor" class="erro-editor" role="alert" hidden></div>
+<section class="grade-planilha" aria-label="Editor da planilha">
+<table id="tabelaDados"><thead></thead><tbody></tbody></table>
+</section>
+<p class="aviso-editor">As alterações são salvas automaticamente. Até 40 colunas, 500 linhas e 2.000 caracteres por célula.</p>
+</main>
+<script src="/global-temas.js"></script><script src="/tabela.js"></script>
+</body></html>
