@@ -16,7 +16,7 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
         const data = typeof body?.data_prova === 'string' ? body.data_prova : '';
         const conteudo = typeof body?.conteudo === 'string' ? body.conteudo.trim() : '';
         if (!materia || materia.length > 80) return { erro: 'Informe uma matéria válida.' };
-        if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(data) || Number.isNaN(Date.parse(data + 'T00:00:00Z'))) return { erro: 'Informe uma data válida.' };
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || Number.isNaN(Date.parse(data + 'T00:00:00Z'))) return { erro: 'Informe uma data válida.' };
         if (conteudo.length > 10000) return { erro: 'O conteúdo deve ter no máximo 10.000 caracteres.' };
         return { materia, data, conteudo };
     }
