@@ -316,6 +316,7 @@ require("./notas")(app, pool, exigirLogin);
 require("./estudos")(app, pool, exigirLogin);
 require("./sticky-notes")(app, pool, exigirLogin);
 require("./fila-saidas")(app, pool, exigirLogin, exigirAdmin);
+require("./roteiro-provas")(app, pool, exigirLogin, exigirAdmin);
 
 
 // =========================
