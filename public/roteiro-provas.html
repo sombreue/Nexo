@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/imagens/favicon.ico">
+<title>Roteiro de provas</title>
+<link rel="stylesheet" href="/global-temas-estilos.css?v=20261012">
+<link rel="stylesheet" href="/navegacao-site.css?v=20261012">
+<link rel="stylesheet" href="/roteiro-provas-estilos.css?v=20261012-1">
+<script>document.documentElement.dataset.theme=localStorage.getItem('agenda-auruda-tema')||'ruby';</script>
+</head>
+<body>
+<header class="site-header"><a href="/index.html" class="site-logo-link" aria-label="Ir para o Início"><img src="/imagens/logo.png" alt="Logo" class="site-logo" onerror="this.onerror=null;this.src='https://i.imgur.com/NKvDhdY.png'"></a><nav class="site-tabs" aria-label="Navegação principal"><a href="/index.html">Início</a><a href="/hoje.html">Hoje</a><a href="/agenda.html">Agenda</a></nav></header>
+<main class="roteiro-main">
+<header class="roteiro-header"><a class="voltar" href="/">← Início</a><h1>Roteiro de provas</h1><p>Consulte as datas das avaliações e os conteúdos que devem ser estudados.</p></header>
+<section id="painel-admin-provas" class="painel-admin-provas" hidden><h2 id="titulo-form-prova">Adicionar prova ao roteiro</h2><form id="form-roteiro-prova"><input type="hidden" id="prova-id"><label>Matéria<select id="prova-materia" required><option value="">Selecione a matéria</option></select></label><label>Data da prova<input id="prova-data" type="date" required></label><label class="campo-conteudo">Conteúdo para estudar<textarea id="prova-conteudo" rows="4" maxlength="10000" placeholder="Assuntos, capítulos, páginas e orientações..." required></textarea></label><div class="acoes"><button type="submit" id="salvar-prova">Adicionar ao roteiro</button><button type="button" id="cancelar-edicao" class="secundario" hidden>Cancelar</button></div><p id="status-form" role="status" aria-live="polite"></p></form></section>
+<section class="roteiro-lista-cabecalho"><h2>Calendário de avaliações</h2><label>Filtrar matéria<select id="filtro-materia"><option value="">Todas as matérias</option></select></label></section>
+<section id="lista-provas" class="lista-provas" aria-live="polite"><p class="vazio">Carregando roteiro...</p></section>
+</main>
+<script src="/global-materias.js?v=20261012"></script><script src="/global-temas.js?v=20261012"></script><script src="/roteiro-provas-logica.js?v=20261012-1"></script>
+</body></html>
