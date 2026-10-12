@@ -55,8 +55,10 @@ a{color:inherit;text-decoration:none}
 }
 @media(min-width:769px) and (max-width:1100px){
   .pagina-grid.tem-fila-saidas{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .pagina-grid.tem-fila-saidas .pagina-card:nth-child(5){grid-column:span 2}
 }
+/* No celular, os seis cards ficam em duas colunas iguais.
+   Não use nth-child: a posição dos cards muda conforme permissões e recursos. */
 @media(max-width:768px){
-  .pagina-grid.tem-fila-saidas .pagina-card:nth-child(5){grid-column:span 2}
+  .pagina-grid.tem-fila-saidas{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pagina-grid.tem-fila-saidas .pagina-card{grid-column:auto;min-width:0}
 }
