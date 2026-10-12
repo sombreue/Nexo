@@ -149,22 +149,6 @@ app.get("/", (req, res) => {
 
 async function criarTabelas() {
     await pool.query(`
-        CREATE TABLE IF NOT EXISTS planilhas (
-            id SERIAL PRIMARY KEY,
-            usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-            nome VARCHAR(100) NOT NULL,
-            colunas JSONB NOT NULL DEFAULT '["Coluna 1", "Coluna 2"]'::jsonb,
-            linhas JSONB NOT NULL DEFAULT '[]'::jsonb,
-            criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );
-    `);
-    await pool.query(`
-        CREATE INDEX IF NOT EXISTS planilhas_usuario_idx
-        ON planilhas (usuario_id, atualizado_em DESC);
-    `);
-
-    await pool.query(`
         CREATE TABLE IF NOT EXISTS sessoes (
             sid TEXT PRIMARY KEY,
             sess JSONB NOT NULL,
@@ -181,6 +165,23 @@ async function criarTabelas() {
             senha TEXT NOT NULL,
             tipo TEXT NOT NULL CHECK (tipo IN ('admin', 'usuario'))
         );
+    `);
+
+
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS planilhas (
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+            nome VARCHAR(100) NOT NULL,
+            colunas JSONB NOT NULL DEFAULT '["Coluna 1", "Coluna 2"]'::jsonb,
+            linhas JSONB NOT NULL DEFAULT '[]'::jsonb,
+            criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+    `);
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS planilhas_usuario_idx
+        ON planilhas (usuario_id, atualizado_em DESC);
     `);
 
     await pool.query(`
