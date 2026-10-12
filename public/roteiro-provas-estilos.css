@@ -15,3 +15,14 @@
 .resumo-prova small{color:var(--theme-muted,#aaa);font-size:.78rem}
 .resumo-sem-prova{color:var(--theme-muted,#888)}
 @media(max-width:520px){.resumo-semanal{padding:12px}.tabela-resumo th,.tabela-resumo td{padding:9px 7px}.tabela-resumo tbody th{width:105px;white-space:normal;font-size:.9rem}.resumo-prova{display:flex;margin:0 0 7px}.resumo-prova:last-child{margin-bottom:0}}
+
+/* Card que transforma as datas futuras numa ordem prática de estudo. */
+.prioridade-estudos{display:grid;grid-template-columns:minmax(220px,.75fr) minmax(0,1.5fr);gap:20px;align-items:center;margin:0 0 22px;padding:20px;border:1px solid var(--theme-border,#333);border-radius:16px;background:linear-gradient(135deg,var(--theme-surface,#19191f),var(--theme-bg,#111116));}
+.prioridade-cabecalho h2{margin:8px 0;font-size:1.35rem}.prioridade-cabecalho p{margin:0;color:var(--theme-muted,#aaa);line-height:1.5;font-size:.94rem}
+.prioridade-selo{display:inline-block;padding:5px 8px;border-radius:6px;background:var(--theme-surface-3,#292930);color:var(--theme-accent,#ef3340);font-size:.72rem;font-weight:800;letter-spacing:.08em}
+.prioridade-lista{list-style:none;display:grid;gap:9px;margin:0;padding:0}.prioridade-item{display:flex;align-items:flex-start;gap:11px;padding:11px;border:1px solid var(--theme-border,#333);border-radius:11px;background:var(--theme-surface-3,#222229);min-width:0}
+.prioridade-numero{display:grid;place-items:center;flex:0 0 28px;height:28px;border-radius:50%;background:var(--theme-accent,#ef3340);color:#fff;font-weight:800}
+.prioridade-detalhe{min-width:0;flex:1}.prioridade-data{font-weight:800;line-height:1.4}.prioridade-data>span{font-size:.84rem;font-weight:600;color:var(--theme-accent,#ef3340);margin-left:5px}
+.prioridade-materias{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.prioridade-materia{display:flex;flex-direction:column;gap:3px;max-width:100%;padding:7px 9px;border-radius:7px;background:var(--theme-surface,#19191f)}.prioridade-materia small{font-size:.77rem;color:var(--theme-muted,#aaa)}
+.prioridade-vazia,.prioridade-carregando{padding:12px;color:var(--theme-muted,#aaa);line-height:1.5}
+@media(max-width:700px){.prioridade-estudos{grid-template-columns:1fr;gap:15px;padding:15px}.prioridade-cabecalho h2{font-size:1.25rem}.prioridade-data>span{display:inline-block;margin-left:3px}}
