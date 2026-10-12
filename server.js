@@ -930,6 +930,52 @@ app.post("/api/planilhas", exigirLogin, async (req, res) => {
     }
 });
 
+
+app.get("/api/planilhas/:id", exigirLogin, async (req, res) => {
+    try {
+        const resultado = await pool.query(
+            "SELECT id, nome, colunas, linhas, atualizado_em FROM planilhas WHERE id = $1 AND usuario_id = $2",
+            [req.params.id, req.session.usuario.id]
+        );
+        if (!resultado.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Tabela não encontrada ou você não tem acesso a ela." });
+        res.json({ sucesso: true, planilha: resultado.rows[0] });
+    } catch (erro) {
+        console.error("Erro ao abrir planilha:", erro);
+        res.status(500).json({ sucesso: false, mensagem: "Não foi possível abrir esta tabela." });
+    }
+});
+
+app.put("/api/planilhas/:id/dados", exigirLogin, async (req, res) => {
+    try {
+        const { colunas, linhas, nome } = req.body || {};
+        if (!Array.isArray(colunas) || colunas.length < 1 || colunas.length > 40 ||
+            !colunas.every(c => typeof c === "string" && c.trim().length > 0 && c.length <= 100)) {
+            return res.status(400).json({ sucesso: false, mensagem: "A tabela precisa ter de 1 a 40 colunas, com nomes de até 100 caracteres." });
+        }
+        if (!Array.isArray(linhas) || linhas.length > 500 ||
+            !linhas.every(l => Array.isArray(l) && l.length === colunas.length &&
+                l.every(c => (typeof c === "string" || typeof c === "number") && String(c).length <= 2000))) {
+            return res.status(400).json({ sucesso: false, mensagem: "Dados inválidos: limite de 500 linhas e 2.000 caracteres por célula." });
+        }
+        const nomeFinal = typeof nome === "string" ? nome.trim() : "";
+        if (nomeFinal.length > 100) return res.status(400).json({ sucesso: false, mensagem: "O nome pode ter no máximo 100 caracteres." });
+        const resultado = await pool.query(
+            `UPDATE planilhas
+             SET colunas = $1::jsonb, linhas = $2::jsonb,
+                 nome = CASE WHEN $3 <> '' THEN $3 ELSE nome END,
+                 atualizado_em = NOW()
+             WHERE id = $4 AND usuario_id = $5
+             RETURNING id, nome, colunas, linhas, atualizado_em`,
+            [JSON.stringify(colunas.map(c => c.trim())), JSON.stringify(linhas.map(l => l.map(c => String(c ?? "")))), nomeFinal, req.params.id, req.session.usuario.id]
+        );
+        if (!resultado.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Tabela não encontrada ou você não tem acesso a ela." });
+        res.json({ sucesso: true, planilha: resultado.rows[0] });
+    } catch (erro) {
+        console.error("Erro ao salvar dados da planilha:", erro);
+        res.status(500).json({ sucesso: false, mensagem: "Não foi possível salvar as alterações." });
+    }
+});
+
 app.patch("/api/planilhas/:id", exigirLogin, async (req, res) => {
     try {
         const nome = typeof req.body?.nome === "string" ? req.body.nome.trim() : "";
