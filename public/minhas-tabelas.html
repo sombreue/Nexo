@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/imagens/favicon.ico"><title>Minhas tabelas — O SITE</title>
+<link rel="stylesheet" href="/global-temas-estilos.css"><link rel="stylesheet" href="/navegacao-site.css"><link rel="stylesheet" href="/minhas-tabelas.css">
+<script>document.documentElement.dataset.theme=localStorage.getItem('agenda-auruda-tema')||'ruby';</script>
+</head>
+<body>
+<header class="topo-tabelas"><a class="voltar-tabelas" href="/index.html">← Início</a><div><h1>Minhas tabelas</h1><p>Planilhas simples para organizar o que quiser.</p></div><button id="criarTabela" class="botao-principal" type="button">＋ Criar tabela</button></header>
+<main class="conteudo-tabelas">
+<div class="linha-status"><span id="statusTabelas" aria-live="polite">Carregando suas tabelas…</span><span id="contadorTabelas"></span></div>
+<section id="listaTabelas" class="grade-tabelas"></section>
+<section id="estadoVazio" class="estado-vazio" hidden><div class="icone-vazio">▦</div><h2>Nenhuma tabela ainda</h2><p>Crie uma tabela e dê um nome para começar a organizar seus dados.</p><button id="criarTabelaVazia" class="botao-principal" type="button">Criar minha primeira tabela</button></section>
+</main>
+<div id="modalTabela" class="modal-tabela" hidden><form id="formTabela" class="caixa-modal"><button type="button" id="fecharModal" class="fechar-modal" aria-label="Fechar">×</button><h2 id="tituloModal">Criar tabela</h2><label for="nomeTabela">Nome da tabela</label><input id="nomeTabela" maxlength="100" required placeholder="Ex.: Notas escolares"><p id="erroModal" role="status"></p><div class="acoes-modal"><button type="button" id="cancelarModal" class="botao-secundario">Cancelar</button><button type="submit" class="botao-principal">Salvar</button></div></form></div>
+<script src="/global-temas.js"></script><script src="/minhas-tabelas.js"></script>
+</body></html>
