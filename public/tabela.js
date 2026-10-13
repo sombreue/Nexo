@@ -51,6 +51,49 @@ async function exportarTabela(){
  }catch(e){mostrarErro(e.message||"Não foi possível exportar a tabela.");}
  finally{botao.disabled=false;botao.textContent=original;}
 }
+
+async function gerarCanvasTabela(){
+ if(!window.html2canvas)throw new Error("A biblioteca de imagem não carregou. Atualize a página e tente novamente.");
+ coletar();const tabela=$("tabelaDados");
+ return await html2canvas(tabela,{backgroundColor:getComputedStyle(document.body).backgroundColor||"#ffffff",scale:2,logging:false,windowWidth:Math.max(document.documentElement.clientWidth,tabela.scrollWidth+40),width:tabela.scrollWidth,height:tabela.scrollHeight,scrollX:0,scrollY:0});
+}
+async function copiarComoJpg(){
+ const botao=$("copiarJpg"),original=botao.textContent;botao.disabled=true;botao.textContent="Preparando JPG…";limparErro();
+ try{
+  const canvas=await gerarCanvasTabela(),blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.95));
+  if(!blob)throw new Error("Não foi possível gerar a imagem JPG.");
+  if(!navigator.clipboard||typeof ClipboardItem==="undefined"||!navigator.clipboard.write){baixarBlob(blob,nomeArquivo("jpg"));$("statusSalvamento").textContent="JPG baixado; cópia direta não disponível neste navegador";return;}
+  try{await navigator.clipboard.write([new ClipboardItem({"image/jpeg":blob})]);$("statusSalvamento").textContent="Imagem JPG copiada para a área de transferência";}
+  catch(err){baixarBlob(blob,nomeArquivo("jpg"));throw new Error("Este navegador não permitiu copiar JPG diretamente. O arquivo JPG foi baixado como alternativa.");}
+ }catch(e){mostrarErro(e.message||"Não foi possível copiar a tabela como JPG.");}
+ finally{botao.disabled=false;botao.textContent=original;}
+}
+async function importarExcel(arquivo){
+ if(!arquivo)return;const input=$("arquivoExcel");
+ try{
+  if(!window.XLSX)throw new Error("A biblioteca Excel não carregou. Atualize a página e tente novamente.");
+  const extensao=(arquivo.name.split(".").pop()||"").toLowerCase();
+  if(!["xlsx","xls","xlsm","csv"].includes(extensao))throw new Error("Selecione um arquivo Excel .xlsx, .xls, .xlsm ou CSV.");
+  if(arquivo.size>10*1024*1024)throw new Error("O arquivo deve ter no máximo 10 MB.");
+  const rows=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error("Não foi possível ler o arquivo."));reader.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:"array",cellDates:false});if(!wb.SheetNames.length)throw new Error("O arquivo não contém planilhas.");resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:"",raw:false,blankrows:false}));}catch(err){reject(err);}};reader.readAsArrayBuffer(arquivo);});
+  while(rows.length&&rows[rows.length-1].every(v=>String(v??"").trim()===""))rows.pop();
+  if(!rows.length)throw new Error("A primeira planilha do arquivo está vazia.");
+  const totalCols=Math.max(1,...rows.map(r=>r.length));
+  if(totalCols>40)throw new Error("O arquivo tem "+totalCols+" colunas; o limite do site é 40.");
+  if(rows.length-1>500)throw new Error("O arquivo tem mais de 500 linhas de dados; o limite do site é 500.");
+  const colunas=Array.from({length:totalCols},(_,i)=>String(rows[0][i]??"").trim().slice(0,100)||("Coluna "+(i+1)));
+  const linhas=rows.slice(1).map(row=>Array.from({length:totalCols},(_,i)=>String(row[i]??"").slice(0,2000)));
+  if(!confirm("Importar a primeira aba de “"+arquivo.name+"” e substituir os dados atuais desta tabela? Essa ação não pode ser desfeita automaticamente."))return;
+  if(estado.salvando)throw new Error("A tabela está sendo salva. Aguarde alguns segundos e tente importar novamente.");
+  clearTimeout(estado.timer);estado.pendente=false;estado.colunas=colunas;estado.linhas=linhas;
+  $("nomePlanilha").value=($("nomePlanilha").value.trim()||arquivo.name.replace(/\.(xlsx|xlsm?|csv)$/i,"")).slice(0,100);
+  renderizar();await salvar();$("statusSalvamento").textContent="Excel importado e salvo";
+ }catch(e){mostrarErro(e.message||"Não foi possível importar o arquivo Excel.");}
+ finally{input.value="";}
+}
+$("copiarJpg").addEventListener("click",copiarComoJpg);
+$("arquivoExcel").addEventListener("change",e=>importarExcel(e.target.files&&e.target.files[0]));
+
 $("exportarTabela").addEventListener("click",exportarTabela);
 
 carregar();
