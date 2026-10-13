@@ -23,7 +23,8 @@ Uma plataforma web desenvolvida para facilitar a organização da rotina escolar
 - **[Site publicado](https://agenda-de-casa.onrender.com/)**
 
 ## Capturas de tela
-
+[inicio-mobile](docs/screenshots/inicio-mobile.png)
+[inicio-pc](docs/screenshots/inicio-pc)
 
 ## Licença
 
