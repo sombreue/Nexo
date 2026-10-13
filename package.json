@@ -1,7 +1,7 @@
 {
-  "name": "tarefas-turma",
+  "name": "nexo",
   "version": "1.0.0",
-  "description": "Sistema de tarefas da turma",
+  "description": "Nexo — plataforma de organização escolar e estudos",
   "main": "server.js",
   "scripts": {
     "start": "node start.js"
