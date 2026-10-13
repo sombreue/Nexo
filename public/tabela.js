@@ -57,15 +57,15 @@ async function gerarCanvasTabela(){
  coletar();const tabela=$("tabelaDados");
  return await html2canvas(tabela,{backgroundColor:getComputedStyle(document.body).backgroundColor||"#ffffff",scale:2,logging:false,windowWidth:Math.max(document.documentElement.clientWidth,tabela.scrollWidth+40),width:tabela.scrollWidth,height:tabela.scrollHeight,scrollX:0,scrollY:0});
 }
-async function copiarComoJpg(){
- const botao=$("copiarJpg"),original=botao.textContent;botao.disabled=true;botao.textContent="Preparando JPG…";limparErro();
+async function copiarComoPng(){
+ const botao=$("copiarJpg"),original=botao.textContent;botao.disabled=true;botao.textContent="Preparando PNG…";limparErro();
  try{
-  const canvas=await gerarCanvasTabela(),blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.95));
-  if(!blob)throw new Error("Não foi possível gerar a imagem JPG.");
-  if(!navigator.clipboard||typeof ClipboardItem==="undefined"||!navigator.clipboard.write){baixarBlob(blob,nomeArquivo("jpg"));$("statusSalvamento").textContent="JPG baixado; cópia direta não disponível neste navegador";return;}
-  try{await navigator.clipboard.write([new ClipboardItem({"image/jpeg":blob})]);$("statusSalvamento").textContent="Imagem JPG copiada para a área de transferência";}
-  catch(err){baixarBlob(blob,nomeArquivo("jpg"));throw new Error("Este navegador não permitiu copiar JPG diretamente. O arquivo JPG foi baixado como alternativa.");}
- }catch(e){mostrarErro(e.message||"Não foi possível copiar a tabela como JPG.");}
+  const canvas=await gerarCanvasTabela(),blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+  if(!blob)throw new Error("Não foi possível gerar a imagem PNG.");
+  if(!navigator.clipboard||typeof ClipboardItem==="undefined"||!navigator.clipboard.write){baixarBlob(blob,nomeArquivo("png"));$("statusSalvamento").textContent="PNG baixado; cópia direta não disponível neste navegador";return;}
+  try{await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);$("statusSalvamento").textContent="Imagem PNG copiada para a área de transferência";}
+  catch(err){baixarBlob(blob,nomeArquivo("png"));throw new Error("O navegador bloqueou a cópia direta. A imagem PNG foi baixada como alternativa.");}
+ }catch(e){mostrarErro(e.message||"Não foi possível copiar a tabela como PNG.");}
  finally{botao.disabled=false;botao.textContent=original;}
 }
 async function importarExcel(arquivo){
@@ -91,7 +91,7 @@ async function importarExcel(arquivo){
  }catch(e){mostrarErro(e.message||"Não foi possível importar o arquivo Excel.");}
  finally{input.value="";}
 }
-$("copiarJpg").addEventListener("click",copiarComoJpg);
+$("copiarJpg").addEventListener("click",copiarComoPng);
 $("arquivoExcel").addEventListener("change",e=>importarExcel(e.target.files&&e.target.files[0]));
 
 $("exportarTabela").addEventListener("click",exportarTabela);
