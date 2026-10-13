@@ -6,17 +6,17 @@
 
   <g class="nexo-logo__graphic">
     <circle cx="306.11" cy="143.72" r="99.43"
-            fill="var(--nexo-logo-accent, #ff5656)"
+            fill="var(--theme-accent, #ff5656)"
             stroke="var(--nexo-logo-outline, #000000)"
             stroke-width="5"/>
 
     <circle cx="97.61" cy="315.22" r="53.88"
-            fill="var(--nexo-logo-accent, #ff5656)"
+            fill="var(--theme-accent, #ff5656)"
             stroke="var(--nexo-logo-outline, #000000)"
             stroke-width="5"/>
 
     <circle cx="489.11" cy="302.22" r="97"
-            fill="var(--nexo-logo-accent, #ff5656)"
+            fill="var(--theme-accent, #ff5656)"
             stroke="var(--nexo-logo-outline, #000000)"
             stroke-width="5"/>
 
@@ -30,7 +30,7 @@
     </g>
 
     <text x="323.04" y="394.27"
-          fill="var(--nexo-logo-text, #ffffff)"
+          fill="var(--theme-text, #ffffff)"
           font-family="Serif"
           font-size="171.68"
           text-anchor="middle">NEXO</text>
