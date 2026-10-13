@@ -24,7 +24,7 @@ Uma plataforma web desenvolvida para facilitar a organização da rotina escolar
 
 ## Capturas de tela
 
-![inicio-mobile](docs/screenshots/inicio-mobile.png)
+![inicio-mobile](docs/screenshots/inicio-mobile)
 
 ![inicio-pc](docs/screenshots/inicio-pc)
 
