@@ -4,3 +4,6 @@
 .exportar-controles select{max-width:190px;min-width:125px;padding:9px 10px;border-radius:9px;border:1px solid var(--theme-border,#444);background:var(--theme-surface,#272831);color:inherit;font:inherit}
 .exportar-controles button:disabled{opacity:.55;cursor:wait}
 @media(max-width:650px){.exportar-controles{flex-basis:100%;padding:10px 0 0;border-left:0;border-top:1px solid var(--theme-border,#444)}.exportar-controles label{flex-basis:100%}.exportar-controles select{flex:1;min-width:0}}
+
+.importar-excel{display:inline-flex;align-items:center;justify-content:center;text-align:center}
+@media(max-width:650px){.importar-excel{flex:1}}
