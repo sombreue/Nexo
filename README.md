@@ -1,4 +1,4 @@
-Central do Site
+# Central do Site
 Uma plataforma web voltada à organização da rotina escolar, reunindo tarefas, trabalhos, provas e ferramentas para facilitar os estudos.
 JavaScript
 Node.js
