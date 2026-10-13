@@ -14,3 +14,8 @@ Funcionalidades
   
 Acessar o projeto: https://github.com/sombreue/agenda-de-casa
 Acessar o site publicado: https://agenda-de-casa.onrender.com/
+
+## Licença
+
+Este projeto está licenciado sob a licença MIT.
+Consulte o arquivo [LICENSE](LICENSE) para mais informações.
