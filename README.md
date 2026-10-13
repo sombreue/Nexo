@@ -1,22 +1,30 @@
 # Central do Site
-Uma plataforma web voltada à organização da rotina escolar, reunindo tarefas, trabalhos, provas e ferramentas para facilitar os estudos.
-JavaScript
-Node.js
-Express
-PostgreSQL
 
-Funcionalidades
-- Organização de tarefas e trabalhos escolares.
-- Consulta de provas e planejamento de estudos.
-- Personalização visual por meio de temas.
-- Interface adaptada para computadores e dispositivos móveis.
-- Painel administrativo para gerenciamento do conteúdo.
-  
-Acessar o projeto: https://github.com/sombreue/agenda-de-casa
+Uma plataforma web desenvolvida para facilitar a organização da rotina escolar, reunindo tarefas, trabalhos, provas e ferramentas que auxiliam os estudantes na organização dos estudos.
 
-Acessar o site publicado: https://agenda-de-casa.onrender.com/
+## Funcionalidades
+
+- **Agenda escolar:** organização de tarefas e trabalhos, com informações sobre prazos de entrega.
+- **Roteiro de provas:** consulta das avaliações e planejamento dos estudos.
+- **Temas personalizados:** personalização da aparência do site.
+- **Interface responsiva:** adaptação para computadores e dispositivos móveis.
+- **Painel administrativo:** gerenciamento de conteúdos e funcionalidades administrativas.
+
+## Tecnologias utilizadas
+
+- JavaScript
+- Node.js
+- Express
+- PostgreSQL
+
+## Acessar o projeto
+
+- **[Repositório no GitHub](https://github.com/sombreue/site)**
+- **[Site publicado](https://agenda-de-casa.onrender.com/)**
+
+## Capturas de tela
+
 
 ## Licença
 
-Este projeto está licenciado sob a licença MIT.
-Consulte o arquivo [LICENSE](LICENSE) para mais informações.
+Este projeto está licenciado sob a [licença MIT](LICENSE). Consulte o arquivo `LICENSE` para obter o texto completo da licença.
