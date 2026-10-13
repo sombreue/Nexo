@@ -10,7 +10,7 @@ Uma plataforma web desenvolvida para facilitar a organização da rotina escolar
 - **Interface responsiva:** adaptação para computadores e dispositivos móveis.
 - **Painel administrativo:** gerenciamento de conteúdos e funcionalidades administrativas.
 
-## Tecnologias utilizadas
+## Ferramentas utilizadas
 
 - JavaScript
 - Node.js
