@@ -18,7 +18,8 @@
 <button id="adicionarLinha" class="botao-secundario" type="button">＋ Linha</button>
 <button id="removerColuna" class="botao-secundario" type="button">− Última coluna</button>
 <button id="removerLinha" class="botao-secundario" type="button">− Última linha</button>
-<div class="exportar-controles"><label for="formatoExportacao">Exportar como</label><select id="formatoExportacao"><option value="xlsx">Excel (.xlsx)</option><option value="pdf">PDF (.pdf)</option><option value="png">Imagem PNG</option><option value="jpg">Imagem JPG</option></select><button id="exportarTabela" class="botao-principal" type="button" disabled>Exportar</button></div>
+<div class="exportar-controles"><label for="formatoExportacao">Exportar como</label><select id="formatoExportacao"><option value="xlsx">Excel (.xlsx)</option><option value="pdf">PDF (.pdf)</option><option value="png">Imagem PNG</option><option value="jpg">Imagem JPG</option></select><button id="exportarTabela" class="botao-principal" type="button" disabled>Exportar</button><button id="copiarJpg" class="botao-secundario" type="button" disabled>Copiar como JPG</button></div>
+<label class="botao-secundario importar-excel" for="arquivoExcel">Importar Excel</label><input id="arquivoExcel" type="file" accept=".xlsx,.xls,.xlsm,.csv" hidden>
 <span class="dica-editor">Clique nos nomes das colunas ou nas células para editar.</span>
 </section>
 <div id="erroEditor" class="erro-editor" role="alert" hidden></div>
