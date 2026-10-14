@@ -75,7 +75,7 @@ If you want a repository that is completely independent of the original:
 
 An independent repository does not automatically receive updates from the original project.
 
-**Original repository:** https://github.com/sombreue/site
+**Original repository:** https://github.com/sombreue/Nexo
 
 > The original repository may change over time. Check its current structure and instructions before proceeding.
 
@@ -124,19 +124,45 @@ Do not install additional packages unless they are required by the project or by
 
 ## 5. Configure environment variables
 
-Nexo requires environment variables for configuration, including its database connection.
+The repository includes a `.env.example` file. Copy it to `.env`.
 
-Create a local `.env` file in the project root if the application uses dotenv.
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+On macOS or Linux:
+
+```bash
+cp .env.example .env
+```
+
+Configure these variables in `.env`:
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Connection string for your own PostgreSQL database. Required. |
+| `NODE_ENV` | Use `development` locally and `production` when deployed. |
+| `PORT` | Local HTTP port. The app defaults to `3000` if this variable is absent; hosting providers may set it for you. |
+| `SESSION_SECRET` | Secret used to protect sessions. Required when `NODE_ENV=production`. |
 
 Example:
 
 ```env
 DATABASE_URL=YOUR_POSTGRESQL_CONNECTION_STRING
-SESSION_SECRET=YOUR_LONG_RANDOM_SECRET
 NODE_ENV=development
+PORT=3000
+SESSION_SECRET=YOUR_LONG_RANDOM_SECRET
 ```
 
-This is an illustrative example, not a guaranteed list of every variable required by your version of Nexo. Check the application source code and hosting configuration to identify all required variables.
+Generate a strong, unique session secret with Node.js:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Copy the output into `SESSION_SECRET`; do not use the example text literally. The `.gitignore` file already excludes `.env`, `node_modules/`, and `database/`. Never commit secrets or database credentials.
 
 ### Important
 
@@ -167,28 +193,13 @@ Keep the database credentials private and make sure the connection string is com
 
 ## 7. Initialize the database
 
-The project includes a database migration script named `migrar.js`.
+For a fresh installation, you do **not** need to run `migrar.js`. The normal server startup creates or checks the tables used by the current application.
 
-Before running it, inspect the script to understand which tables or changes it creates.
+After configuring `.env`, start Nexo with `npm start` and wait for the table setup to finish. The PostgreSQL account must have permission to create and alter the application's tables and indexes.
 
-If the script is configured to run directly with Node.js, the command may be:
+The separate `migrar.js` script is for transferring data from a legacy SQLite file at `database/tarefas.db`. See [Section 12](#12-legacy-sqlite-migration). Do not run it for an empty installation.
 
-```bash
-node migrar.js
-```
-
-Confirm the correct migration command in `package.json` or the project's source code before executing it.
-
-Run migrations only against your own database.
-
-If initialization fails, review the terminal output and verify:
-
-- The connection string is correct.
-- The database is available.
-- The required environment variables are loaded.
-- The database user has the necessary permissions.
-
-Do not repeatedly run migration scripts without understanding whether they are safe to execute more than once.
+If initialization fails, check the full terminal output, the `DATABASE_URL`, database availability, and the database user's permissions.
 
 ## 8. Run Nexo locally
 
@@ -220,23 +231,84 @@ Verify that:
 
 ## 9. Create your administrator account
 
-Before using your installation, you need an administrator account.
+A fresh database does **not** automatically receive an administrator. The normal user-management endpoints require an existing administrator, so a new installation needs a one-time bootstrap step.
 
-**Follow the account-creation method implemented by your version of Nexo.** Do not assume that the application automatically creates an administrator during migration.
+### 9.1 Start the server once
 
-Check the authentication code and existing user-management instructions to determine how the first administrator is created.
+Run `npm start`, wait for the table-creation process to finish, then stop the server with `Ctrl+C`.
 
-Depending on the implementation, this may involve an existing registration flow, a dedicated initialization procedure, or a database operation.
+### 9.2 Create a temporary script
 
-Never make a regular user an administrator simply by editing an arbitrary database value without understanding the application's authorization logic.
+Create `create-admin.js` in the project root and paste this code:
 
-Once your administrator account is ready, sign in and verify that you can access the administrative panel.
+```javascript
+require("dotenv").config();
+
+const bcrypt = require("bcrypt");
+const { Pool } = require("pg");
+
+async function main() {
+  const { DATABASE_URL, ADMIN_USERNAME, ADMIN_PASSWORD } = process.env;
+
+  if (!DATABASE_URL || !ADMIN_USERNAME || !ADMIN_PASSWORD) {
+    throw new Error("Set DATABASE_URL, ADMIN_USERNAME, and ADMIN_PASSWORD first.");
+  }
+  if (ADMIN_USERNAME.length < 3 || ADMIN_USERNAME.length > 50) {
+    throw new Error("The administrator username must be 3–50 characters long.");
+  }
+  if (ADMIN_PASSWORD.length < 12) {
+    throw new Error("Use a password with at least 12 characters.");
+  }
+
+  const pool = new Pool({
+    connectionString: DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+
+  try {
+    const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+    const result = await pool.query(
+      `INSERT INTO usuarios (usuario, senha, tipo)
+       VALUES ($1, $2, 'admin')
+       ON CONFLICT (usuario) DO NOTHING
+       RETURNING id, usuario, tipo`,
+      [ADMIN_USERNAME, passwordHash]
+    );
+
+    if (result.rowCount === 0) {
+      throw new Error("That username already exists; no account was changed.");
+    }
+    console.log("Administrator created:", result.rows[0].usuario);
+  } finally {
+    await pool.end();
+  }
+}
+
+main().catch(error => {
+  console.error("Could not create administrator:", error.message);
+  process.exitCode = 1;
+});
+```
+
+### 9.3 Run it
+
+In Windows PowerShell, set credentials for this terminal session only:
+
+```powershell
+$env:ADMIN_USERNAME = "choose-an-admin-username"
+$env:ADMIN_PASSWORD = "use-a-unique-password-of-at-least-12-characters"
+node create-admin.js
+Remove-Item Env:ADMIN_USERNAME
+Remove-Item Env:ADMIN_PASSWORD
+```
+
+Use your own values. Avoid sharing the terminal while the password is visible in command history. On macOS or Linux, use `export ADMIN_USERNAME="..."`, `export ADMIN_PASSWORD="..."`, run `node create-admin.js`, then run `unset ADMIN_USERNAME ADMIN_PASSWORD`.
+
+The script hashes the password with bcrypt and does not overwrite an existing account. After confirming that you can sign in and open the admin panel, **delete `create-admin.js`**. Do not commit or deploy the temporary script.
 
 ## 10. Deploy Nexo
 
-After confirming that Nexo works locally, you can publish your instance online.
-
-This guide uses Render as an example hosting provider.
+After confirming that Nexo works locally, you can publish your instance online. This guide uses Render as an example hosting provider.
 
 ### Create the web service
 
@@ -245,17 +317,20 @@ This guide uses Render as an example hosting provider.
 3. Create a new Web Service.
 4. Connect your repository.
 5. Select the appropriate branch.
-6. Configure the build and start commands based on `package.json`.
-7. Add the required environment variables.
-8. Deploy the application.
+6. Set the build command to `npm install`.
+7. Set the start command to `npm start`.
+8. Add the required environment variables.
+9. Deploy the application.
 
 ### Configure production
 
-Set the environment variables required by the application, including:
+Set these production environment variables:
 
-- Your own PostgreSQL connection string.
-- A unique, secure session secret.
-- `NODE_ENV=production`, if required by the application.
+- `DATABASE_URL`: your own PostgreSQL connection string.
+- `SESSION_SECRET`: a strong, unique random secret.
+- `NODE_ENV=production`.
+
+Do not upload your local `.env` file. Enter values in the hosting provider's environment settings. The current server uses the host-provided `PORT` when available, configures Express proxy trust, and enables secure session cookies when `NODE_ENV=production`.
 
 Confirm that the server listens on the port supplied by the hosting environment when applicable.
 
@@ -292,7 +367,15 @@ If you maintain a fork, consider keeping your customizations in separate commits
 
 Remember that changing source code does not automatically update your production website. You may need to commit, push, and redeploy your changes.
 
-## 12. Troubleshooting
+## 12. Legacy SQLite migration
+
+The repository includes `migrar.js`, which transfers users and tasks from a legacy SQLite database at `database/tarefas.db` into PostgreSQL.
+
+**Do not run this script for a fresh installation** unless you intentionally have that SQLite database and want to migrate its data. It expects the SQLite file to exist and uses `DATABASE_URL` as the PostgreSQL destination.
+
+Before migration, back up the SQLite file, confirm the destination database, review the tables and fields transferred by the script, then verify user/task counts and test the results. The script does not necessarily migrate every newer Nexo feature, such as personalized themes, personal tables, or exam schedules.
+
+## 13. Troubleshooting
 
 ### The application cannot connect to PostgreSQL
 
@@ -300,7 +383,7 @@ Check that `DATABASE_URL` is set correctly, the database is online, and the data
 
 ### The application reports missing environment variables
 
-Review your `.env` file and the environment variables configured in your hosting dashboard.
+Review your `.env` file and the environment variables configured in your hosting dashboard. In production, the current server exits if `SESSION_SECRET` is missing.
 
 Make sure the variable names match those expected by the application.
 
@@ -310,7 +393,7 @@ Inspect the terminal or hosting logs. Check the Node.js version, the dependencie
 
 ### Database tables are missing
 
-Verify that the migration script completed successfully and that it targeted the correct database.
+Verify that server startup completed successfully and that it is connected to the intended database. The normal server startup creates the application's tables; `migrar.js` is only for legacy SQLite data.
 
 ### Login does not work
 
@@ -320,9 +403,9 @@ Do not store passwords in plaintext or disable authentication to bypass the prob
 
 ### The website works locally but fails after deployment
 
-Compare the local and production environment variables, start commands, Node.js versions, database connectivity, and production logs.
+Compare local and production environment variables, confirm the host uses `npm install` and `npm start`, check database connectivity, and inspect production logs.
 
-## 13. Security recommendations
+## 14. Security recommendations
 
 Every Nexo installation should be operated independently and responsibly.
 
