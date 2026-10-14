@@ -264,13 +264,24 @@ No PowerShell do Windows, defina as credenciais apenas para a sessão atual do t
 
 ```powershell
 $env:ADMIN_USERNAME = "escolha-um-nome-de-administrador"
-$env:ADMIN_PASSWORD = "use-uma-senha-exclusiva-com-pelo-menos-12-caracteres"
+$securePassword = Read-Host "Senha do administrador" -AsSecureString
+$env:ADMIN_PASSWORD = [System.Net.NetworkCredential]::new("", $securePassword).Password
 node create-admin.js
 Remove-Item Env:ADMIN_USERNAME
 Remove-Item Env:ADMIN_PASSWORD
+Remove-Variable securePassword
 ```
 
-Substitua os exemplos por seus próprios valores. Evite compartilhar o terminal enquanto a senha estiver visível no histórico de comandos. No macOS ou Linux, use `export ADMIN_USERNAME="..."`, `export ADMIN_PASSWORD="..."`, execute `node create-admin.js` e depois `unset ADMIN_USERNAME ADMIN_PASSWORD`.
+Substitua os exemplos por seus próprios valores. O comando `Read-Host -AsSecureString` oculta a senha enquanto você digita. No macOS ou Linux, defina o usuário, solicite a senha sem exibi-la, execute o script e limpe as variáveis:
+
+```bash
+export ADMIN_USERNAME="escolha-um-nome-de-administrador"
+read -rsp "Senha do administrador: " ADMIN_PASSWORD
+echo
+export ADMIN_PASSWORD
+node create-admin.js
+unset ADMIN_USERNAME ADMIN_PASSWORD
+```
 
 O script gera um hash bcrypt da senha e não substitui uma conta já existente. Se o nome de usuário já existir, escolha outro ou investigue a conta existente usando uma ferramenta confiável.
 
