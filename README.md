@@ -12,6 +12,11 @@ O **Nexo** é uma plataforma web de organização da rotina escolar e dos estudo
 - **Fila de saídas:** ferramenta de organização para professores e administração.
 - **Painel administrativo:** gerenciamento de usuários, conteúdos e solicitações.
 
+## Documentação
+
+- **[Installation Guide (English)](docs/INSTALLATION.md)** — setup, database, first administrator, and deployment.
+- **[Guia de instalação (Português)](docs/INSTALACAO.md)** — instruções em português para criar sua própria instalação.
+
 ## Tecnologias
 
 - JavaScript
@@ -21,7 +26,7 @@ O **Nexo** é uma plataforma web de organização da rotina escolar e dos estudo
 
 ## Acessar o projeto
 
-- **[Repositório no GitHub](https://github.com/sombreue/site)**
+- **[Repositório no GitHub](https://github.com/sombreue/Nexo)**
 - **[Nexo — plataforma publicada](https://agenda-de-casa.onrender.com/)**
 
 ## Capturas de tela
