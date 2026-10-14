@@ -298,13 +298,24 @@ In Windows PowerShell, set credentials for this terminal session only:
 
 ```powershell
 $env:ADMIN_USERNAME = "choose-an-admin-username"
-$env:ADMIN_PASSWORD = "use-a-unique-password-of-at-least-12-characters"
+$securePassword = Read-Host "Administrator password" -AsSecureString
+$env:ADMIN_PASSWORD = [System.Net.NetworkCredential]::new("", $securePassword).Password
 node create-admin.js
 Remove-Item Env:ADMIN_USERNAME
 Remove-Item Env:ADMIN_PASSWORD
+Remove-Variable securePassword
 ```
 
-Use your own values. Avoid sharing the terminal while the password is visible in command history. On macOS or Linux, use `export ADMIN_USERNAME="..."`, `export ADMIN_PASSWORD="..."`, run `node create-admin.js`, then run `unset ADMIN_USERNAME ADMIN_PASSWORD`.
+Use your own values. The PowerShell prompt above masks the password while you type it. On macOS or Linux, set the username, prompt for the password without echoing it, run the script, then clear both variables:
+
+```bash
+export ADMIN_USERNAME="choose-an-admin-username"
+read -rsp "Administrator password: " ADMIN_PASSWORD
+echo
+export ADMIN_PASSWORD
+node create-admin.js
+unset ADMIN_USERNAME ADMIN_PASSWORD
+```
 
 The script hashes the password with bcrypt and does not overwrite an existing account. After confirming that you can sign in and open the admin panel, **delete `create-admin.js`**. Do not commit or deploy the temporary script.
 
