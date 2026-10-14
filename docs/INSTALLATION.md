@@ -19,8 +19,10 @@ By following this guide, you will create your own installation, with a separate 
 9. [Create your administrator account](#9-create-your-administrator-account)
 10. [Deploy Nexo](#10-deploy-nexo)
 11. [Customize your installation](#11-customize-your-installation)
-12. [Troubleshooting](#12-troubleshooting)
-13. [Security recommendations](#13-security-recommendations)
+12. [Legacy SQLite migration](#12-legacy-sqlite-migration)
+13. [Troubleshooting](#13-troubleshooting)
+14. [Security recommendations](#14-security-recommendations)
+15. [Launch checklist](#15-launch-checklist)
 
 ---
 
@@ -424,7 +426,7 @@ If you are deploying Nexo for a school, classroom, or group of students, conside
 
 ---
 
-## Final checklist
+## 15. Launch checklist
 
 Before considering your installation ready, verify that:
 
