@@ -2,6 +2,8 @@
 
 O **Nexo** é uma plataforma web de organização da rotina escolar e dos estudos. Reúne tarefas, trabalhos, provas e ferramentas pessoais em um só lugar, com uma interface adaptada para computadores e dispositivos móveis.
 
+**Idiomas:** [Português](README.md) · [English](README.en.md)
+
 ## Funcionalidades
 
 - **Agenda escolar:** organização de tarefas e trabalhos com prazos de entrega.
