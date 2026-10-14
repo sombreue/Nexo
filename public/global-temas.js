@@ -70,23 +70,20 @@
     document.head.appendChild(estilo);
 
     function atualizarLogos(id) {
-        const logosEspeciais={"quarta-feira":"/imagens/quarta-feira.jpg","segunda-feira":"/imagens/segunda-feira.jpg"};
-        document.querySelectorAll(".logo, .home-logo, .site-logo").forEach(logo=>{
-            if(!logo.dataset.logoOriginal) logo.dataset.logoOriginal=logo.getAttribute("src")||"";
-            const logoEspecial=logosEspeciais[id];
-            logo.src=logoEspecial||logo.dataset.logoOriginal;
-            logo.alt=logoEspecial?(id==="segunda-feira"?"Segunda-feira":"Quarta-feira"):"Logo";
-            if(!logo.dataset.logoFallback) {
-                logo.dataset.logoFallback="true";
-                logo.addEventListener("error",()=>{
-                    if(!logo.dataset.fallbackUsado) {
-                        logo.dataset.fallbackUsado="true";
-                        logo.src="https://i.imgur.com/NKvDhdY.png";
-                    }
-                });
-            }
-        });
-    }
+    const logosEspeciais = {
+        "quarta-feira": "/imagens/quarta-feira.jpg",
+        "segunda-feira": "/imagens/segunda-feira.jpg"
+    };
+
+    document.querySelectorAll(".logo, .home-logo, .site-logo").forEach(logo => {
+        const logoOriginal = "/imagens/svg-nexo.svg";
+        logo.dataset.logoOriginal = logoOriginal;
+
+        const logoEspecial = logosEspeciais[id];
+        logo.src = logoEspecial || logoOriginal;
+        logo.alt = logoEspecial ? "Logo do tema" : "Logo do Nexo";
+    });
+}
 
     function atualizarBloqueioQuarta() {
         document.documentElement.classList.toggle("quarta-feira-forcada", ehQuartaFeira());
@@ -130,10 +127,10 @@
         localStorage.setItem(chave,"custom-"+tema.id);
         localStorage.setItem("agenda-auruda-tema-custom",JSON.stringify(tema));
         document.querySelectorAll(".logo,.home-logo,.site-logo").forEach(logo=>{
-            if(!logo.dataset.logoOriginal) logo.dataset.logoOriginal=logo.getAttribute("src")||"";
-            logo.src=tema.logoData || logo.dataset.logoOriginal;
-            logo.alt=tema.logoData ? tema.nome : "Logo";
-        });
+    if(!logo.dataset.logoOriginal) logo.dataset.logoOriginal=logo.getAttribute("src")||"";
+    logo.src=tema.logoData || logo.dataset.logoOriginal;
+    logo.alt=tema.logoData ? tema.nome : "Logo";
+});
         document.querySelectorAll(".tema-opcao").forEach(botao=>botao.classList.toggle("ativo",botao.dataset.tema==="custom-"+tema.id));
         const nome=document.querySelector(".seletor-tema-nome");
         if(nome) nome.textContent=tema.nome;
