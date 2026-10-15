@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.ico">
+<title>Matérias — Nexo</title>
+<link rel="stylesheet" href="global-temas-estilos.css?v=20261006">
+<link rel="stylesheet" href="navegacao-site.css?v=20261006">
+<link rel="stylesheet" href="materias-estilos.css?v=20261015-1">
+<script>document.documentElement.dataset.theme = localStorage.getItem('agenda-auruda-tema') || 'ruby';</script>
+</head>
+<body>
+<header class="materias-header">
+  <div><p class="materias-kicker">CONFIGURAÇÃO DO NEXO</p><h1>Catálogo de matérias</h1><p>Defina quais matérias existem nesta instalação, sem editar o código.</p></div>
+  <div class="materias-header-acoes"><a href="/admin-panel.html">Painel admin</a><a href="/agenda.html">Voltar à agenda</a></div>
+</header>
+<main class="materias-main">
+  <section class="materias-section">
+    <h2>Adicionar matéria</h2>
+    <p>Cadastre uma matéria uma única vez. Ela ficará disponível para configurar o horário da turma.</p>
+    <form id="form-nova-materia"><label for="nome-nova-materia">Nome da matéria</label><div class="materias-form-linha"><input id="nome-nova-materia" name="nome" maxlength="80" placeholder="Ex.: Filosofia" required><button type="submit">Adicionar matéria</button></div></form>
+    <p id="materias-status" role="status" aria-live="polite"></p>
+  </section>
+  <section class="materias-section">
+    <div class="materias-lista-cabecalho"><div><h2>Matérias cadastradas</h2><p>Use as setas para definir a ordem. Matérias inativas não aparecem nas novas seleções, mas continuam preservadas no histórico.</p></div><button id="atualizar-materias" type="button" class="secundario">Atualizar</button></div>
+    <div id="lista-materias" aria-live="polite"><p>Carregando matérias…</p></div>
+  </section>
+</main>
+<script src="global-temas.js?v=20261007"></script>
+<script src="materias-admin.js?v=20261015-1"></script>
+</body>
+</html>
