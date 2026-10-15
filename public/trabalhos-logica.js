@@ -10,7 +10,11 @@ const conteudoAdmin = document.getElementById('conteudo-trabalhos-admin');
 const botaoMinAdmin = document.getElementById('botao-minimizar-trabalhos-admin');
 const formAdmin = document.getElementById('form-trabalho-admin');
 const statusAdmin = document.getElementById('status-admin-trabalhos');
-const catalogoMaterias = Array.isArray(window.MATERIAS_AGENDA) ? window.MATERIAS_AGENDA : [];
+let catalogoMaterias = Array.isArray(window.MATERIAS_AGENDA) ? window.MATERIAS_AGENDA.slice() : [];
+window.addEventListener('nexo:materias-carregadas', evento => {
+    catalogoMaterias = Array.isArray(evento.detail) ? evento.detail.slice() : [];
+    atualizarMaterias();
+});
 
 function formatarData(data){
     if(!data) return 'Sem prazo';
