@@ -90,6 +90,34 @@
 (function () {
     const materias = () => Array.from(document.querySelectorAll('#painel-materias input[type="checkbox"]'));
 
+    async function carregarMateriasDoCatalogo() {
+        try {
+            const resposta = await fetch("/api/materias", { cache: "no-store" });
+            if (!resposta.ok) return;
+            const dados = await resposta.json();
+            if (!dados.sucesso || !Array.isArray(dados.materias)) return;
+            const painel = document.getElementById("painel-materias");
+            const selecionadas = new Set(materias().filter(c => c.checked).map(c => c.value));
+            painel.replaceChildren();
+            dados.materias.forEach(materia => {
+                const label = document.createElement("label");
+                label.className = "opcao-materia";
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = materia.nome;
+                checkbox.checked = selecionadas.has(materia.nome);
+                const texto = document.createElement("span");
+                texto.textContent = materia.nome;
+                label.append(checkbox, texto);
+                painel.appendChild(label);
+                checkbox.addEventListener("change", aplicarFiltroMateria);
+            });
+            atualizarResumo();
+        } catch (erro) {
+            console.warn("Não foi possível atualizar as matérias do filtro:", erro);
+        }
+    }
+
     function obterFiltros() {
         return {
             data: document.getElementById("data")?.value || "",
@@ -214,6 +242,7 @@
     }
 
     window.carregarTarefas = aplicarFiltros;
+    carregarMateriasDoCatalogo();
 })();
 </script>
 </body></html>
