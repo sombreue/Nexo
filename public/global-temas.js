@@ -79,7 +79,7 @@
             : null;
         const fonte = (temaCustom && temaCustom.logoData) || logosEspeciais[id] || "/imagens/svg-nexo.svg";
 
-        document.querySelectorAll(".logo, .home-logo, .site-logo").forEach(logo => {
+        document.querySelectorAll(".logo:not(.tema-logo-personalizada), .home-logo:not(.tema-logo-personalizada), .site-logo:not(.tema-logo-personalizada)").forEach(logo => {
             // SVG inline não possui atributo src; use uma imagem auxiliar sem duplicar a logo visível.
             if (logo instanceof SVGElement) {
                 let imagem = logo.parentElement?.querySelector(":scope > .tema-logo-personalizada");
