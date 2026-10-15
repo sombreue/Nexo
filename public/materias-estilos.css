@@ -1,0 +1,21 @@
+.materias-header,.materias-main{width:min(100% - 32px,1000px);margin-inline:auto}
+.materias-header{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:34px 0 24px;border-bottom:1px solid var(--theme-border);color:var(--theme-text)}
+.materias-kicker{font-size:.76rem;font-weight:800;letter-spacing:.12em;color:var(--theme-accent);margin:0 0 8px}
+.materias-header h1{margin:0;font-size:clamp(1.8rem,4vw,2.5rem);color:var(--theme-text)}
+.materias-header p:not(.materias-kicker){margin:8px 0 0;color:var(--theme-muted)}
+.materias-header-acoes{display:flex;flex-wrap:wrap;gap:10px}
+.materias-header-acoes a,.materias-form-linha button,.secundario,.materia-acoes button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:1px solid var(--theme-border);border-radius:9px;padding:10px 13px;background:var(--theme-button);color:var(--theme-text);font:inherit;cursor:pointer}
+.materias-main{padding:24px 0 48px;display:grid;gap:20px;color:var(--theme-text)}
+.materias-section{padding:22px;background:var(--theme-surface);border:1px solid var(--theme-border);border-top:2px solid var(--theme-accent);border-radius:var(--radius);box-shadow:var(--shadow)}
+.materias-section h2{margin:0 0 8px;font-size:1.25rem}.materias-section p{color:var(--theme-muted);line-height:1.5}
+#form-nova-materia label{display:block;margin:18px 0 7px;font-weight:650}
+.materias-form-linha{display:flex;gap:10px}.materias-form-linha input{flex:1;min-width:0}
+.materias-form-linha input,.editor-nome-materia{box-sizing:border-box;border:1px solid var(--theme-border);border-radius:9px;padding:11px 12px;background:var(--theme-surface-2);color:var(--theme-text);font:inherit}
+.materias-lista-cabecalho{display:flex;justify-content:space-between;align-items:start;gap:16px;margin-bottom:14px}
+.materias-lista-cabecalho p{margin-bottom:0}
+.materia-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid var(--theme-border)}
+.materia-info{display:flex;align-items:center;gap:12px;min-width:0}.materia-nome{font-weight:700;overflow-wrap:anywhere}.materia-meta{display:block;color:var(--theme-muted);font-size:.83rem;margin-top:4px}
+.materia-inativa{opacity:.65}.materia-acoes{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}.materia-acoes button{padding:7px 10px}
+.materia-acoes button:disabled{opacity:.35;cursor:not-allowed}.materia-acoes .reativar{border-color:var(--theme-accent)}
+#materias-status{min-height:1.3em;margin-bottom:0}.materias-erro{color:#d65c5c!important}
+@media(max-width:650px){.materias-header{align-items:flex-start;flex-direction:column}.materias-header-acoes{width:100%}.materias-form-linha{flex-direction:column}.materias-form-linha button{width:100%}.materias-section{padding:16px}.materia-item{align-items:flex-start;flex-direction:column}.materia-acoes{justify-content:flex-start}.materias-lista-cabecalho{align-items:flex-start}}
