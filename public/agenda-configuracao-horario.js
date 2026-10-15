@@ -5,6 +5,22 @@
     let configuracao = null;
     let administrador = false;
     const materiasPadrao = ["Ciências", "Matemática", "Português", "Redação", "Bilíngue", "Artes", "Robótica", "Ed. Física", "Socioemocional", "Literatura", "Gramática", "História", "Química", "Geografia", "Física"];
+    let materiasCatalogo = null;
+
+    async function carregarMateriasCatalogo() {
+        if (materiasCatalogo) return materiasCatalogo;
+        try {
+            const resposta = await fetch("/api/materias", { cache: "no-store" });
+            if (!resposta.ok) throw new Error("Catálogo indisponível");
+            const dados = await resposta.json();
+            if (!dados.sucesso || !Array.isArray(dados.materias)) throw new Error("Catálogo inválido");
+            materiasCatalogo = dados.materias.map(m => m.nome);
+        } catch (erro) {
+            console.warn("Usando lista de matérias de compatibilidade:", erro);
+            materiasCatalogo = materiasPadrao.slice();
+        }
+        return materiasCatalogo;
+    }
 
     const escapeHtml = valor => String(valor ?? "").replace(/[&<>"']/g, c => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -43,7 +59,8 @@
         document.getElementById("editar-horario-turma")?.addEventListener("click", abrirEditor);
     }
 
-    function abrirEditor() {
+    async function abrirEditor() {
+        await carregarMateriasCatalogo();
         const editor = document.getElementById("editor-horario-turma");
         if (!editor || !configuracao) return;
         editor.hidden = false;
@@ -53,7 +70,7 @@
             configuracao.dias.map((d, i) => '<th>' + escapeHtml(d.nome) + '<button type="button" data-remover-dia="' + i + '" title="Remover dia">×</button></th>').join("") + '<th></th></tr></thead><tbody>' +
             configuracao.periodos.map((p, i) => '<tr data-periodo="' + i + '"><td><select data-campo="tipo"><option value="aula"' + (p.tipo === "aula" ? " selected" : "") + '>Aula</option><option value="intervalo"' + (p.tipo === "intervalo" ? " selected" : "") + '>Intervalo</option></select></td>' +
             '<td><input data-campo="inicio" type="time" required value="' + escapeHtml(p.inicio) + '"></td><td><input data-campo="fim" type="time" required value="' + escapeHtml(p.fim) + '"></td>' +
-            p.materias.map((m, j) => '<td><input data-materia="' + j + '" maxlength="80" aria-label="' + escapeHtml("Matéria de " + configuracao.dias[j].nome) + '" value="' + escapeHtml(m) + '" placeholder="Sem aula"></td>').join("") +
+            p.materias.map((m, j) => '<td><select data-materia="' + j + '" aria-label="' + escapeHtml("Matéria de " + configuracao.dias[j].nome) + '"><option value="">Sem aula</option>' + Array.from(new Set([...(materiasCatalogo || materiasPadrao), ...(m && !(materiasCatalogo || materiasPadrao).includes(m) ? [m] : [])])).map(nome => '<option value="' + escapeHtml(nome) + '"' + (m === nome ? " selected" : "") + '>' + escapeHtml(nome) + '</option>').join("") + '</select></td>').join("") +
             '<td><button type="button" data-remover="' + i + '" class="remover-periodo">Remover</button></td></tr>').join("") +
             '</tbody></table></div><div class="editor-horario-acoes"><button type="button" id="adicionar-dia">+ Adicionar dia</button><button type="button" id="adicionar-periodo">+ Adicionar período</button><button type="submit">Salvar horário</button><button type="button" id="cancelar-editor-horario">Cancelar</button></div><p id="mensagem-editor-horario" role="status"></p></form>';
 
