@@ -346,7 +346,7 @@ function mostrarMateriasDoDia() {
         dataEntrega.type = "date";
         dataEntrega.className = "data-entrega-tarefa";
         dataEntrega.dataset.materia = materia;
-        dataEntrega.value = data;
+        dataEntrega.value = "";
 
         container.appendChild(
             label
@@ -474,7 +474,7 @@ async function adicionarTarefasDoDia() {
                 subtitulo,
 
             dataEntrega:
-                descricao ? (campoEntrega?.value || data) : null
+                descricao ? (campoEntrega?.value || null) : null
 
         });
 
@@ -1052,7 +1052,7 @@ function abrirModalEdicao(
     document.getElementById("editar-tarefa-materia").value = materiaAtual;
     document.getElementById("editar-tarefa-descricao").value = descricaoAtual || "";
     document.getElementById("editar-tarefa-subtitulo").value = subtituloAtual || "";
-    document.getElementById("editar-tarefa-data-entrega").value = dataEntregaAtual || dataAtual;
+    document.getElementById("editar-tarefa-data-entrega").value = dataEntregaAtual || "";
 
     modal.style.display = "flex";
 
