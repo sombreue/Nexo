@@ -2,8 +2,16 @@
 const $ = id => document.getElementById(id);
 const form=$('form-roteiro-prova'), materia=$('prova-materia'), data=$('prova-data'), etapa=$('prova-etapa'), tipo=$('prova-tipo'), conteudo=$('prova-conteudo'), idCampo=$('prova-id'), lista=$('lista-provas'), filtro=$('filtro-materia'), mensagem=$('status-form');
 let provas=[], podeEditar=false;
-const materias=Array.isArray(window.MATERIAS_AGENDA)?window.MATERIAS_AGENDA:[];
-for(const nome of materias){for(const select of [materia,filtro]){const o=document.createElement('option');o.value=nome;o.textContent=nome;select.append(o);}}
+function preencherCatalogoMaterias(nomes=window.MATERIAS_AGENDA||[]){
+ const valores=[materia.value,filtro.value];
+ for(const [i,select] of [materia,filtro].entries()){
+  select.innerHTML=i===0?'<option value="">Selecione a matéria</option>':'<option value="">Todas as matérias</option>';
+  for(const nome of nomes){const o=document.createElement('option');o.value=nome;o.textContent=nome;select.append(o);}
+  if(valores[i]&&nomes.includes(valores[i]))select.value=valores[i];
+ }
+}
+preencherCatalogoMaterias();
+window.addEventListener('nexo:materias-carregadas',evento=>preencherCatalogoMaterias(evento.detail));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dataBR=iso=>{const [a,m,d]=iso.slice(0,10).split('-');return new Date(+a,+m-1,+d).toLocaleDateString('pt-BR');};
 const dataComDia=iso=>{const [a,m,d]=iso.slice(0,10).split('-').map(Number);const data=new Date(a,m-1,d);const dia=data.toLocaleDateString('pt-BR',{weekday:'long'});return dataBR(iso)+' ('+dia+')';};
