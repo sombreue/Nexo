@@ -70,20 +70,39 @@
     document.head.appendChild(estilo);
 
     function atualizarLogos(id) {
-    const logosEspeciais = {
-        "quarta-feira": "/imagens/quarta-feira.jpg",
-        "segunda-feira": "/imagens/segunda-feira.jpg"
-    };
+        const logosEspeciais = {
+            "quarta-feira": "/imagens/quarta-feira.jpg",
+            "segunda-feira": "/imagens/segunda-feira.jpg"
+        };
+        const temaCustom = id.startsWith("custom-")
+            ? temasPersonalizados.find(t => "custom-" + t.id === id)
+            : null;
+        const fonte = (temaCustom && temaCustom.logoData) || logosEspeciais[id] || "/imagens/svg-nexo.svg";
 
-    document.querySelectorAll(".logo, .home-logo, .site-logo").forEach(logo => {
-        const logoOriginal = "/imagens/svg-nexo.svg";
-        logo.dataset.logoOriginal = logoOriginal;
+        document.querySelectorAll(".logo, .home-logo, .site-logo").forEach(logo => {
+            // SVG inline não possui atributo src; use uma imagem auxiliar sem duplicar a logo visível.
+            if (logo instanceof SVGElement) {
+                let imagem = logo.parentElement?.querySelector(":scope > .tema-logo-personalizada");
+                if (!imagem) {
+                    imagem = document.createElement("img");
+                    imagem.className = "tema-logo-personalizada " + [...logo.classList].join(" ");
+                    imagem.style.display = "none";
+                    imagem.alt = "Logo do Nexo";
+                    logo.insertAdjacentElement("afterend", imagem);
+                }
+                imagem.src = fonte;
+                imagem.alt = temaCustom?.logoData ? temaCustom.nome : (logosEspeciais[id] ? "Logo do tema" : "Logo do Nexo");
+                const usarImagem = Boolean(temaCustom?.logoData || logosEspeciais[id]);
+                logo.style.display = usarImagem ? "none" : "";
+                imagem.style.display = usarImagem ? "" : "none";
+                return;
+            }
 
-        const logoEspecial = logosEspeciais[id];
-        logo.src = logoEspecial || logoOriginal;
-        logo.alt = logoEspecial ? "Logo do tema" : "Logo do Nexo";
-    });
-}
+            if (!logo.dataset.logoOriginal) logo.dataset.logoOriginal = "/imagens/svg-nexo.svg";
+            logo.src = fonte;
+            logo.alt = temaCustom?.logoData ? temaCustom.nome : (logosEspeciais[id] ? "Logo do tema" : "Logo do Nexo");
+        });
+    }
 
     function atualizarBloqueioQuarta() {
         document.documentElement.classList.toggle("quarta-feira-forcada", ehQuartaFeira());
@@ -126,11 +145,7 @@
         document.documentElement.dataset.theme = "custom-"+tema.id;
         localStorage.setItem(chave,"custom-"+tema.id);
         localStorage.setItem("agenda-auruda-tema-custom",JSON.stringify(tema));
-        document.querySelectorAll(".logo,.home-logo,.site-logo").forEach(logo=>{
-    if(!logo.dataset.logoOriginal) logo.dataset.logoOriginal=logo.getAttribute("src")||"";
-    logo.src=tema.logoData || logo.dataset.logoOriginal;
-    logo.alt=tema.logoData ? tema.nome : "Logo";
-});
+        atualizarLogos("custom-" + tema.id);
         document.querySelectorAll(".tema-opcao").forEach(botao=>botao.classList.toggle("ativo",botao.dataset.tema==="custom-"+tema.id));
         const nome=document.querySelector(".seletor-tema-nome");
         if(nome) nome.textContent=tema.nome;
