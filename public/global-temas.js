@@ -74,10 +74,24 @@
             "quarta-feira": "/imagens/quarta-feira.jpg",
             "segunda-feira": "/imagens/segunda-feira.jpg"
         };
+        const logosSuperTemas = {
+            "batman": "/imagens/batman.png",
+            "spider-man": "/imagens/spiderman.png",
+            "doctor-doom": "/imagens/doom).png",
+            "iron-man": "/imagens/ironman.png",
+            "hulk": "/imagens/hulk.png",
+            "captain-america": "/imagens/captainamerica.png",
+            "wolverine": "/imagens/wolverine.png",
+            "deadpool": "/imagens/deadpool.png",
+            "sonic": "/imagens/sonic.png",
+            "fantastic-four": "/imagens/fantastic4.png",
+            "punisher": "/imagens/punisher.png",
+            "superman": "/imagens/superman.png"
+        };
         const temaCustom = id.startsWith("custom-")
             ? temasPersonalizados.find(t => "custom-" + t.id === id)
             : null;
-        const fonte = (temaCustom && temaCustom.logoData) || logosEspeciais[id] || "/imagens/svg-nexo.svg";
+        const fonte = (temaCustom && temaCustom.logoData) || logosEspeciais[id] || logosSuperTemas[id] || "/imagens/svg-nexo.svg";
 
         document.querySelectorAll(".logo:not(.tema-logo-personalizada), .home-logo:not(.tema-logo-personalizada), .site-logo:not(.tema-logo-personalizada)").forEach(logo => {
             // SVG inline não possui atributo src; use uma imagem auxiliar sem duplicar a logo visível.
@@ -91,8 +105,8 @@
                     logo.insertAdjacentElement("afterend", imagem);
                 }
                 imagem.src = fonte;
-                imagem.alt = temaCustom?.logoData ? temaCustom.nome : (logosEspeciais[id] ? "Logo do tema" : "Logo do Nexo");
-                const usarImagem = Boolean(temaCustom?.logoData || logosEspeciais[id]);
+                imagem.alt = temaCustom?.logoData ? temaCustom.nome : ((logosEspeciais[id] || logosSuperTemas[id]) ? "Logo do tema" : "Logo do Nexo");
+                const usarImagem = Boolean(temaCustom?.logoData || logosEspeciais[id] || (logosSuperTemas[id] && logo.classList.contains("home-logo")));
                 logo.style.display = usarImagem ? "none" : "";
                 imagem.style.display = usarImagem ? "" : "none";
                 return;
@@ -100,7 +114,7 @@
 
             if (!logo.dataset.logoOriginal) logo.dataset.logoOriginal = "/imagens/svg-nexo.svg";
             logo.src = fonte;
-            logo.alt = temaCustom?.logoData ? temaCustom.nome : (logosEspeciais[id] ? "Logo do tema" : "Logo do Nexo");
+            logo.alt = temaCustom?.logoData ? temaCustom.nome : ((logosEspeciais[id] || logosSuperTemas[id]) ? "Logo do tema" : "Logo do Nexo");
         });
     }
 
