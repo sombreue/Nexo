@@ -5,10 +5,11 @@
     <link rel="stylesheet" href="global-temas-estilos.css?v=20261003"><link rel="stylesheet" href="inicio-estilos.css?v=20261012-mobile-grid"><link rel="stylesheet" href="inicio-sugestoes-estilos.css?v=20260908-rodape2"><link rel="stylesheet" href="navegacao-site.css?v=20261006"><script>document.documentElement.dataset.theme = localStorage.getItem('agenda-auruda-tema') || 'ruby';</script>
 </head>
 <body><main class="home">
-<header class="home-header">
-    <svg xmlns="http://www.w3.org/2000/svg"
+<header class="site-header">
+    <a href="/index.html" class="site-logo-link" aria-label="Ir para o Início">
+        <svg xmlns="http://www.w3.org/2000/svg"
          viewBox="0 0 640 480"
-         class="nexo-logo home-logo"
+         class="nexo-logo site-logo"
          role="img"
          aria-label="Nexo">
         <g class="nexo-logo__graphic">
@@ -22,14 +23,12 @@
             <text x="323.04" y="394.27" fill="var(--theme-text)" font-family="Serif" font-size="171.68" text-anchor="middle">NEXO</text>
         </g>
     </svg>
-
-    <p>Nexo — conectando tarefas, provas e estudos.</p>
-
-    <div class="conta-index">
-        <span id="usuario-logado-index">Verificando sessão...</span>
-        <a id="link-admin-index" class="link-admin-index" href="/admin-panel.html" hidden>Painel admin</a>
-        <button id="botao-logout-index" type="button" hidden>Sair</button>
-    </div>
+    </a>
+    <nav class="site-tabs" aria-label="Navegação principal">
+        <a href="/index.html" class="ativo" aria-current="page">Início</a>
+        <a href="/hoje.html">Hoje</a>
+        <a href="/agenda.html">Agenda</a>
+    </nav>
 </header>
 <header class="home-header">
     <svg xmlns="http://www.w3.org/2000/svg"
@@ -49,6 +48,11 @@
         </g>
     </svg>
     <p>Nexo — conectando tarefas, provas e estudos.</p>
+    <div class="conta-index">
+        <span id="usuario-logado-index">Verificando sessão...</span>
+        <a id="link-admin-index" class="link-admin-index" href="/admin-panel.html" hidden>Painel admin</a>
+        <button id="botao-logout-index" type="button" hidden>Sair</button>
+    </div>
 <section class="pagina-grid" aria-label="Páginas do site">
 <a class="pagina-card" href="/area-aluno.html"><span class="pagina-icone">🎓</span><h2>Área do aluno</h2><p>Seu espaço pessoal com tarefas, estudos, notas e outras ferramentas.</p><span class="pagina-link">Entrar na Área do aluno →</span></a>
 <a class="pagina-card" href="/agenda.html"><span class="pagina-icone">📅</span><h2>Agenda</h2><p>Veja as tarefas de casa e o horário de aulas.</p><span class="pagina-link">Acessar Agenda →</span></a>
