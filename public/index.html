@@ -5,51 +5,31 @@
     <link rel="stylesheet" href="global-temas-estilos.css?v=20261003"><link rel="stylesheet" href="inicio-estilos.css?v=20261012-mobile-grid"><link rel="stylesheet" href="inicio-sugestoes-estilos.css?v=20260908-rodape2"><link rel="stylesheet" href="navegacao-site.css?v=20261006"><script>document.documentElement.dataset.theme = localStorage.getItem('agenda-auruda-tema') || 'ruby';</script>
 </head>
 <body><main class="home">
-<header class="site-header">
-<a href="/index.html" class="site-logo-link" aria-label="Ir para o Início"><svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="0 0 640 480"
-     class="nexo-logo"
-     role="img"
-     aria-label="Nexo">
+<header class="home-header">
+    <svg xmlns="http://www.w3.org/2000/svg"
+         viewBox="0 0 640 480"
+         class="nexo-logo home-logo"
+         role="img"
+         aria-label="Nexo">
+        <g class="nexo-logo__graphic">
+            <circle cx="306.11" cy="143.72" r="99.43" fill="var(--theme-accent)" stroke="#000" stroke-width="5"/>
+            <circle cx="97.61" cy="315.22" r="53.88" fill="var(--theme-accent)" stroke="#000" stroke-width="5"/>
+            <circle cx="489.11" cy="302.22" r="97" fill="var(--theme-accent)" stroke="#000" stroke-width="5"/>
+            <g fill="none" stroke="#000" stroke-width="20">
+                <line x1="133.11" y1="275.22" x2="224.11" y2="201.22"/>
+                <line x1="416.11" y1="240.22" x2="381.11" y2="210.22"/>
+            </g>
+            <text x="323.04" y="394.27" fill="var(--theme-text)" font-family="Serif" font-size="171.68" text-anchor="middle">NEXO</text>
+        </g>
+    </svg>
 
-  <g class="nexo-logo__graphic">
-    <circle cx="306.11" cy="143.72" r="99.43"
-            fill="var(--theme-accent)"
-            stroke="var(--nexo-logo-outline, #000000)"
-            stroke-width="5"/>
+    <p>Nexo — conectando tarefas, provas e estudos.</p>
 
-    <circle cx="97.61" cy="315.22" r="53.88"
-            fill="var(--theme-accent)"
-            stroke="var(--nexo-logo-outline, #000000)"
-            stroke-width="5"/>
-
-    <circle cx="489.11" cy="302.22" r="97"
-            fill="var(--theme-accent)"
-            stroke="var(--nexo-logo-outline, #000000)"
-            stroke-width="5"/>
-
-    <g fill="none"
-       stroke="var(--nexo-logo-outline, #000000)"
-       stroke-width="20">
-      <line x1="133.11" y1="275.22"
-            x2="224.11" y2="201.22"/>
-      <line x1="416.11" y1="240.22"
-            x2="381.11" y2="210.22"/>
-    </g>
-
-    <text x="323.04" y="394.27"
-          fill="var(--theme-text)"
-          font-family="Serif"
-          font-size="171.68"
-          text-anchor="middle">NEXO</text>
-  </g>
-</svg>
-</a>
-<nav class="site-tabs" aria-label="Navegação principal">
-<a href="/index.html" class="ativo" aria-current="page">Início</a>
-<a href="/hoje.html">Hoje</a>
-<a href="/agenda.html">Agenda</a>
-</nav>
+    <div class="conta-index">
+        <span id="usuario-logado-index">Verificando sessão...</span>
+        <a id="link-admin-index" class="link-admin-index" href="/admin-panel.html" hidden>Painel admin</a>
+        <button id="botao-logout-index" type="button" hidden>Sair</button>
+    </div>
 </header>
 <header class="home-header">
     <svg xmlns="http://www.w3.org/2000/svg"
