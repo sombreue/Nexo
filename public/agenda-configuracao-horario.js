@@ -50,20 +50,53 @@
         editor.innerHTML = '<form id="form-editor-horario"><div class="editor-horario-cabecalho"><h3>Configurar horário</h3><label>Nome da turma <input name="turma" maxlength="60" required value="' + escapeHtml(configuracao.turma) + '"></label></div>' +
             '<p>Edite os horários e as matérias. Deixe a matéria vazia quando não houver aula. Marque um período como intervalo para exibi-lo destacado.</p>' +
             '<div class="editor-horario-tabela-wrap"><table class="editor-horario-tabela"><thead><tr><th>Tipo</th><th>Início</th><th>Fim</th>' +
-            configuracao.dias.map(d => '<th>' + escapeHtml(d.nome) + '</th>').join("") + '<th></th></tr></thead><tbody>' +
+            configuracao.dias.map((d, i) => '<th>' + escapeHtml(d.nome) + '<button type="button" data-remover-dia="' + i + '" title="Remover dia">×</button></th>').join("") + '<th></th></tr></thead><tbody>' +
             configuracao.periodos.map((p, i) => '<tr data-periodo="' + i + '"><td><select data-campo="tipo"><option value="aula"' + (p.tipo === "aula" ? " selected" : "") + '>Aula</option><option value="intervalo"' + (p.tipo === "intervalo" ? " selected" : "") + '>Intervalo</option></select></td>' +
             '<td><input data-campo="inicio" type="time" required value="' + escapeHtml(p.inicio) + '"></td><td><input data-campo="fim" type="time" required value="' + escapeHtml(p.fim) + '"></td>' +
             p.materias.map((m, j) => '<td><input data-materia="' + j + '" maxlength="80" aria-label="' + escapeHtml("Matéria de " + configuracao.dias[j].nome) + '" value="' + escapeHtml(m) + '" placeholder="Sem aula"></td>').join("") +
             '<td><button type="button" data-remover="' + i + '" class="remover-periodo">Remover</button></td></tr>').join("") +
-            '</tbody></table></div><div class="editor-horario-acoes"><button type="button" id="adicionar-periodo">+ Adicionar período</button><button type="submit">Salvar horário</button><button type="button" id="cancelar-editor-horario">Cancelar</button></div><p id="mensagem-editor-horario" role="status"></p></form>';
+            '</tbody></table></div><div class="editor-horario-acoes"><button type="button" id="adicionar-dia">+ Adicionar dia</button><button type="button" id="adicionar-periodo">+ Adicionar período</button><button type="submit">Salvar horário</button><button type="button" id="cancelar-editor-horario">Cancelar</button></div><p id="mensagem-editor-horario" role="status"></p></form>';
 
+        function capturarEdicao() {
+            const form = editor.querySelector("#form-editor-horario");
+            return {
+                turma: form.elements.turma.value.trim() || configuracao.turma,
+                dias: configuracao.dias.map(d => ({ ...d })),
+                periodos: Array.from(form.querySelectorAll("tbody tr[data-periodo]")).map(linha => ({
+                    tipo: linha.querySelector('[data-campo="tipo"]').value,
+                    inicio: linha.querySelector('[data-campo="inicio"]').value,
+                    fim: linha.querySelector('[data-campo="fim"]').value,
+                    materias: configuracao.dias.map((d, i) => linha.querySelector('[data-materia="' + i + '"]').value.trim())
+                }))
+            };
+        }
+        editor.querySelector("#adicionar-dia").addEventListener("click", () => {
+            configuracao = capturarEdicao();
+            if (configuracao.dias.length >= 7) return alert("O limite é de 7 dias.");
+            const usados = new Set(configuracao.dias.map(d => d.id));
+            const id = [1, 2, 3, 4, 5, 6, 0].find(n => !usados.has(n));
+            const nomes = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            configuracao.dias.push({ id, nome: nomes[id] });
+            configuracao.periodos.forEach(p => p.materias.push(""));
+            abrirEditor();
+        });
+        editor.querySelectorAll("[data-remover-dia]").forEach(botao => botao.addEventListener("click", () => {
+            configuracao = capturarEdicao();
+            if (configuracao.dias.length <= 1) return alert("A grade precisa ter pelo menos um dia.");
+            const indice = Number(botao.dataset.removerDia);
+            configuracao.dias.splice(indice, 1);
+            configuracao.periodos.forEach(p => p.materias.splice(indice, 1));
+            abrirEditor();
+        }));
         editor.querySelector("#adicionar-periodo").addEventListener("click", () => {
+            configuracao = capturarEdicao();
             const ultimo = configuracao.periodos[configuracao.periodos.length - 1];
             if (configuracao.periodos.length >= 16) return alert("O limite é de 16 períodos.");
             configuracao.periodos.push({ inicio: ultimo?.fim || "12:20", fim: "13:10", tipo: "aula", materias: configuracao.dias.map(() => "") });
             abrirEditor();
         });
         editor.querySelectorAll("[data-remover]").forEach(botao => botao.addEventListener("click", () => {
+            configuracao = capturarEdicao();
             if (configuracao.periodos.length <= 1) return;
             configuracao.periodos.splice(Number(botao.dataset.remover), 1);
             abrirEditor();
