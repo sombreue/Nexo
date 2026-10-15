@@ -2,6 +2,19 @@
 let tarefas=[],editando=null,selecionadas=new Set(),origens={agenda:[],trabalho:[]},origemTipoAtual='agenda',origemSelecionada=null;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+function preencherMateriasCatalogo(nomes=window.MATERIAS_AGENDA||[]){
+ const sel=$('materia');
+ if(!sel)return;
+ const valor=sel.value;
+ const outra=$('materia-outra');
+ const valorOutra=outra?.value||'';
+ sel.innerHTML='<option value="">Sem matéria</option>'+nomes.map(nome=>'<option value="'+esc(nome)+'">'+esc(nome)+'</option>').join('')+'<option value="__outra">Outra</option>';
+ if(valor&&valor!=='__outra'&&nomes.includes(valor))sel.value=valor;
+ else if(valor==='__outra'||(valor&&!nomes.includes(valor))){sel.value='__outra';outra.hidden=false;if(valor&&valor!=='__outra')outra.value=valor;else outra.value=valorOutra;}
+ else sel.value='';
+}
+preencherMateriasCatalogo();
+window.addEventListener('nexo:materias-carregadas',evento=>preencherMateriasCatalogo(evento.detail));
 function md(text){let s=esc(text).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/^### (.*)$/gm,'<h4>$1</h4>').replace(/^## (.*)$/gm,'<h3>$1</h3>').replace(/^# (.*)$/gm,'<h2>$1</h2>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/^- (.*)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,m=>'<ul>'+m+'</ul>').replace(/\n/g,'<br>');return s;}
 function data(d){if(!d)return '—';const [a,m,dia]=String(d).slice(0,10).split('-');return a&&m&&dia?`${dia}/${m}/${a}`:'—';}
 function prioridade(p){return p==='alta'?'Alta':p==='baixa'?'Baixa':'Média';}
