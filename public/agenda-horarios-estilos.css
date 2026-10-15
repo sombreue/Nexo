@@ -62,7 +62,7 @@
 
 .horario-conteudo {
     overflow: hidden;
-    max-height: 900px;
+    max-height: 5000px;
     opacity: 1;
     transition: max-height .25s ease, opacity .18s ease, margin-top .25s ease;
 }
