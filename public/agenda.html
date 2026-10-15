@@ -42,7 +42,7 @@
 </header>
 <section id="horario-aulas" class="horario-aulas" aria-labelledby="titulo-horario">
     <div class="horario-cabecalho"><div class="horario-titulo"><h2 id="titulo-horario">Horário de aulas — 8º B</h2><p>Grade semanal de segunda a sexta</p></div><button type="button" id="botao-minimizar-horario" class="botao-minimizar-horario" aria-expanded="true" aria-controls="conteudo-horario-aulas" aria-label="Minimizar horário de aulas" title="Minimizar horário">−</button></div>
-    <div id="conteudo-horario-aulas" class="horario-conteudo"><div class="horario-tabela-wrap"><table class="horario-tabela"><thead><tr><th>Horário</th><th>Segunda</th><th>Terça</th><th>Quarta</th><th>Quinta</th><th>Sexta</th></tr></thead><tbody><tr><td>07:00 - 07:50</td><td>Ciências</td><td>Redação</td><td>Ed. Física</td><td>Gramática</td><td>Geografia</td></tr><tr><td>07:50 - 08:40</td><td>Português</td><td>Redação</td><td>Ed. Física</td><td>História</td><td>Física</td></tr><tr><td>08:40 - 09:30</td><td>Matemática</td><td>Bilíngue</td><td>Socioemocional</td><td>História</td><td>Geografia</td></tr><tr class="intervalo"><td>09:30 - 09:50</td><td>INTERVALO</td><td>INTERVALO</td><td>INTERVALO</td><td>INTERVALO</td><td>INTERVALO</td></tr><tr><td>09:50 - 10:40</td><td>Português</td><td>Artes</td><td>Literatura</td><td>Matemática</td><td>Física</td></tr><tr><td>10:40 - 11:30</td><td>Matemática</td><td>Matemática</td><td>Matemática</td><td>Bilíngue</td><td>Gramática</td></tr><tr><td>11:30 - 12:20</td><td class="vazio">—</td><td>Robótica</td><td class="vazio">—</td><td>Química</td><td>Ciências</td></tr></tbody></table></div></div>
+    <div id="conteudo-horario-aulas" class="horario-conteudo"><p class="horario-carregando">Carregando horário da turma…</p></div>
 </section>
 <main>
     <section class="filtro filtro-agenda">
@@ -85,7 +85,7 @@
     <section id="lista-tarefas"></section>
     <section id="modal-senha" class="modal-senha"><div class="conteudo-modal"><h2>Alterar senha</h2><p id="usuario-senha"></p><input type="password" id="senha-alterada" placeholder="Digite a nova senha"><div class="botoes-modal"><button onclick="confirmarAlteracaoSenha()">Alterar senha</button><button class="cancelar" onclick="fecharModalSenha()">Cancelar</button></div></div></section>
 </main>
-<script src="agenda-logica.js?v=20260909-agenda-fix"></script><script src="global-temas.js?v=20260907-lightfix5"></script><script src="agenda-temas-integracao.js?v=20260907-3"></script><script src="agenda-painel-admin.js?v=20260907-1"></script><script src="agenda-horarios.js?v=20260907-1"></script><script src="global-notificacoes.js?v=20260918"></script>
+<script src="agenda-logica.js?v=20260909-agenda-fix"></script><script src="global-temas.js?v=20260907-lightfix5"></script><script src="agenda-temas-integracao.js?v=20260907-3"></script><script src="agenda-painel-admin.js?v=20260907-1"></script><script src="agenda-horarios.js?v=20260907-1"></script><script src="agenda-configuracao-horario.js?v=20261015-1"></script><script src="global-notificacoes.js?v=20260918"></script>
 <script>
 (function () {
     const materias = () => Array.from(document.querySelectorAll('#painel-materias input[type="checkbox"]'));
