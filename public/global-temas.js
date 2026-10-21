@@ -1,18 +1,7 @@
 (() => {
+    const iniciarTemas = () => {
     const temas = [
         { id: "ruby", nome: "Ruby", icone: "◆", cor: "#ef3340", grupo: "Escuros" },
-        { id: "batman", nome: "Batman", icone: "🦇", cor: "#f2c300", grupo: "Super temas" },
-        { id: "spider-man", nome: "Homem-Aranha", icone: "🕷", cor: "#e52521", grupo: "Super temas" },
-        { id: "doctor-doom", nome: "Doutor Destino", icone: "☠", cor: "#3fae49", grupo: "Super temas" },
-        { id: "iron-man", nome: "Homem de Ferro", icone: "◈", cor: "#e21b23", grupo: "Super temas" },
-        { id: "hulk", nome: "Hulk", icone: "✊", cor: "#7bbf35", grupo: "Super temas" },
-        { id: "superman", nome: "Superman", icone: "S", cor: "#e52521", grupo: "Super temas" },
-        { id: "captain-america", nome: "Capitão América", icone: "★", cor: "#2f6fbd", grupo: "Super temas" },
-        { id: "wolverine", nome: "Wolverine", icone: "✕", cor: "#fdb300", grupo: "Super temas" },
-        { id: "deadpool", nome: "Deadpool", icone: "☠", cor: "#d71920", grupo: "Super temas" },
-        { id: "sonic", nome: "Sonic", icone: "⚡", cor: "#1261c9", grupo: "Super temas" },
-        { id: "fantastic-four", nome: "Quarteto Fantástico", icone: "✦", cor: "#2f7ee6", grupo: "Super temas" },
-        { id: "punisher", nome: "Justiceiro", icone: "☠", cor: "#d71920", grupo: "Super temas" },
         { id: "ocean", nome: "Ocean", icone: "●", cor: "#2196f3", grupo: "Escuros" },
         { id: "violet", nome: "Violet", icone: "◆", cor: "#9c5cff", grupo: "Escuros" },
         { id: "midnight", nome: "Midnight", icone: "✦", cor: "#6875ff", grupo: "Especiais" },
@@ -30,23 +19,26 @@
         { id: "system", nome: "Sistema", icone: "◐", cor: "#888", grupo: "Automático" }
     ];
 
+    if (window.NEXO_SUPER_TEMAS_ENABLED !== false && Array.isArray(window.NEXO_SUPER_TEMAS)) {
+        temas.push(...window.NEXO_SUPER_TEMAS);
+    }
+
     window.agendaTemasOficiais = temas;
 
     const chave = "agenda-auruda-tema";
     let temasPersonalizados = [];
     let temaPersonalizadoAtivo = null;
     const ehQuartaFeira = () => new Date().getDay() === 3;
-    const temaSalvo = localStorage.getItem(chave) || "ruby";
+    const temaSalvoOriginal = localStorage.getItem(chave) || "ruby";
+    const temaSalvo = temas.some(t => t.id === temaSalvoOriginal) || temaSalvoOriginal.startsWith("custom-") ? temaSalvoOriginal : "ruby";
     const customSalvo = localStorage.getItem("agenda-auruda-tema-custom");
     const temaInicial = ehQuartaFeira() ? "quarta-feira" : (temas.some(t => t.id === temaSalvo) ? temaSalvo : "ruby");
     document.documentElement.dataset.theme = customSalvo && temaSalvo.startsWith("custom-") ? temaSalvo : temaInicial;
 
-    if (!document.querySelector('link[href*="global-temas-estilos.css"]')) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = "global-temas-estilos.css?v=20261002-super-fantastic-four-punisher";
-        document.head.appendChild(link);
-    }
+    const linkTemasBase = document.querySelector('link[href*="global-temas-estilos.css"]') || document.createElement("link");
+    linkTemasBase.rel = "stylesheet";
+    linkTemasBase.href = "global-temas-estilos.css?v=20261021-separacao-super-temas";
+    if (!linkTemasBase.parentNode) document.head.appendChild(linkTemasBase);
 
     const estilo = document.createElement("style");
     estilo.textContent = `
@@ -74,20 +66,7 @@
             "quarta-feira": "/imagens/quarta-feira.jpg",
             "segunda-feira": "/imagens/segunda-feira.jpg"
         };
-        const logosSuperTemas = {
-            "batman": "/imagens/batman.png",
-            "spider-man": "/imagens/spiderman.png",
-            "doctor-doom": "/imagens/doom).png",
-            "iron-man": "/imagens/ironman.png",
-            "hulk": "/imagens/hulk.png",
-            "captain-america": "/imagens/captainamerica.png",
-            "wolverine": "/imagens/wolverine.png",
-            "deadpool": "/imagens/deadpool.png",
-            "sonic": "/imagens/sonic.png",
-            "fantastic-four": "/imagens/fantastic4.png",
-            "punisher": "/imagens/punisher.png",
-            "superman": "/imagens/superman.png"
-        };
+        const logosSuperTemas = window.NEXO_SUPER_TEMA_LOGOS || {};
         const temaCustom = id.startsWith("custom-")
             ? temasPersonalizados.find(t => "custom-" + t.id === id)
             : null;
@@ -257,4 +236,19 @@
         carregarTemasPersonalizados();
     }
     setInterval(verificarQuarta,60000);
-})();
+    };
+
+    if (window.NEXO_SUPER_TEMAS_ENABLED === false) {
+        iniciarTemas();
+        return;
+    }
+    if (Array.isArray(window.NEXO_SUPER_TEMAS)) {
+        iniciarTemas();
+        return;
+    }
+    const script = document.createElement("script");
+    script.src = "global-super-temas.js?v=20261021";
+    script.onload = iniciarTemas;
+    script.onerror = () => { console.warn("Temas opcionais não carregados; iniciando apenas com temas base."); iniciarTemas(); };
+    document.head.appendChild(script);
+})();;
