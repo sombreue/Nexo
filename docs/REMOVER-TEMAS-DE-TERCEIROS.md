@@ -18,7 +18,7 @@ Antes de carregar `global-temas.js`, defina a opção abaixo no HTML da implanta
 <script src="global-temas.js?v=20261021"></script>
 ```
 
-Com a opção desativada, o seletor não registra os super temas e não carrega o módulo opcional. Temas salvos anteriormente que não existirem mais serão substituídos pelo tema base `ruby`.
+Com a opção desativada, o seletor não registra os super temas e não carrega o módulo opcional. Temas salvos anteriormente que não existirem mais serão substituídos pelo tema base `ruby`. Também é possível omitir `global-super-temas.js` e `global-super-temas.css` da distribuição: o núcleo inicia sem os super temas se o módulo opcional não estiver disponível.
 
 ## Remoção completa do pacote
 Se a distribuição institucional precisar excluir os recursos por completo:
