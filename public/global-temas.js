@@ -35,12 +35,10 @@
     const temaInicial = ehQuartaFeira() ? "quarta-feira" : (temas.some(t => t.id === temaSalvo) ? temaSalvo : "ruby");
     document.documentElement.dataset.theme = customSalvo && temaSalvo.startsWith("custom-") ? temaSalvo : temaInicial;
 
-    if (!document.querySelector('link[href*="global-temas-estilos.css"]')) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = "global-temas-estilos.css?v=20261021-separacao-super-temas";
-        document.head.appendChild(link);
-    }
+    const linkTemasBase = document.querySelector('link[href*="global-temas-estilos.css"]') || document.createElement("link");
+    linkTemasBase.rel = "stylesheet";
+    linkTemasBase.href = "global-temas-estilos.css?v=20261021-separacao-super-temas";
+    if (!linkTemasBase.parentNode) document.head.appendChild(linkTemasBase);
 
     const estilo = document.createElement("style");
     estilo.textContent = `
