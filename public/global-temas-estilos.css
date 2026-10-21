@@ -1,241 +1,4 @@
-/* =========================================================
-   AGENDA AURUDA — SISTEMA DE TEMAS
-   ========================================================= */
 
-/* =========================================================
-   SUPER TEMAS — heróis e vilões
-   ========================================================= */
-:root[data-theme="batman"] {
-  --theme-bg:#08090b;
-  --theme-surface:#111317;
-  --theme-surface-2:#181b20;
-  --theme-surface-3:#22262d;
-  --theme-border:#343942;
-  --theme-border-hover:#555c68;
-  --theme-text:#f5f6f8;
-  --theme-muted:#b0b4bb;
-  --theme-accent:#f2c300;
-  --theme-accent-hover:#ffe052;
-  --theme-accent-dark:#806700;
-  --theme-input:#0b0c0f;
-  --theme-header:#121419;
-  --theme-header-2:#090a0d;
-  --theme-button:#b89200;
-  --theme-button-hover:#e0b900;
-}
-
-:root[data-theme="spider-man"] {
-  --theme-bg:#160608;
-  --theme-surface:#240a0d;
-  --theme-surface-2:#351014;
-  --theme-surface-3:#48171c;
-  --theme-border:#6a2630;
-  --theme-border-hover:#1f6fc1;
-  --theme-text:#fff8f8;
-  --theme-muted:#b9c9dc;
-  --theme-accent:#e52521;
-  --theme-accent-hover:#ff4a45;
-  --theme-accent-dark:#a30f16;
-  --theme-input:#17080a;
-  --theme-header:#2b0b10;
-  --theme-header-2:#130507;
-  --theme-button:#1f6fc1;
-  --theme-button-hover:#3f8ddd;
-}
-
-:root[data-theme="doctor-doom"] {
-  --theme-bg:#07100b;
-  --theme-surface:#101b13;
-  --theme-surface-2:#17281a;
-  --theme-surface-3:#203521;
-  --theme-border:#53605a;
-  --theme-border-hover:#aeb8b4;
-  --theme-text:#f0f4e9;
-  --theme-muted:#c2c9c6;
-  --theme-accent:#3fae49;
-  --theme-accent-hover:#61d46c;
-  --theme-accent-dark:#236d2b;
-  --theme-input:#09140b;
-  --theme-header:#142118;
-  --theme-header-2:#0a110c;
-  --theme-button:#6f7975;
-  --theme-button-hover:#9fa9a5;
-}
-
-:root[data-theme="iron-man"] {
-  --theme-bg:#120809;
-  --theme-surface:#1d1012;
-  --theme-surface-2:#2a1518;
-  --theme-surface-3:#381b1f;
-  --theme-border:#633438;
-  --theme-border-hover:#c39b25;
-  --theme-text:#fff7f5;
-  --theme-muted:#d8bd83;
-  --theme-accent:#e21b23;
-  --theme-accent-hover:#ff4149;
-  --theme-accent-dark:#a10f15;
-  --theme-input:#160a0b;
-  --theme-header:#241215;
-  --theme-header-2:#100708;
-  --theme-button:#a98218;
-  --theme-button-hover:#c9a42e;
-}
-
-:root[data-theme="hulk"] {
-  --theme-bg:#080e09;
-  --theme-surface:#111b12;
-  --theme-surface-2:#18271a;
-  --theme-surface-3:#22351f;
-  --theme-border:#385535;
-  --theme-border-hover:#721CB8;
-  --theme-text:#f4fff1;
-  --theme-muted:#c1b2c8;
-  --theme-accent:#7bbf35;
-  --theme-accent-hover:#9be84c;
-  --theme-accent-dark:#4e7f1d;
-  --theme-input:#0a130b;
-  --theme-header:#152117;
-  --theme-header-2:#0a110c;
-  --theme-button:#721CB8;
-  --theme-button-hover:#9366aa;
-}
-
-:root[data-theme="superman"] {
-  --theme-bg:#07132a;
-  --theme-surface:#0e2040;
-  --theme-surface-2:#15305c;
-  --theme-surface-3:#1d3e76;
-  --theme-border:#2e568f;
-  --theme-border-hover:#4a7abb;
-  --theme-text:#FFD76B;
-  --theme-muted:#adbad2;
-  --theme-accent:#e52521;
-  --theme-accent-hover:#ff4945;
-  --theme-accent-dark:#9f1512;
-  --theme-input:#091832;
-  --theme-header:#10264b;
-  --theme-header-2:#08152c;
-  --theme-button:#b91d1a;
-  --theme-button-hover:#e02b27;
-}
-
-:root[data-theme="captain-america"] {
-  --theme-bg:#080f1b;
-  --theme-surface:#101c30;
-  --theme-surface-2:#172941;
-  --theme-surface-3:#203956;
-  --theme-border:#355574;
-  --theme-border-hover:#24557f;
-  --theme-text:#f5f8fc;
-  --theme-muted:#b1bdcb;
-  --theme-accent:#012E5D;
-  --theme-accent-hover:#1a4f7d;
-  --theme-accent-dark:#01244a;
-  --theme-input:#0a1524;
-  --theme-header:#12243b;
-  --theme-header-2:#091321;
-  --theme-button:#b91d1a;
-  --theme-button-hover:#e02b27;
-}
-
-:root[data-theme="wolverine"] {
-  --theme-bg: #CA9603;
-  --theme-surface: #FEC602;
-  --theme-surface-2: #FBE59A;
-  --theme-surface-3: #FDECB0;
-  --theme-border: #536a8b;
-  --theme-border-hover: #7d9dcc;
-  --theme-text: #000000;
-  --theme-muted: #003987;
-  --theme-accent: #FDB300;
-  --theme-accent-hover: #FFD76B;
-  --theme-accent-dark: #C68A00;
-  --theme-input: #F4D263;
-  --theme-header: #EBC34F;
-  --theme-header-2: #D5A82A;
-  --theme-button: #19b5ff;
-  --theme-button-hover: #243e68;
-}
-
-:root[data-theme="deadpool"] {
-  --theme-bg:#14191d;
-  --theme-surface:#7b262f;
-  --theme-surface-2:#7f363e;
-  --theme-surface-3:#a1313d;
-  --theme-border:#592830;
-  --theme-border-hover:#813c46;
-  --theme-text:#fff6f5;
-  --theme-muted:#d0a9aa;
-  --theme-accent:#ff8181;
-  --theme-accent-hover:#ff3d45;
-  --theme-accent-dark:#980e14;
-  --theme-input:#21262e;
-  --theme-header:#63252c;
-  --theme-header-2:#14191d;
-  --theme-button:#1b1b1b;
-  --theme-button-hover:#24262b;
-}
-
-:root[data-theme="fantastic-four"] {
-  --theme-bg:#061a3a;
-  --theme-surface:#0b2b5a;
-  --theme-surface-2:#10396f;
-  --theme-surface-3:#174a8c;
-  --theme-border:#2863a8;
-  --theme-border-hover:#4d8bd1;
-  --theme-text:#f4f8ff;
-  --theme-muted:#b7c9e2;
-  --theme-accent:#2f7ee6;
-  --theme-accent-hover:#55a0ff;
-  --theme-accent-dark:#174f9d;
-  --theme-input:#071f43;
-  --theme-header:#0c3268;
-  --theme-header-2:#061a38;
-  --theme-button:#1557a8;
-  --theme-button-hover:#2370c8;
-}
-
-:root[data-theme="punisher"] {
-  --theme-bg:#090a0c;
-  --theme-surface:#111317;
-  --theme-surface-2:#191c21;
-  --theme-surface-3:#24282e;
-  --theme-border:#363a41;
-  --theme-border-hover:#626873;
-  --theme-text:#cd0000;
-  --theme-muted:#aeb2b8;
-  --theme-accent:#d71920;
-  --theme-accent-hover:#f02b32;
-  --theme-accent-dark:#8f0f15;
-  --theme-input:#0c0d10;
-  --theme-header:#15171b;
-  --theme-header-2:#090a0c;
-  --theme-button:#ffffff;
-  --theme-button-hover:#e6e6e6;
-}
-
-:root[data-theme="sonic"] {
-  --theme-bg:#06102a;
-  --theme-surface:#0c1c40;
-  --theme-surface-2:#12305d;
-  --theme-surface-3:#19427c;
-  --theme-border:#806b28;
-  --theme-border-hover:#c5a94b;
-  --theme-text:#f4f9ff;
-  --theme-muted:#c5c0ac;
-  --theme-accent:#1261c9;
-  --theme-accent-hover:#3685ef;
-  --theme-accent-dark:#0b3f87;
-  --theme-input:#081631;
-  --theme-header:#10264e;
-  --theme-header-2:#07122c;
-  --theme-button:#a78a32;
-  --theme-button-hover:#3c3a28;
-}
-
-:root[data-theme="fantastic-four"] .home-logo { content:url("/imagens/fantastic4.png"); display:block; width:230px; height:230px; max-width:230px; object-fit:contain; object-position:center; margin:0 auto; filter:drop-shadow(0 5px 14px rgba(0,0,0,.35)); }
-
-:root[data-theme="punisher"] .home-logo { content:url("/imagens/punisher.png"); display:block; width:230px; height:230px; max-width:230px; object-fit:contain; object-position:center; margin:0 auto; filter:drop-shadow(0 5px 14px rgba(0,0,0,.4)); }
 
 
 :root,
@@ -257,6 +20,7 @@
   --theme-button:#29292f;
   --theme-button-hover:#35353d;
 }
+
 :root[data-theme="ocean"] {
   --theme-bg:#0a0f14;
   --theme-surface:#111a22;
@@ -275,6 +39,7 @@
   --theme-button:#253440;
   --theme-button-hover:#304351;
 }
+
 :root[data-theme="violet"] {
   --theme-bg:#0f0b14;
   --theme-surface:#18121f;
@@ -293,6 +58,7 @@
   --theme-button:#30243a;
   --theme-button-hover:#3d2d4a;
 }
+
 :root[data-theme="emerald"] {
   --theme-bg:#09120e;
   --theme-surface:#101c17;
@@ -311,6 +77,7 @@
   --theme-button:#25372f;
   --theme-button-hover:#30473d;
 }
+
 :root[data-theme="amber"] {
   --theme-bg:#120f09;
   --theme-surface:#1d1810;
@@ -329,6 +96,7 @@
   --theme-button:#3a301f;
   --theme-button-hover:#493c27;
 }
+
 :root[data-theme="ice"] {
   --theme-bg:#091115;
   --theme-surface:#111c22;
@@ -347,6 +115,7 @@
   --theme-button:#253943;
   --theme-button-hover:#304852;
 }
+
 :root[data-theme="midnight"] {
   --theme-bg:#070914;
   --theme-surface:#0d1122;
@@ -365,6 +134,7 @@
   --theme-button:#202947;
   --theme-button-hover:#2b3558;
 }
+
 :root[data-theme="bordeaux"] {
   --theme-bg:#12070c;
   --theme-surface:#1c0d13;
@@ -383,6 +153,7 @@
   --theme-button:#38202a;
   --theme-button-hover:#482833;
 }
+
 :root[data-theme="ancient"] {
   --theme-bg:#11100c;
   --theme-surface:#1c1911;
@@ -401,6 +172,7 @@
   --theme-button:#39311e;
   --theme-button-hover:#4a4027;
 }
+
 :root[data-theme="forest"] {
   --theme-bg:#07100b;
   --theme-surface:#0e1a12;
@@ -419,6 +191,7 @@
   --theme-button:#213b2a;
   --theme-button-hover:#2c4b36;
 }
+
 :root[data-theme="sakura"] {
   --theme-bg:#120b10;
   --theme-surface:#1d121a;
@@ -437,6 +210,7 @@
   --theme-button:#38232f;
   --theme-button-hover:#492d3c;
 }
+
 :root[data-theme="arctic"] {
   --theme-bg:#071116;
   --theme-surface:#0e1c23;
@@ -456,6 +230,7 @@
   --theme-button-hover:#2d4e5a;
 }
 
+
 :root[data-theme="ruby-light"] {
   --theme-bg:#f6f6f7;
   --theme-surface:#fff;
@@ -474,6 +249,7 @@
   --theme-button:#e7e7ea;
   --theme-button-hover:#dcdce0;
 }
+
 :root[data-theme="ocean-light"] {
   --theme-bg:#f3f8fb;
   --theme-surface:#fff;
@@ -492,6 +268,7 @@
   --theme-button:#e4f0f6;
   --theme-button-hover:#d5e7ef;
 }
+
 :root[data-theme="violet-light"] {
   --theme-bg:#f7f4fa;
   --theme-surface:#fff;
@@ -510,6 +287,7 @@
   --theme-button:#ede5f3;
   --theme-button-hover:#e1d5e9;
 }
+
 :root[data-theme="emerald-light"] {
   --theme-bg:#f2f8f5;
   --theme-surface:#fff;
@@ -528,6 +306,7 @@
   --theme-button:#e1eee7;
   --theme-button-hover:#d2e4da;
 }
+
 :root[data-theme="amber-light"] {
   --theme-bg:#fbf8f0;
   --theme-surface:#fff;
@@ -546,6 +325,7 @@
   --theme-button:#f0e7d2;
   --theme-button-hover:#e6dac0;
 }
+
 :root[data-theme="ice-light"] {
   --theme-bg:#f2f9fc;
   --theme-surface:#fff;
@@ -564,6 +344,7 @@
   --theme-button:#e1f0f5;
   --theme-button-hover:#d1e6ed;
 }
+
 
 /* Sistema: acompanha o tema claro/escuro do dispositivo */
 :root[data-theme="system"] {
@@ -584,7 +365,9 @@
   --theme-button:#29292f;
   --theme-button-hover:#35353d;
 }
+
 @media (prefers-color-scheme: light) {
+
     :root[data-theme="system"] {
   --theme-bg:#f6f6f7;
   --theme-surface:#fff;
@@ -603,7 +386,10 @@
   --theme-button:#e7e7ea;
   --theme-button-hover:#dcdce0;
 }
+
+
 }
+
 
 /* Turkey: vermelho, branco, dourado e azul inspirados em detalhes otomanos */
 :root[data-theme="turkey"] {
@@ -624,33 +410,186 @@
   --theme-button:#332022;
   --theme-button-hover:#45292b;
 }
+
 :root[data-theme="turkey"] body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:-1; opacity:.055; background-image:linear-gradient(45deg, transparent 42%, #c9a227 43%, #c9a227 46%, transparent 47%),linear-gradient(-45deg, transparent 42%, #c9a227 43%, #c9a227 46%, transparent 47%); background-size:44px 44px; mask-image:linear-gradient(to bottom, #000, transparent 70%); }
+
 :root[data-theme="turkey"] header { box-shadow:inset 0 -1px 0 rgba(201,162,39,.18),0 10px 35px rgba(0,0,0,.18); }
+
 :root[data-theme="turkey"] .logo::after { color:#c9a227; }
 
+
 /* Aplicacao das variaveis ao design existente */
-html, body, header, main, section, div, button, input, textarea, table, th, td { transition:background-color .22s ease,border-color .22s ease,color .22s ease,box-shadow .22s ease; }
-body{background:var(--theme-bg)!important;color:var(--theme-text)!important}
-header{background:linear-gradient(180deg,var(--theme-header) 0%,var(--theme-header-2) 100%)!important;border-color:var(--theme-border)!important}
-header::before{background:color-mix(in srgb,var(--theme-accent) 10%,transparent)!important}
-header h1,.painel-admin h2,.formulario h2,.dia h2,.tarefa h3{color:var(--theme-accent)!important}
-header p,.secao-cabecalho p,#usuario-logado,#usuario-senha,.aviso-precos,.contador-subtitulo,#dataApresentacao{color:var(--theme-muted)!important}
-.painel-admin,.formulario,.filtro,.tarefa,.conteudo-modal,.contador-feira,.decoracao-feira,.feira-equipes,.form-decoracao,.modal-conteudo{border-color:var(--theme-border)!important}
-.painel-admin,.formulario,.filtro,.conteudo-modal,.contador-feira,.decoracao-feira,.form-decoracao,.modal-conteudo{background:var(--theme-surface)!important}
-.tarefa{background:linear-gradient(145deg,var(--theme-surface-2),var(--theme-surface))!important}.tarefa:hover{background:var(--theme-surface-3)!important;border-color:var(--theme-border-hover)!important}
-.botao-voltar,.botao-imagem{background:var(--theme-surface-2)!important;color:var(--theme-text)!important;border-color:var(--theme-border)!important}.botao-voltar:hover,.botao-imagem:hover{background:var(--theme-surface-3)!important;border-color:var(--theme-border-hover)!important}
-button,.botao-expec,.botao-adicionar,#btnCriarEquipe,#btnSalvarData,#btnAlternarExpec,#btnAdicionarDecoracao{background:linear-gradient(135deg,var(--theme-accent-dark),var(--theme-accent))!important}button:hover,.botao-expec:hover,.botao-adicionar:hover,#btnCriarEquipe:hover,#btnSalvarData:hover,#btnAlternarExpec:hover,#btnAdicionarDecoracao:hover{background:var(--theme-accent-hover)!important}
-#botao-logout,.cancelar,.botoes-modal .cancelar{background:var(--theme-button)!important;border-color:var(--theme-border)!important;color:var(--theme-text)!important}#botao-logout:hover,.cancelar:hover,.botoes-modal .cancelar:hover{background:var(--theme-button-hover)!important}
-input[type="date"],input[type="text"],input[type="password"],input[type="number"],input[type="datetime-local"],input[type="file"],textarea{background:var(--theme-input)!important;color:var(--theme-text)!important;border-color:var(--theme-border)!important}input:hover,textarea:hover{border-color:var(--theme-border-hover)!important}input:focus,textarea:focus{border-color:var(--theme-accent)!important;background:var(--theme-input)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--theme-accent) 14%,transparent)!important}::placeholder{color:color-mix(in srgb,var(--theme-muted) 75%,transparent)!important}
-.arquivo{color:var(--theme-accent)!important}.arquivo:hover{color:var(--theme-accent-hover)!important}
-.secao-cabecalho h2,.contador-feira h2,.decoracao-feira h2,.feira-equipes h2,.modal-conteudo h2,.formulario label,.filtro label,.modal-conteudo label{color:var(--theme-text)!important}.tarefa p{color:var(--theme-muted)!important}.dia h2{border-color:var(--theme-accent)!important}table,th,td{border-color:var(--theme-border)!important}th,tfoot td{background:var(--theme-surface-2)!important;color:var(--theme-text)!important}td{color:var(--theme-text)!important}
-:root[data-theme$="-light"] .modal-senha,:root[data-theme$="-light"] .modal{background:rgba(15,18,22,.32)!important}:root[data-theme$="-light"] .contador-feira,:root[data-theme$="-light"] .decoracao-feira,:root[data-theme$="-light"] .feira-equipes{color:var(--theme-text)!important}
+html,
+body,
+header,
+main,
+section,
+div,
+button,
+input,
+textarea,
+table,
+th,
+td { transition:background-color .22s ease,border-color .22s ease,color .22s ease,box-shadow .22s ease; }
+
+body {background:var(--theme-bg)!important;color:var(--theme-text)!important}
+
+header {background:linear-gradient(180deg,var(--theme-header) 0%,var(--theme-header-2) 100%)!important;border-color:var(--theme-border)!important}
+
+header::before {background:color-mix(in srgb,var(--theme-accent) 10%,transparent)!important}
+
+header h1,
+.painel-admin h2,
+.formulario h2,
+.dia h2,
+.tarefa h3 {color:var(--theme-accent)!important}
+
+header p,
+.secao-cabecalho p,
+#usuario-logado,
+#usuario-senha,
+.aviso-precos,
+.contador-subtitulo,
+#dataApresentacao {color:var(--theme-muted)!important}
+
+.painel-admin,
+.formulario,
+.filtro,
+.tarefa,
+.conteudo-modal,
+.contador-feira,
+.decoracao-feira,
+.feira-equipes,
+.form-decoracao,
+.modal-conteudo {border-color:var(--theme-border)!important}
+
+.painel-admin,
+.formulario,
+.filtro,
+.conteudo-modal,
+.contador-feira,
+.decoracao-feira,
+.form-decoracao,
+.modal-conteudo {background:var(--theme-surface)!important}
+
+.tarefa {background:linear-gradient(145deg,var(--theme-surface-2),var(--theme-surface))!important}
+.tarefa:hover {background:var(--theme-surface-3)!important;border-color:var(--theme-border-hover)!important}
+
+.botao-voltar,
+.botao-imagem {background:var(--theme-surface-2)!important;color:var(--theme-text)!important;border-color:var(--theme-border)!important}
+.botao-voltar:hover,
+.botao-imagem:hover {background:var(--theme-surface-3)!important;border-color:var(--theme-border-hover)!important}
+
+button,
+.botao-expec,
+.botao-adicionar,
+#btnCriarEquipe,
+#btnSalvarData,
+#btnAlternarExpec,
+#btnAdicionarDecoracao {background:linear-gradient(135deg,var(--theme-accent-dark),var(--theme-accent))!important}
+button:hover,
+.botao-expec:hover,
+.botao-adicionar:hover,
+#btnCriarEquipe:hover,
+#btnSalvarData:hover,
+#btnAlternarExpec:hover,
+#btnAdicionarDecoracao:hover {background:var(--theme-accent-hover)!important}
+
+#botao-logout,
+.cancelar,
+.botoes-modal .cancelar {background:var(--theme-button)!important;border-color:var(--theme-border)!important;color:var(--theme-text)!important}
+#botao-logout:hover,
+.cancelar:hover,
+.botoes-modal .cancelar:hover {background:var(--theme-button-hover)!important}
+
+input[type="date"],
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="datetime-local"],
+input[type="file"],
+textarea {background:var(--theme-input)!important;color:var(--theme-text)!important;border-color:var(--theme-border)!important}
+input:hover,
+textarea:hover {border-color:var(--theme-border-hover)!important}
+input:focus,
+textarea:focus {border-color:var(--theme-accent)!important;background:var(--theme-input)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--theme-accent) 14%,transparent)!important}
+::placeholder {color:color-mix(in srgb,var(--theme-muted) 75%,transparent)!important}
+
+.arquivo {color:var(--theme-accent)!important}
+.arquivo:hover {color:var(--theme-accent-hover)!important}
+
+.secao-cabecalho h2,
+.contador-feira h2,
+.decoracao-feira h2,
+.feira-equipes h2,
+.modal-conteudo h2,
+.formulario label,
+.filtro label,
+.modal-conteudo label {color:var(--theme-text)!important}
+.tarefa p {color:var(--theme-muted)!important}
+.dia h2 {border-color:var(--theme-accent)!important}
+table,
+th,
+td {border-color:var(--theme-border)!important}
+th,
+tfoot td {background:var(--theme-surface-2)!important;color:var(--theme-text)!important}
+td {color:var(--theme-text)!important}
+
+:root[data-theme$="-light"] .modal-senha,
+:root[data-theme$="-light"] .modal {background:rgba(15,18,22,.32)!important}
+:root[data-theme$="-light"] .contador-feira,
+:root[data-theme$="-light"] .decoracao-feira,
+:root[data-theme$="-light"] .feira-equipes {color:var(--theme-text)!important}
+
 
 /* Seletor de temas organizado */
-.seletor-tema{position:fixed;top:18px;right:18px;z-index:2000;width:min(310px,calc(100vw - 36px));font-family:Arial,Helvetica,sans-serif}.seletor-tema-botao{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;border:1px solid var(--theme-border);border-radius:12px;background:color-mix(in srgb,var(--theme-surface) 92%,transparent);color:var(--theme-text);box-shadow:0 8px 25px rgba(0,0,0,.16);backdrop-filter:blur(12px);cursor:pointer}.seletor-tema-botao:hover{background:var(--theme-surface-2)!important}.seletor-tema-atual{display:flex;align-items:center;gap:9px}.seletor-tema-icone{font-size:15px}.seletor-tema-seta{font-size:16px;transition:transform .2s ease}.seletor-tema-botao[aria-expanded="true"] .seletor-tema-seta{transform:rotate(180deg)}.seletor-tema-lista{display:block;margin-top:8px;padding:10px;border:1px solid var(--theme-border);border-radius:14px;background:var(--theme-surface);box-shadow:0 14px 35px rgba(0,0,0,.24);max-height:min(72vh,560px);overflow-y:auto}.seletor-tema-lista[hidden]{display:none}.tema-grupo-titulo{padding:5px 4px 7px;color:var(--theme-muted);font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}.tema-grupo-grade{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:10px}.tema-grupo-grade:last-child{margin-bottom:0}.tema-opcao{display:flex;align-items:center;gap:8px;width:100%;min-width:0;padding:9px 10px;border:1px solid transparent;border-radius:9px;background:var(--theme-surface-2)!important;color:var(--theme-text)!important;font-size:13px;font-weight:600;text-align:left;cursor:pointer}.tema-opcao:hover{transform:none;border-color:var(--theme-border-hover);background:var(--theme-surface-3)!important}.tema-opcao.ativo{border-color:var(--theme-accent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--theme-accent) 25%,transparent)}.tema-bolinha{flex:0 0 12px;width:12px;height:12px;border-radius:50%;background:var(--cor-tema);box-shadow:0 0 0 2px color-mix(in srgb,var(--cor-tema) 18%,transparent)}.tema-opcao-texto{display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}.tema-opcao-icone{opacity:.85}
-:root[data-theme="turkey"] .seletor-tema-botao,:root[data-theme="turkey"] .seletor-tema-lista{border-color:#7a393d!important}:root[data-theme="turkey"] .seletor-tema-botao{box-shadow:0 10px 30px rgba(0,0,0,.3),0 0 0 1px rgba(227,10,23,.08)}
-@media(max-width:600px){.seletor-tema{top:10px;right:10px;width:min(280px,calc(100vw - 20px))}.seletor-tema-lista{max-height:70vh}.tema-grupo-grade{grid-template-columns:1fr}}
-@media(prefers-reduced-motion:reduce){html,body,header,main,section,div,button,input,textarea,table,th,td{transition:none!important}.seletor-tema-seta{transition:none!important}}
+.seletor-tema {position:fixed;top:18px;right:18px;z-index:2000;width:min(310px,calc(100vw - 36px));font-family:Arial,Helvetica,sans-serif}
+.seletor-tema-botao {width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;border:1px solid var(--theme-border);border-radius:12px;background:color-mix(in srgb,var(--theme-surface) 92%,transparent);color:var(--theme-text);box-shadow:0 8px 25px rgba(0,0,0,.16);backdrop-filter:blur(12px);cursor:pointer}
+.seletor-tema-botao:hover {background:var(--theme-surface-2)!important}
+.seletor-tema-atual {display:flex;align-items:center;gap:9px}
+.seletor-tema-icone {font-size:15px}
+.seletor-tema-seta {font-size:16px;transition:transform .2s ease}
+.seletor-tema-botao[aria-expanded="true"] .seletor-tema-seta {transform:rotate(180deg)}
+.seletor-tema-lista {display:block;margin-top:8px;padding:10px;border:1px solid var(--theme-border);border-radius:14px;background:var(--theme-surface);box-shadow:0 14px 35px rgba(0,0,0,.24);max-height:min(72vh,560px);overflow-y:auto}
+.seletor-tema-lista[hidden] {display:none}
+.tema-grupo-titulo {padding:5px 4px 7px;color:var(--theme-muted);font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+.tema-grupo-grade {display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:10px}
+.tema-grupo-grade:last-child {margin-bottom:0}
+.tema-opcao {display:flex;align-items:center;gap:8px;width:100%;min-width:0;padding:9px 10px;border:1px solid transparent;border-radius:9px;background:var(--theme-surface-2)!important;color:var(--theme-text)!important;font-size:13px;font-weight:600;text-align:left;cursor:pointer}
+.tema-opcao:hover {transform:none;border-color:var(--theme-border-hover);background:var(--theme-surface-3)!important}
+.tema-opcao.ativo {border-color:var(--theme-accent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--theme-accent) 25%,transparent)}
+.tema-bolinha {flex:0 0 12px;width:12px;height:12px;border-radius:50%;background:var(--cor-tema);box-shadow:0 0 0 2px color-mix(in srgb,var(--cor-tema) 18%,transparent)}
+.tema-opcao-texto {display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}
+.tema-opcao-icone {opacity:.85}
+
+:root[data-theme="turkey"] .seletor-tema-botao,
+:root[data-theme="turkey"] .seletor-tema-lista {border-color:#7a393d!important}
+:root[data-theme="turkey"] .seletor-tema-botao {box-shadow:0 10px 30px rgba(0,0,0,.3),0 0 0 1px rgba(227,10,23,.08)}
+
+@media(max-width:600px) {
+.seletor-tema {top:10px;right:10px;width:min(280px,calc(100vw - 20px))}
+.seletor-tema-lista {max-height:70vh}
+.tema-grupo-grade {grid-template-columns:1fr}
+
+}
+
+@media(prefers-reduced-motion:reduce) {
+html,
+body,
+header,
+main,
+section,
+div,
+button,
+input,
+textarea,
+table,
+th,
+td {transition:none!important}
+.seletor-tema-seta {transition:none!important}
+
+}
+
 
 
 /* =========================================================
@@ -674,6 +613,7 @@ input[type="date"],input[type="text"],input[type="password"],input[type="number"
   --theme-button:#8f0000;
   --theme-button-hover:#b80000;
 }
+
 :root[data-theme="segunda-feira"] body::before {
     content:"";
     position:fixed;
@@ -685,9 +625,11 @@ input[type="date"],input[type="text"],input[type="password"],input[type="number"
         repeating-linear-gradient(0deg,rgba(255,255,0,.055) 0 2px,transparent 2px 7px),
         radial-gradient(circle at 50% -10%,rgba(255,255,255,.18),transparent 38%);
 }
+
 :root[data-theme="segunda-feira"] header {
     box-shadow:inset 0 -2px 0 rgba(255,255,0,.35),0 12px 40px rgba(80,0,0,.45);
 }
+
 :root[data-theme="segunda-feira"] header h1,
 :root[data-theme="segunda-feira"] .painel-admin h2,
 :root[data-theme="segunda-feira"] .formulario h2,
@@ -695,62 +637,23 @@ input[type="date"],input[type="text"],input[type="password"],input[type="number"
 :root[data-theme="segunda-feira"] .tarefa h3 {
     color:#ffff00!important;
 }
+
 :root[data-theme="segunda-feira"] .logo,
 :root[data-theme="segunda-feira"] .home-logo {
     object-fit:contain;
     filter:drop-shadow(0 5px 12px rgba(0,0,0,.5));
 }
+
 :root[data-theme="segunda-feira"] .seletor-tema-botao,
 :root[data-theme="segunda-feira"] .seletor-tema-lista {
     border-color:#ff6666!important;
     box-shadow:0 12px 34px rgba(80,0,0,.45),0 0 22px rgba(255,255,0,.10);
 }
+
 :root[data-theme="segunda-feira"] .tema-opcao.ativo {
     border-color:#ffff00;
 }
 
-/* Detalhes cromáticos dos Super temas */
-:root[data-theme="spider-man"] header,
-:root[data-theme="spider-man"] .seletor-tema-botao,
-:root[data-theme="spider-man"] .seletor-tema-lista { box-shadow:inset 0 -2px 0 #e52521, 0 10px 30px rgba(0,0,0,.28); }
-:root[data-theme="spider-man"] .tarefa:hover,
-:root[data-theme="spider-man"] input:focus,
-:root[data-theme="spider-man"] textarea:focus { border-color:#1f6fc1!important; box-shadow:0 0 0 3px rgba(31,111,193,.16)!important; }
-
-:root[data-theme="iron-man"] header { background:linear-gradient(180deg,#321316 0%,#17090b 100%)!important; border-bottom-color:#c39b25!important; }
-:root[data-theme="iron-man"] header h1,
-:root[data-theme="iron-man"] .dia h2 { text-shadow:0 0 12px rgba(195,155,37,.18); }
-:root[data-theme="iron-man"] .seletor-tema-botao,
-:root[data-theme="iron-man"] .seletor-tema-lista { border-color:#c39b25!important; box-shadow:0 0 18px rgba(195,155,37,.10),0 10px 30px rgba(0,0,0,.3); }
-:root[data-theme="iron-man"] .tarefa { border-left:3px solid #e21b23!important; }
-:root[data-theme="iron-man"] .botao-adicionar,
-:root[data-theme="iron-man"] button { box-shadow:inset 0 1px 0 rgba(255,213,74,.28); }
-
-:root[data-theme="doctor-doom"] header,
-:root[data-theme="doctor-doom"] .seletor-tema-botao,
-:root[data-theme="doctor-doom"] .seletor-tema-lista { border-color:#7e8985!important; }
-:root[data-theme="doctor-doom"] .tarefa { border-left:3px solid #3fae49!important; }
-:root[data-theme="doctor-doom"] .tarefa:hover,
-:root[data-theme="doctor-doom"] input:focus,
-:root[data-theme="doctor-doom"] textarea:focus { border-color:#aeb8b4!important; box-shadow:0 0 0 3px rgba(174,184,180,.13)!important; }
-
-:root[data-theme="hulk"] header { border-bottom-color:#7b4b8e!important; }
-:root[data-theme="hulk"] .seletor-tema-botao,
-:root[data-theme="hulk"] .seletor-tema-lista { border-color:#714e87!important; box-shadow:0 0 18px rgba(113,78,135,.12),0 10px 30px rgba(0,0,0,.3); }
-:root[data-theme="hulk"] .tarefa { border-left:3px solid #7bbf35!important; }
-:root[data-theme="hulk"] .tarefa:hover { border-color:#9b6bb1!important; }
-
-:root[data-theme="wolverine"] header { border-bottom-color:#315d9b!important; }
-:root[data-theme="wolverine"] .seletor-tema-botao,
-:root[data-theme="wolverine"] .seletor-tema-lista { border-color:#536a8b!important; box-shadow:0 0 18px rgba(49,93,155,.12),0 10px 30px rgba(0,0,0,.3); }
-:root[data-theme="wolverine"] .tarefa { border-left:3px solid #012E5D!important; }
-:root[data-theme="wolverine"] .tarefa:hover { border-color:#315d9b!important; }
-
-:root[data-theme="sonic"] header { border-bottom-color:#c5a94b!important; background:linear-gradient(180deg,#122b57 0%,#08142e 100%)!important; }
-:root[data-theme="sonic"] .seletor-tema-botao,
-:root[data-theme="sonic"] .seletor-tema-lista { border-color:#a78a32!important; box-shadow:0 0 18px rgba(197,169,75,.11),0 10px 30px rgba(0,0,0,.3); }
-:root[data-theme="sonic"] .tarefa { border-left:3px solid #1261c9!important; }
-:root[data-theme="sonic"] .tarefa:hover { border-color:#c5a94b!important; }
 
 
 /* Os temas comuns usam a cor de destaque nos botoes. */
@@ -778,6 +681,7 @@ input[type="date"],input[type="text"],input[type="password"],input[type="number"
   --theme-button-hover:var(--theme-accent-hover);
 }
 
+
 /* Botoes dos temas */
 :root[data-theme] button,
 :root[data-theme] .botao-expec,
@@ -790,6 +694,7 @@ input[type="date"],input[type="text"],input[type="password"],input[type="number"
     border-color:var(--theme-border)!important;
     color:var(--theme-text)!important;
 }
+
 :root[data-theme] button:hover,
 :root[data-theme] .botao-expec:hover,
 :root[data-theme] .botao-adicionar:hover,
@@ -800,109 +705,3 @@ input[type="date"],input[type="text"],input[type="password"],input[type="number"
     background:var(--theme-button-hover)!important;
 }
 
-/* Quarteto Fantastico: botoes brancos com texto azul. */
-:root[data-theme="fantastic-four"] {
-  --theme-button:#fff;
-  --theme-button-hover:#f0f0f0;
-}
-:root[data-theme="fantastic-four"] button,
-:root[data-theme="fantastic-four"] .botao-expec,
-:root[data-theme="fantastic-four"] .botao-adicionar,
-:root[data-theme="fantastic-four"] #btnCriarEquipe,
-:root[data-theme="fantastic-four"] #btnSalvarData,
-:root[data-theme="fantastic-four"] #btnAlternarExpec,
-:root[data-theme="fantastic-four"] #btnAdicionarDecoracao {
-    color:#1557a8!important;
-}
-
-/* Justiceiro: botoes brancos com texto preto. */
-:root[data-theme="punisher"] button,
-:root[data-theme="punisher"] .botao-expec,
-:root[data-theme="punisher"] .botao-adicionar,
-:root[data-theme="punisher"] #btnCriarEquipe,
-:root[data-theme="punisher"] #btnSalvarData,
-:root[data-theme="punisher"] #btnAlternarExpec,
-:root[data-theme="punisher"] #btnAdicionarDecoracao {
-    background:#fff!important;
-    color:var(--theme-text)!important;
-}
-:root[data-theme="punisher"] button:hover,
-:root[data-theme="punisher"] .botao-expec:hover,
-:root[data-theme="punisher"] .botao-adicionar:hover,
-:root[data-theme="punisher"] #btnCriarEquipe:hover,
-:root[data-theme="punisher"] #btnSalvarData:hover,
-:root[data-theme="punisher"] #btnAlternarExpec:hover,
-:root[data-theme="punisher"] #btnAdicionarDecoracao:hover {
-    background:#f0f0f0!important;
-}
-
-/* Texto escuro nos secundarios claros. */
-:root[data-theme="batman"] button,
-:root[data-theme="batman"] .botao-expec,
-:root[data-theme="batman"] .botao-adicionar,
-:root[data-theme="batman"] #btnCriarEquipe,
-:root[data-theme="batman"] #btnSalvarData,
-:root[data-theme="batman"] #btnAlternarExpec,
-:root[data-theme="batman"] #btnAdicionarDecoracao,
-:root[data-theme="iron-man"] button,
-:root[data-theme="iron-man"] .botao-expec,
-:root[data-theme="iron-man"] .botao-adicionar,
-:root[data-theme="iron-man"] #btnCriarEquipe,
-:root[data-theme="iron-man"] #btnSalvarData,
-:root[data-theme="iron-man"] #btnAlternarExpec,
-:root[data-theme="iron-man"] #btnAdicionarDecoracao,
-:root[data-theme="sonic"] button,
-:root[data-theme="sonic"] .botao-expec,
-:root[data-theme="sonic"] .botao-adicionar,
-:root[data-theme="sonic"] #btnCriarEquipe,
-:root[data-theme="sonic"] #btnSalvarData,
-:root[data-theme="sonic"] #btnAlternarExpec,
-:root[data-theme="sonic"] #btnAdicionarDecoracao {
-    color:var(--theme-text)!important;
-}
-
-/* =========================================================
-   LOGOS DOS SUPER TEMAS — cada personagem usa sua imagem da pasta /imagens
-   ========================================================= */
-:root[data-theme="batman"] .home-logo,
-:root[data-theme="spider-man"] .home-logo,
-:root[data-theme="doctor-doom"] .home-logo,
-:root[data-theme="iron-man"] .home-logo,
-:root[data-theme="hulk"] .home-logo,
-:root[data-theme="captain-america"] .home-logo,
-:root[data-theme="wolverine"] .home-logo,
-:root[data-theme="deadpool"] .home-logo,
-:root[data-theme="sonic"] .home-logo,
-:root[data-theme="fantastic-four"] .home-logo,
-:root[data-theme="punisher"] .home-logo,
-:root[data-theme="superman"] .home-logo {
-    display: block;
-    width: 230px;
-    height: 230px;
-    max-width: 230px;
-    object-fit: contain;
-    object-position: center;
-    margin: 0 auto;
-}
-
-:root[data-theme="batman"] .home-logo          { content: url("/imagens/batman.png"); }
-:root[data-theme="spider-man"] .home-logo      { content: url("/imagens/spiderman.png"); }
-:root[data-theme="doctor-doom"] .home-logo     { content: url("/imagens/doom).png"); }
-:root[data-theme="iron-man"] .home-logo        { content: url("/imagens/ironman.png"); }
-:root[data-theme="hulk"] .home-logo            { content: url("/imagens/hulk.png"); }
-:root[data-theme="captain-america"] .home-logo { content: url("/imagens/captainamerica.png"); }
-:root[data-theme="wolverine"] .home-logo       { content: url("/imagens/wolverine.png"); }
-:root[data-theme="deadpool"] .home-logo        { content: url("/imagens/deadpool.png"); }
-:root[data-theme="sonic"] .home-logo           { content: url("/imagens/sonic.png"); }
-:root[data-theme="fantastic-four"] .home-logo { content: url("/imagens/fantastic4.png"); }
-:root[data-theme="punisher"] .home-logo      { content: url("/imagens/punisher.png"); }
-:root[data-theme="superman"] .home-logo        { content: url("/imagens/superman.png"); }
-
-
-/* Remove a aparência nativa dos botões nesses temas. */
-:root[data-theme="wolverine"] button,
-:root[data-theme="fantastic-four"] button,
-:root[data-theme="punisher"] button {
-  -webkit-appearance:none!important;
-  appearance:none!important;
-}
