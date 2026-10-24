@@ -14,7 +14,7 @@
     const resposta = await fetch("/api/sessao", {credentials:"same-origin", cache:"no-store"});
     const dados = await resposta.json();
     if (!dados.logado) { window.location.replace("/login.html"); return false; }
-    if (dados.tipo !== "admin") { window.location.replace("/"); return false; }
+    if (dados.tipo !== "admin") { window.location.replace("/index.html"); return false; }
     $("admin-inicio-boas-vindas").textContent = "Olá, " + (dados.usuario?.usuario || dados.usuario || "administrador") + ". Selecione uma turma para trabalhar.";
     return true;
   }
