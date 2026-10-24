@@ -7,7 +7,7 @@
     let representante = false;
     const turmaSelecionadaAdmin = new URLSearchParams(window.location.search).get("turmaId");
     const gerenciaTurma = () => representante || (administrador && Boolean(turmaSelecionadaAdmin));
-    const sufixoTurma = () => administrador && turmaSelecionadaAdmin ? "?turmaId=" + encodeURIComponent(turmaSelecionadaAdmin) : "";
+    const sufixoTurma = () => turmaSelecionadaAdmin ? "?turmaId=" + encodeURIComponent(turmaSelecionadaAdmin) : "";
     const materiasPadrao = ["Ciências", "Matemática", "Português", "Redação", "Bilíngue", "Artes", "Robótica", "Ed. Física", "Socioemocional", "Literatura", "Gramática", "História", "Química", "Geografia", "Física"];
     let materiasCatalogo = null;
 
