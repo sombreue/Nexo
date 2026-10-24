@@ -148,11 +148,8 @@ app.get("/", (req, res) => {
     // O detector considera apenas telefones, evitando tratar tablets como celular.
     const userAgent = String(req.headers["user-agent"] || "");
     const celular = /Mobi|Android.*Mobile|iPhone|iPod/i.test(userAgent);
-    // O painel global reúne seleção de turmas e ferramentas administrativas.
-    if (req.session.usuario.tipo === "admin") {
-        return res.sendFile(path.join(__dirname, "public", "admin-panel.html"));
-    }
-
+    // A rota raiz é sempre a página inicial do site, inclusive para o admin-global.
+    // O painel administrativo é acessado separadamente por /admin-panel.html.
     const paginaInicial = celular ? "hoje.html" : "index.html";
     res.sendFile(path.join(__dirname, "public", paginaInicial));
 });
