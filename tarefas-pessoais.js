@@ -31,9 +31,17 @@ module.exports = function registrarTarefasPessoais(app, pool, exigirLogin) {
     app.get('/api/tarefas-pessoais/origens', exigirLogin, async (req,res)=>{
         try{
             await tabelaPronta;
+            const conta = await pool.query("SELECT tipo, turma_id FROM usuarios WHERE id = $1", [req.session.usuario.id]);
+            if (!conta.rowCount) return res.status(401).json({ sucesso: false, mensagem: "Conta não encontrada." });
+            const usuario = conta.rows[0];
+            if (usuario.tipo !== "admin" && !usuario.turma_id) return res.status(403).json({ sucesso: false, mensagem: "Sua conta não está vinculada a uma turma." });
             const [agenda,trabalhos]=await Promise.all([
-                pool.query(`SELECT id,data,materia,descricao FROM tarefas ORDER BY data DESC,id DESC`),
-                pool.query(`SELECT id,titulo,materia,prazo,descricao,vale_ponto,criado_em,to_char(criado_em AT TIME ZONE 'America/Fortaleza','YYYY-MM-DD') AS data_passada FROM trabalhos ORDER BY prazo ASC NULLS LAST,id DESC`)
+                usuario.tipo === "admin"
+                    ? pool.query(`SELECT id,data,materia,descricao FROM tarefas ORDER BY data DESC,id DESC`)
+                    : pool.query(`SELECT id,data,materia,descricao FROM tarefas WHERE turma_id = $1 ORDER BY data DESC,id DESC`, [usuario.turma_id]),
+                usuario.tipo === "admin"
+                    ? pool.query(`SELECT id,titulo,materia,prazo,descricao,vale_ponto,criado_em,to_char(criado_em AT TIME ZONE 'America/Fortaleza','YYYY-MM-DD') AS data_passada FROM trabalhos ORDER BY prazo ASC NULLS LAST,id DESC`)
+                    : pool.query(`SELECT id,titulo,materia,prazo,descricao,vale_ponto,criado_em,to_char(criado_em AT TIME ZONE 'America/Fortaleza','YYYY-MM-DD') AS data_passada FROM trabalhos WHERE turma_id = $1 ORDER BY prazo ASC NULLS LAST,id DESC`, [usuario.turma_id])
             ]);
             const usadas=await pool.query(`SELECT origem_tipo,origem_id FROM tarefas_pessoais WHERE usuario_id=$1 AND origem_tipo IS NOT NULL AND origem_id IS NOT NULL`,[req.session.usuario.id]);
             const chaveUsada=new Set(usadas.rows.map(x=>`${x.origem_tipo}:${x.origem_id}`));
@@ -60,12 +68,24 @@ module.exports = function registrarTarefasPessoais(app, pool, exigirLogin) {
             let item;
             let dataPassada;
             if(origemTipo==='agenda'){
-                const r=await pool.query(`SELECT id,data,materia,descricao FROM tarefas WHERE id=$1`,[origemId]);
+                const conta = await pool.query("SELECT tipo, turma_id FROM usuarios WHERE id = $1", [req.session.usuario.id]);
+                if (!conta.rowCount) return res.status(401).json({sucesso:false,mensagem:"Conta não encontrada."});
+                const usuario = conta.rows[0];
+                if (usuario.tipo !== "admin" && !usuario.turma_id) return res.status(403).json({sucesso:false,mensagem:"Sua conta não está vinculada a uma turma."});
+                const r = usuario.tipo === "admin"
+                    ? await pool.query(`SELECT id,data,materia,descricao FROM tarefas WHERE id=$1`, [origemId])
+                    : await pool.query(`SELECT id,data,materia,descricao FROM tarefas WHERE id=$1 AND turma_id=$2`, [origemId, usuario.turma_id]);
                 if(!r.rows.length)return res.status(404).json({sucesso:false,mensagem:'A tarefa da Agenda não existe mais.'});
                 item=r.rows[0];
                 dataPassada=item.data;
             }else{
-                const r=await pool.query(`SELECT id,titulo,materia,prazo,descricao,criado_em,to_char(criado_em AT TIME ZONE 'America/Fortaleza','YYYY-MM-DD') AS data_passada FROM trabalhos WHERE id=$1`,[origemId]);
+                const conta = await pool.query("SELECT tipo, turma_id FROM usuarios WHERE id = $1", [req.session.usuario.id]);
+                if (!conta.rowCount) return res.status(401).json({sucesso:false,mensagem:"Conta não encontrada."});
+                const usuario = conta.rows[0];
+                if (usuario.tipo !== "admin" && !usuario.turma_id) return res.status(403).json({sucesso:false,mensagem:"Sua conta não está vinculada a uma turma."});
+                const r = usuario.tipo === "admin"
+                    ? await pool.query(`SELECT id,titulo,materia,prazo,descricao,criado_em,to_char(criado_em AT TIME ZONE 'America/Fortaleza','YYYY-MM-DD') AS data_passada FROM trabalhos WHERE id=$1`, [origemId])
+                    : await pool.query(`SELECT id,titulo,materia,prazo,descricao,criado_em,to_char(criado_em AT TIME ZONE 'America/Fortaleza','YYYY-MM-DD') AS data_passada FROM trabalhos WHERE id=$1 AND turma_id=$2`, [origemId, usuario.turma_id]);
                 if(!r.rows.length)return res.status(404).json({sucesso:false,mensagem:'O trabalho não existe mais.'});
                 item=r.rows[0];
                 dataPassada=item.data_passada;
