@@ -47,7 +47,23 @@
                 console.warn("Não foi possível verificar o acesso à fila de saídas:", erroFila);
             }
 
-            usuarioLogado.textContent = `Logado como: ${usuario.usuario}${usuario.tipo === "admin" ? " (administrador)" : ""}`;
+            let identificacao = `Logado como: ${usuario.usuario}${usuario.tipo === "admin" ? " (administrador)" : ""}`;
+            if (usuario.tipo === "representante") {
+                try {
+                    const respostaTurma = await fetch("/api/turmas", {
+                        credentials: "same-origin",
+                        cache: "no-store"
+                    });
+                    const dadosTurma = await respostaTurma.json();
+                    const turma = Array.isArray(dadosTurma.turmas) ? dadosTurma.turmas[0] : null;
+                    if (respostaTurma.ok && dadosTurma.sucesso && turma?.nome) {
+                        identificacao += ` · Representante da turma ${turma.nome}`;
+                    }
+                } catch (erroTurma) {
+                    console.warn("Não foi possível identificar a turma do representante:", erroTurma);
+                }
+            }
+            usuarioLogado.textContent = identificacao;
             if (botaoLogout) botaoLogout.hidden = false;
 
             if (usuario.tipo === "admin" && linkAdmin) {
