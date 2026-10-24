@@ -1,9 +1,10 @@
-/* Renderiza a grade compartilhada e oferece edição aos administradores. */
+/* Renderiza o horário e permite que cada representante edite somente sua turma. */
 (function () {
     "use strict";
 
     let configuracao = null;
     let administrador = false;
+    let representante = false;
     const materiasPadrao = ["Ciências", "Matemática", "Português", "Redação", "Bilíngue", "Artes", "Robótica", "Ed. Física", "Socioemocional", "Literatura", "Gramática", "História", "Química", "Geografia", "Física"];
     let materiasCatalogo = null;
 
@@ -37,7 +38,7 @@
         const titulo = document.getElementById("titulo-horario");
         const subtitulo = document.querySelector(".horario-titulo p");
         if (titulo) titulo.textContent = "Horário de aulas — " + configuracao.turma;
-        if (subtitulo) subtitulo.textContent = "Grade semanal configurada pela administração";
+        if (subtitulo) subtitulo.textContent = representante ? "Grade semanal configurada pelo representante da turma" : "Grade semanal configurada pela administração";
 
         let html = '<div class="horario-tabela-wrap"><table class="horario-tabela"><thead><tr><th>Horário</th>';
         configuracao.dias.forEach(dia => html += '<th>' + escapeHtml(dia.nome) + '</th>');
@@ -52,11 +53,75 @@
             html += '</tr>';
         });
         html += '</tbody></table></div>';
-        if (administrador) {
-            html += '<div class="horario-acoes-admin"><button type="button" id="editar-horario-turma">Editar horário da turma</button></div><div id="editor-horario-turma" hidden></div>';
+        if (administrador || representante) {
+            html += '<div class="horario-acoes-admin"><button type="button" id="editar-horario-turma">Editar horário da turma</button>' +
+                (representante ? '<button type="button" id="gerenciar-materias-turma">Gerenciar matérias da turma</button>' : '') +
+                '</div><div id="editor-horario-turma" hidden></div><div id="editor-materias-turma"></div>';
         }
         container.innerHTML = html;
         document.getElementById("editar-horario-turma")?.addEventListener("click", abrirEditor);
+        document.getElementById("gerenciar-materias-turma")?.addEventListener("click", abrirGerenciadorMaterias);
+    }
+
+    async function abrirGerenciadorMaterias() {
+        if (!representante) return;
+        const container = obterContainer();
+        if (!container) return;
+        let editor = document.getElementById("editor-materias-turma");
+        if (!editor) {
+            editor = document.createElement("div");
+            editor.id = "editor-materias-turma";
+            container.appendChild(editor);
+        }
+        editor.innerHTML = '<p>Carregando matérias da turma…</p>';
+        try {
+            const resposta = await fetch("/api/materias", { cache: "no-store", credentials: "same-origin" });
+            const dados = await resposta.json();
+            if (!resposta.ok || !dados.sucesso || !Array.isArray(dados.materias)) throw new Error(dados.mensagem || "Não foi possível carregar as matérias.");
+            materiasCatalogo = dados.materias.map(m => m.nome);
+            window.MATERIAS_AGENDA = materiasCatalogo.slice();
+            window.dispatchEvent(new CustomEvent("nexo:materias-carregadas", { detail: materiasCatalogo.slice() }));
+            editor.innerHTML = '<section class="editor-materias-turma"><h3>Matérias da turma</h3><p>Adicionar ou desativar matérias afeta somente esta turma.</p>' +
+                '<form id="form-nova-materia-turma"><label for="nova-materia-turma">Nova matéria</label><input id="nova-materia-turma" name="nome" maxlength="80" required><button type="submit">Adicionar matéria</button></form>' +
+                '<ul>' + dados.materias.map(m => '<li><span>' + escapeHtml(m.nome) + '</span><button type="button" data-desativar-materia="' + Number(m.id) + '">Desativar</button></li>').join("") + '</ul><p id="status-materias-turma" role="status"></p></section>';
+            editor.querySelector("#form-nova-materia-turma").addEventListener("submit", async evento => {
+                evento.preventDefault();
+                const campo = evento.currentTarget.elements.nome;
+                const nome = campo.value.trim();
+                if (!nome) return;
+                const status = editor.querySelector("#status-materias-turma");
+                const botao = evento.currentTarget.querySelector('button[type="submit"]');
+                botao.disabled = true;
+                try {
+                    const r = await fetch("/api/materias", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ nome }) });
+                    const d = await r.json();
+                    if (!r.ok || !d.sucesso) throw new Error(d.mensagem || "Não foi possível adicionar a matéria.");
+                    materiasCatalogo = null;
+                    await abrirGerenciadorMaterias();
+                } catch (erro) {
+                    status.textContent = erro.message;
+                } finally {
+                    botao.disabled = false;
+                }
+            });
+            editor.querySelectorAll("[data-desativar-materia]").forEach(botao => botao.addEventListener("click", async () => {
+                if (!confirm("Desativar esta matéria somente nesta turma?")) return;
+                const status = editor.querySelector("#status-materias-turma");
+                botao.disabled = true;
+                try {
+                    const r = await fetch("/api/materias/" + encodeURIComponent(botao.dataset.desativarMateria), { method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ ativa: false }) });
+                    const d = await r.json();
+                    if (!r.ok || !d.sucesso) throw new Error(d.mensagem || "Não foi possível desativar a matéria.");
+                    materiasCatalogo = null;
+                    await abrirGerenciadorMaterias();
+                } catch (erro) {
+                    status.textContent = erro.message;
+                    botao.disabled = false;
+                }
+            }));
+        } catch (erro) {
+            editor.innerHTML = '<p role="alert">' + escapeHtml(erro.message) + '</p>';
+        }
     }
 
     async function abrirEditor() {
@@ -174,6 +239,7 @@
             if (!dados.sucesso || !dados.configuracao) throw new Error(dados.mensagem || "Horário indisponível.");
             configuracao = dados.configuracao;
             administrador = Boolean(sessao.logado && sessao.tipo === "admin");
+            representante = Boolean(sessao.logado && sessao.tipo === "representante");
             window.NEXO_HORARIO_TURMA = configuracao;
             renderizarGrade();
             window.dispatchEvent(new CustomEvent("nexo:horario-carregado", { detail: configuracao }));
