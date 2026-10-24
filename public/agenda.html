@@ -188,7 +188,12 @@
         if (!lista) return;
         const { data, materias: materiasSelecionadas } = obterFiltros();
         try {
-            const resposta = await fetch("/api/tarefas");
+            // Os filtros também precisam respeitar a turma selecionada pelo admin.
+            const turmaSelecionada = document.getElementById("turma-agenda-seletor")?.value;
+            const urlTarefas = turmaSelecionada
+                ? "/api/tarefas?turmaId=" + encodeURIComponent(turmaSelecionada)
+                : "/api/tarefas";
+            const resposta = await fetch(urlTarefas, { cache: "no-store" });
             const dados = await resposta.json();
             if (!dados.sucesso) {
                 console.error(dados.mensagem);
