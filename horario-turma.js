@@ -91,24 +91,12 @@ module.exports = function registrarRotasHorarioTurma(app, pool, exigirLogin, exi
                 const turma = await pool.query("SELECT id, nome FROM turmas WHERE id = $1", [turmaId]);
                 if (!turma.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Turma não encontrada." });
                 resultado = await pool.query("SELECT configuracao, atualizado_em FROM horarios_turmas WHERE turma_id = $1", [turmaId]);
-                if (!resultado.rowCount) {
-                    resultado = await pool.query("SELECT configuracao, atualizado_em FROM horario_turma WHERE id = 1");
-                    resultado.rows[0] = {
-                        ...resultado.rows[0],
-                        configuracao: { ...resultado.rows[0].configuracao, turma: turma.rows[0].nome }
-                    };
-                }
+                if (!resultado.rowCount) return res.json({ sucesso: true, configuracao: null, semConfiguracao: true, turma: turma.rows[0].nome });
             } else if (usuario.tipo === "admin") {
                 resultado = await pool.query("SELECT configuracao, atualizado_em FROM horario_turma WHERE id = 1");
             } else {
                 resultado = await pool.query("SELECT configuracao, atualizado_em FROM horarios_turmas WHERE turma_id = $1", [usuario.turma_id]);
-                if (!resultado.rowCount) {
-                    resultado = await pool.query("SELECT configuracao, atualizado_em FROM horario_turma WHERE id = 1");
-                    resultado.rows[0] = {
-                        ...resultado.rows[0],
-                        configuracao: { ...resultado.rows[0].configuracao, turma: usuario.turma_nome || "Minha turma" }
-                    };
-                }
+                if (!resultado.rowCount) return res.json({ sucesso: true, configuracao: null, semConfiguracao: true, turma: usuario.turma_nome || "Minha turma" });
             }
 
             res.set("Cache-Control", "no-store");
