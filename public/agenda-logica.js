@@ -807,10 +807,11 @@ async function carregarTarefas() {
 
     try {
 
-        const resposta =
-            await fetch(
-                "/api/tarefas"
-            );
+        const turmaSelecionada = document.getElementById("turma-agenda-seletor")?.value;
+        const urlTarefas = turmaSelecionada
+            ? "/api/tarefas?turmaId=" + encodeURIComponent(turmaSelecionada)
+            : "/api/tarefas";
+        const resposta = await fetch(urlTarefas, { cache: "no-store" });
 
 
         const dados =
@@ -1447,7 +1448,18 @@ async function verificarSessao() {
                             String(t.nome).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) +
                             (t.anoLetivo ? ' · ' + t.anoLetivo : '') + '</option>'
                         ).join("");
-                        if (!turmasAtivas.length) seletorTurmaAgenda.innerHTML = '<option value="">Nenhuma turma ativa</option>';
+                        if (!turmasAtivas.length) {
+                            seletorTurmaAgenda.innerHTML = '<option value="">Nenhuma turma ativa</option>';
+                        } else {
+                            const turmaUrl = new URLSearchParams(window.location.search).get("turmaId");
+                            if (turmaUrl && turmasAtivas.some(t => String(t.id) === String(turmaUrl))) {
+                                seletorTurmaAgenda.value = String(turmaUrl);
+                            }
+                            seletorTurmaAgenda.addEventListener("change", () => {
+                                if (!seletorTurmaAgenda.value) return;
+                                window.location.href = "/agenda.html?turmaId=" + encodeURIComponent(seletorTurmaAgenda.value);
+                            });
+                        }
                     }
                 } catch (erroTurmas) {
                     console.error("Não foi possível carregar as turmas:", erroTurmas);
