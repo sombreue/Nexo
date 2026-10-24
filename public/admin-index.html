@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Turmas — Nexo Administração</title>
+  <link rel="icon" href="/imagens/favicon.ico?v=20261024">
+  <link rel="stylesheet" href="/global-temas-estilos.css?v=20261024">
+  <link rel="stylesheet" href="/navegacao-site.css?v=20261024">
+  <link rel="stylesheet" href="/admin-index-estilos.css?v=20261024">
+  <script>document.documentElement.dataset.theme = localStorage.getItem('agenda-auruda-tema') || 'ruby';</script>
+</head>
+<body>
+  <main class="admin-inicio">
+    <header class="admin-inicio-topo">
+      <a class="admin-inicio-logo" href="/admin-index.html" aria-label="Início do administrador">
+        <svg viewBox="0 0 640 480" role="img" aria-label="Nexo"><circle cx="306" cy="144" r="99" fill="var(--theme-accent)" stroke="currentColor" stroke-width="5"/><circle cx="98" cy="315" r="54" fill="var(--theme-accent)" stroke="currentColor" stroke-width="5"/><circle cx="489" cy="302" r="97" fill="var(--theme-accent)" stroke="currentColor" stroke-width="5"/><g fill="none" stroke="currentColor" stroke-width="20"><line x1="133" y1="275" x2="224" y2="201"/><line x1="416" y1="240" x2="381" y2="210"/></g><text x="323" y="394" fill="currentColor" font-family="serif" font-size="172" text-anchor="middle">NEXO</text></svg>
+      </a>
+      <div class="admin-inicio-identidade">
+        <span class="admin-inicio-selo">ADMINISTRAÇÃO GLOBAL</span>
+        <h1>Suas turmas</h1>
+        <p id="admin-inicio-boas-vindas">Carregando turmas...</p>
+      </div>
+      <nav class="admin-inicio-acoes" aria-label="Ações administrativas">
+        <a href="/admin-panel.html">Painel administrativo</a>
+        <button id="admin-inicio-sair" type="button">Sair</button>
+      </nav>
+    </header>
+
+    <section class="admin-inicio-intro">
+      <div>
+        <h2>Escolha uma turma para acessar</h2>
+        <p>Abra a agenda de uma turma para consultar ou editar o horário, as matérias e as tarefas daquele grupo. As configurações continuam separadas por turma.</p>
+      </div>
+      <a class="admin-inicio-gerenciar" href="/admin-panel.html#gerenciar-turmas">Gerenciar turmas</a>
+    </section>
+
+    <div class="admin-inicio-ferramentas">
+      <label for="admin-inicio-busca">Buscar turma</label>
+      <input id="admin-inicio-busca" type="search" placeholder="Ex.: 9º A" autocomplete="off">
+      <button id="admin-inicio-atualizar" type="button">Atualizar lista</button>
+    </div>
+
+    <p id="admin-inicio-status" class="admin-inicio-status" role="status" aria-live="polite"></p>
+    <section>
+      <div class="admin-inicio-secao-titulo"><h2>Turmas ativas</h2><span id="admin-inicio-total-ativas">—</span></div>
+      <div id="admin-inicio-ativas" class="admin-inicio-grid"><div class="admin-inicio-vazio">Carregando...</div></div>
+    </section>
+    <section class="admin-inicio-arquivadas-secao">
+      <div class="admin-inicio-secao-titulo"><h2>Turmas arquivadas</h2><span id="admin-inicio-total-arquivadas">—</span></div>
+      <div id="admin-inicio-arquivadas" class="admin-inicio-grid"><div class="admin-inicio-vazio">Carregando...</div></div>
+    </section>
+    <footer class="admin-inicio-rodape"><span>Nexo · Administração global</span><a href="/admin-panel.html">Configurações administrativas</a></footer>
+  </main>
+  <script src="/admin-index.js?v=20261024"></script>
+</body>
+</html>
