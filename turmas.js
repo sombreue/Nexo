@@ -136,8 +136,14 @@ module.exports = function registrarRotasTurmas(app, pool, exigirLogin, exigirAdm
             if (!data || !materia || (!descricao && !subtitulo)) return res.status(400).json({ sucesso: false, mensagem: "Preencha data, matéria e uma tarefa ou subtítulo." });
             let turmaId = Number(usuario.turma_id);
             if (usuario.tipo === "admin") {
-                turmaId = req.body?.turmaId == null || req.body.turmaId === "" ? NaN : Number(req.body.turmaId);
-                if (!Number.isSafeInteger(turmaId) || turmaId <= 0) return res.status(400).json({ sucesso: false, mensagem: "Selecione a turma da tarefa." });
+                if (req.body?.turmaId == null || req.body.turmaId === "") {
+                    const padrao = await pool.query("SELECT id FROM turmas WHERE ativa = TRUE ORDER BY id ASC LIMIT 1");
+                    if (!padrao.rowCount) return res.status(400).json({ sucesso: false, mensagem: "Crie uma turma ativa antes de adicionar tarefas." });
+                    turmaId = Number(padrao.rows[0].id);
+                } else {
+                    turmaId = Number(req.body.turmaId);
+                    if (!Number.isSafeInteger(turmaId) || turmaId <= 0) return res.status(400).json({ sucesso: false, mensagem: "Turma inválida." });
+                }
             }
             const turma = await pool.query("SELECT id FROM turmas WHERE id = $1 AND ativa = TRUE", [turmaId]);
             if (!turma.rowCount) return res.status(400).json({ sucesso: false, mensagem: "A turma não existe ou está inativa." });
