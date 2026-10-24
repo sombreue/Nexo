@@ -5,13 +5,16 @@
     let configuracao = null;
     let administrador = false;
     let representante = false;
+    const turmaSelecionadaAdmin = new URLSearchParams(window.location.search).get("turmaId");
+    const gerenciaTurma = () => representante || (administrador && Boolean(turmaSelecionadaAdmin));
+    const sufixoTurma = () => administrador && turmaSelecionadaAdmin ? "?turmaId=" + encodeURIComponent(turmaSelecionadaAdmin) : "";
     const materiasPadrao = ["Ciências", "Matemática", "Português", "Redação", "Bilíngue", "Artes", "Robótica", "Ed. Física", "Socioemocional", "Literatura", "Gramática", "História", "Química", "Geografia", "Física"];
     let materiasCatalogo = null;
 
     async function carregarMateriasCatalogo() {
         if (materiasCatalogo) return materiasCatalogo;
         try {
-            const resposta = await fetch("/api/materias", { cache: "no-store" });
+            const resposta = await fetch("/api/materias" + sufixoTurma(), { cache: "no-store" });
             if (!resposta.ok) throw new Error("Catálogo indisponível");
             const dados = await resposta.json();
             if (!dados.sucesso || !Array.isArray(dados.materias)) throw new Error("Catálogo inválido");
@@ -55,7 +58,7 @@
         html += '</tbody></table></div>';
         if (administrador || representante) {
             html += '<div class="horario-acoes-admin"><button type="button" id="editar-horario-turma">Editar horário da turma</button>' +
-                (representante ? '<button type="button" id="gerenciar-materias-turma">Gerenciar matérias da turma</button>' : '') +
+                (gerenciaTurma() ? '<button type="button" id="gerenciar-materias-turma">Gerenciar matérias da turma</button>' : '') +
                 '</div><div id="editor-horario-turma" hidden></div><div id="editor-materias-turma"></div>';
         }
         container.innerHTML = html;
@@ -64,7 +67,7 @@
     }
 
     async function abrirGerenciadorMaterias() {
-        if (!representante) return;
+        if (!gerenciaTurma()) return;
         const container = obterContainer();
         if (!container) return;
         let editor = document.getElementById("editor-materias-turma");
@@ -93,7 +96,7 @@
                 const botao = evento.currentTarget.querySelector('button[type="submit"]');
                 botao.disabled = true;
                 try {
-                    const r = await fetch("/api/materias", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ nome }) });
+                    const r = await fetch("/api/materias", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ nome, ...(administrador && turmaSelecionadaAdmin ? { turmaId: Number(turmaSelecionadaAdmin) } : {}) }) });
                     const d = await r.json();
                     if (!r.ok || !d.sucesso) throw new Error(d.mensagem || "Não foi possível adicionar a matéria.");
                     materiasCatalogo = null;
@@ -109,7 +112,7 @@
                 const status = editor.querySelector("#status-materias-turma");
                 botao.disabled = true;
                 try {
-                    const r = await fetch("/api/materias/" + encodeURIComponent(botao.dataset.desativarMateria), { method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ ativa: false }) });
+                    const r = await fetch("/api/materias/" + encodeURIComponent(botao.dataset.desativarMateria) + sufixoTurma(), { method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ ativa: false }) });
                     const d = await r.json();
                     if (!r.ok || !d.sucesso) throw new Error(d.mensagem || "Não foi possível desativar a matéria.");
                     materiasCatalogo = null;
@@ -213,7 +216,7 @@
             const resposta = await fetch("/api/horario-turma", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ configuracao: nova })
+                body: JSON.stringify({ configuracao: nova, ...(administrador && turmaSelecionadaAdmin ? { turmaId: Number(turmaSelecionadaAdmin) } : {}) })
             });
             const dados = await resposta.json();
             if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Falha ao salvar.");
@@ -230,7 +233,7 @@
     async function inicializar() {
         try {
             const [respostaHorario, respostaSessao] = await Promise.all([
-                fetch("/api/horario-turma", { cache: "no-store" }),
+                fetch("/api/horario-turma" + sufixoTurma(), { cache: "no-store" }),
                 fetch("/api/sessao", { cache: "no-store" })
             ]);
             if (!respostaHorario.ok) throw new Error("Falha ao carregar o horário.");
