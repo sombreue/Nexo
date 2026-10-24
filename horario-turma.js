@@ -85,7 +85,20 @@ module.exports = function registrarRotasHorarioTurma(app, pool, exigirLogin, exi
             }
 
             let resultado;
-            if (usuario.tipo === "admin") {
+            if (usuario.tipo === "admin" && req.query.turmaId != null) {
+                const turmaId = Number(req.query.turmaId);
+                if (!Number.isSafeInteger(turmaId) || turmaId <= 0) return res.status(400).json({ sucesso: false, mensagem: "Turma inválida." });
+                const turma = await pool.query("SELECT id, nome FROM turmas WHERE id = $1", [turmaId]);
+                if (!turma.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Turma não encontrada." });
+                resultado = await pool.query("SELECT configuracao, atualizado_em FROM horarios_turmas WHERE turma_id = $1", [turmaId]);
+                if (!resultado.rowCount) {
+                    resultado = await pool.query("SELECT configuracao, atualizado_em FROM horario_turma WHERE id = 1");
+                    resultado.rows[0] = {
+                        ...resultado.rows[0],
+                        configuracao: { ...resultado.rows[0].configuracao, turma: turma.rows[0].nome }
+                    };
+                }
+            } else if (usuario.tipo === "admin") {
                 resultado = await pool.query("SELECT configuracao, atualizado_em FROM horario_turma WHERE id = 1");
             } else {
                 resultado = await pool.query("SELECT configuracao, atualizado_em FROM horarios_turmas WHERE turma_id = $1", [usuario.turma_id]);
@@ -124,7 +137,22 @@ module.exports = function registrarRotasHorarioTurma(app, pool, exigirLogin, exi
 
             await garantirTabelas();
             let resultado;
-            if (usuario.tipo === "representante") {
+            const turmaAlvoAdmin = usuario.tipo === "admin" && req.body?.turmaId != null && req.body.turmaId !== ""
+                ? Number(req.body.turmaId) : null;
+            if (usuario.tipo === "admin" && turmaAlvoAdmin !== null) {
+                if (!Number.isSafeInteger(turmaAlvoAdmin) || turmaAlvoAdmin <= 0) return res.status(400).json({ sucesso: false, mensagem: "Turma inválida." });
+                const turma = await pool.query("SELECT id, nome FROM turmas WHERE id = $1", [turmaAlvoAdmin]);
+                if (!turma.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Turma não encontrada." });
+                const configuracaoDaTurma = { ...configuracao, turma: turma.rows[0].nome };
+                resultado = await pool.query(
+                    `INSERT INTO horarios_turmas (turma_id, configuracao, atualizado_em, atualizado_por)
+                     VALUES ($1, $2::jsonb, NOW(), $3)
+                     ON CONFLICT (turma_id) DO UPDATE SET configuracao = EXCLUDED.configuracao,
+                        atualizado_em = NOW(), atualizado_por = EXCLUDED.atualizado_por
+                     RETURNING configuracao, atualizado_em`,
+                    [turmaAlvoAdmin, JSON.stringify(configuracaoDaTurma), usuario.id]
+                );
+            } else if (usuario.tipo === "representante") {
                 const configuracaoDaTurma = { ...configuracao, turma: usuario.turma_nome || configuracao.turma };
                 resultado = await pool.query(
                     `INSERT INTO horarios_turmas (turma_id, configuracao, atualizado_em, atualizado_por)
