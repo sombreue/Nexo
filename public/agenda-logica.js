@@ -688,7 +688,7 @@ function criarTarefa(
 
     if (
         usuarioAtual &&
-        usuarioAtual.tipo === "admin"
+        ["admin", "representante"].includes(usuarioAtual.tipo)
     ) {
 
         const areaBotoes =
@@ -1425,7 +1425,7 @@ async function verificarSessao() {
         if (areaAdicionar) {
 
             areaAdicionar.style.display =
-                dados.tipo === "admin"
+                ["admin", "representante"].includes(dados.tipo)
                     ? "block"
                     : "none";
 
