@@ -239,10 +239,21 @@
             if (!respostaHorario.ok) throw new Error("Falha ao carregar o horário.");
             const dados = await respostaHorario.json();
             const sessao = await respostaSessao.json();
-            if (!dados.sucesso || !dados.configuracao) throw new Error(dados.mensagem || "Horário indisponível.");
-            configuracao = dados.configuracao;
+            if (!dados.sucesso) throw new Error(dados.mensagem || "Horário indisponível.");
             administrador = Boolean(sessao.logado && sessao.tipo === "admin");
             representante = Boolean(sessao.logado && sessao.tipo === "representante");
+            if (!dados.configuracao) {
+                configuracao = { turma: dados.turma || "Esta turma", dias: [{id:1,nome:"Segunda"},{id:2,nome:"Terça"},{id:3,nome:"Quarta"},{id:4,nome:"Quinta"},{id:5,nome:"Sexta"}], periodos: [{inicio:"07:00",fim:"07:50",tipo:"aula",materias:["","","","",""]}] };
+                window.NEXO_HORARIO_TURMA = null;
+                const container = obterContainer();
+                if (container) {
+                    container.innerHTML = '<p class="horario-carregando">Esta turma ainda não tem um horário próprio configurado.</p>' +
+                        ((administrador || representante) ? '<div class="horario-acoes-admin"><button type="button" id="criar-horario-turma">Configurar horário desta turma</button></div><div id="editor-horario-turma" hidden></div><div id="editor-materias-turma"></div>' : '');
+                    document.getElementById("criar-horario-turma")?.addEventListener("click", abrirEditor);
+                }
+                return;
+            }
+            configuracao = dados.configuracao;
             window.NEXO_HORARIO_TURMA = configuracao;
             renderizarGrade();
             window.dispatchEvent(new CustomEvent("nexo:horario-carregado", { detail: configuracao }));
@@ -253,7 +264,7 @@
 
     const funcaoOriginal = window.obterMateriasDoDia;
     window.obterMateriasDoDia = function (data) {
-        if (!configuracao || !data) return typeof funcaoOriginal === "function" ? funcaoOriginal(data) : [];
+        if (!configuracao || !data) return [];
         const partes = data.split("-").map(Number);
         const diaSemana = new Date(partes[0], partes[1] - 1, partes[2]).getDay();
         const indiceDia = configuracao.dias.findIndex(d => d.id === diaSemana);
