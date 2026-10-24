@@ -136,12 +136,7 @@ app.get("/admin-panel.html", (req, res) => {
 app.get("/admin-index.html", (req, res) => {
     if (!req.session?.usuario) return res.redirect("/login.html");
     if (req.session.usuario.tipo !== "admin") return res.redirect("/");
-    res.set({
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0"
-    });
-    res.sendFile(path.join(__dirname, "public", "admin-index.html"));
+    return res.redirect("/admin-panel.html");
 });
 
 app.use(express.static("public", { index: false }));
@@ -153,9 +148,9 @@ app.get("/", (req, res) => {
     // O detector considera apenas telefones, evitando tratar tablets como celular.
     const userAgent = String(req.headers["user-agent"] || "");
     const celular = /Mobi|Android.*Mobile|iPhone|iPod/i.test(userAgent);
-    // O administrador global começa pela página de seleção de turmas.
+    // O painel global reúne seleção de turmas e ferramentas administrativas.
     if (req.session.usuario.tipo === "admin") {
-        return res.sendFile(path.join(__dirname, "public", "admin-index.html"));
+        return res.sendFile(path.join(__dirname, "public", "admin-panel.html"));
     }
 
     const paginaInicial = celular ? "hoje.html" : "index.html";
