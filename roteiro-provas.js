@@ -18,8 +18,8 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
         ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS etapa SMALLINT NOT NULL DEFAULT 1;
         ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS tipo VARCHAR(12) NOT NULL DEFAULT 'parcial';
         ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS turma_id BIGINT;
-        UPDATE roteiro_provas SET turma_id = (SELECT id FROM turmas WHERE ativa = TRUE ORDER BY id ASC LIMIT 1)
-        WHERE turma_id IS NULL AND EXISTS (SELECT 1 FROM turmas WHERE ativa = TRUE);
+        UPDATE roteiro_provas SET turma_id = (SELECT id FROM turmas ORDER BY id ASC LIMIT 1)
+        WHERE turma_id IS NULL AND EXISTS (SELECT 1 FROM turmas);
         CREATE INDEX IF NOT EXISTS roteiro_provas_etapa_tipo_idx ON roteiro_provas (etapa, tipo, data_prova);
         CREATE INDEX IF NOT EXISTS roteiro_provas_turma_data_idx ON roteiro_provas (turma_id, data_prova);
     `));
