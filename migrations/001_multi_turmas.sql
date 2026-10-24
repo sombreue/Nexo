@@ -35,7 +35,7 @@ BEGIN
     LOOP
         EXECUTE format('ALTER TABLE usuarios DROP CONSTRAINT %I', c.conname);
     END LOOP;
-END $$;
+END; $$;
 
 UPDATE usuarios
 SET tipo = 'usuario'
@@ -61,7 +61,7 @@ BEGIN
             ADD CONSTRAINT usuarios_turma_fk
             FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE RESTRICT;
     END IF;
-END $$;
+END; $$;
 
 -- Administradores são globais; contas comuns e representantes precisam de turma.
 ALTER TABLE usuarios
@@ -103,7 +103,7 @@ BEGIN
             ADD CONSTRAINT tarefas_turma_fk
             FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE RESTRICT;
     END IF;
-END $$;
+END; $$;
 
 CREATE INDEX IF NOT EXISTS tarefas_turma_data_idx
     ON tarefas (turma_id, data DESC, id DESC);
@@ -139,7 +139,7 @@ BEGIN
             ADD CONSTRAINT trabalhos_turma_fk
             FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE RESTRICT;
     END IF;
-END $$;
+END; $$;
 
 CREATE INDEX IF NOT EXISTS trabalhos_turma_prazo_idx
     ON trabalhos (turma_id, prazo, id DESC);
