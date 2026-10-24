@@ -10,6 +10,8 @@
     const status = $("status-admin");
     const campoSenha = $("nova-senha");
     const botaoMostrarSenha = $("botao-mostrar-senha");
+    const buscaTurmas = $("admin-inicio-busca");
+    let turmasParaAbrir = [];
 
     usuarioLogado.textContent = "Carregando painel...";
 
@@ -98,6 +100,45 @@
         } catch (erro) {
             listaTurmas.innerHTML = '<div class="estado-vazio">' + escapar(erro.message) + '</div>';
             seletorTurmaConta.innerHTML = '<option value="">Não foi possível carregar turmas</option>';
+        }
+    }
+
+    function renderizarTurmasParaAbrir() {
+        if (!buscaTurmas) return;
+        const termo = buscaTurmas.value.trim().toLocaleLowerCase("pt-BR");
+        const filtradas = turmasParaAbrir.filter(t =>
+            String(t.nome || "").toLocaleLowerCase("pt-BR").includes(termo) ||
+            String(t.anoLetivo || "").includes(termo)
+        );
+        const ativas = filtradas.filter(t => t.ativa);
+        const arquivadas = filtradas.filter(t => !t.ativa);
+        $("admin-inicio-total-ativas").textContent = String(ativas.length);
+        $("admin-inicio-total-arquivadas").textContent = String(arquivadas.length);
+        const card = turma => {
+            const nome = escapar(turma.nome);
+            const ano = turma.anoLetivo ? "Ano letivo " + escapar(turma.anoLetivo) : "Turma do Nexo";
+            const estado = turma.ativa ? "Ativa" : "Arquivada";
+            return '<a class="admin-turma-card" href="/agenda.html?turmaId=' + encodeURIComponent(turma.id) + '">' +
+                '<div class="admin-turma-card-topo"><span class="admin-turma-card-icone" aria-hidden="true">▦</span><span class="admin-turma-card-status">' + estado + '</span></div>' +
+                '<h3>' + nome + '</h3><p>' + ano + '</p><span class="admin-turma-card-abrir">Acessar turma →</span></a>';
+        };
+        $("admin-inicio-ativas").innerHTML = ativas.map(card).join("") || '<div class="admin-inicio-vazio">Nenhuma turma ativa corresponde à busca.</div>';
+        $("admin-inicio-arquivadas").innerHTML = arquivadas.map(card).join("") || '<div class="admin-inicio-vazio">Nenhuma turma arquivada corresponde à busca.</div>';
+    }
+
+    async function carregarTurmasParaAbrir() {
+        const area = $("admin-inicio-status");
+        if (!area) return;
+        area.textContent = "Atualizando turmas...";
+        try {
+            const dados = await json(await fetch("/api/turmas", {credentials:"same-origin", cache:"no-store"}));
+            turmasParaAbrir = Array.isArray(dados.turmas) ? dados.turmas : [];
+            renderizarTurmasParaAbrir();
+            area.textContent = turmasParaAbrir.length ? "Lista atualizada." : "Ainda não há turmas cadastradas.";
+        } catch (erro) {
+            area.textContent = erro.message;
+            $("admin-inicio-ativas").innerHTML = '<div class="admin-inicio-vazio">Não foi possível carregar as turmas.</div>';
+            $("admin-inicio-arquivadas").innerHTML = "";
         }
     }
 
@@ -231,6 +272,8 @@
 
     seletorTipoConta.addEventListener("change", atualizarSeletorTurmaConta);
     $("botao-atualizar-turmas").addEventListener("click", carregarTurmas);
+    if (buscaTurmas) buscaTurmas.addEventListener("input", renderizarTurmasParaAbrir);
+    $("admin-inicio-atualizar")?.addEventListener("click", carregarTurmasParaAbrir);
 
     listaSessoes.addEventListener("click", async evento => {
         const botao = evento.target.closest("[data-encerrar-sessao]");
@@ -283,6 +326,6 @@
 
     (async () => {
         usuarioLogado.textContent = "Painel administrativo";
-        await Promise.all([carregarTurmas(), carregarUsuarios(), carregarSessoes()]);
+        await Promise.all([carregarTurmas(), carregarUsuarios(), carregarSessoes(), carregarTurmasParaAbrir()]);
     })();
 })();
