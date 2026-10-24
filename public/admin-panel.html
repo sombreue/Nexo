@@ -6,7 +6,8 @@
     <link rel="icon" href="/favicon.ico?v=20260914" type="image/x-icon">
     <title>Painel de administração</title>
     <link rel="stylesheet" href="global-temas-estilos.css?v=20261006">
-    <link rel="stylesheet" href="admin-panel-estilos.css?v=20261006">
+    <link rel="stylesheet" href="admin-panel-estilos.css?v=20261024-unificado">
+    <link rel="stylesheet" href="/admin-index-estilos.css?v=20261024-unificado">
     <script>document.documentElement.dataset.theme = localStorage.getItem('agenda-auruda-tema') || 'ruby';</script>
 </head>
 <body>
@@ -23,6 +24,28 @@
 </header>
 
 <main class="admin-container">
+    <section class="admin-inicio-selecao-turmas" aria-labelledby="titulo-selecao-turmas">
+        <div class="admin-inicio-intro">
+            <div>
+                <h2 id="titulo-selecao-turmas">Acessar uma turma</h2>
+                <p>Selecione uma turma para abrir sua agenda. Abaixo ficam as ferramentas de administração global.</p>
+            </div>
+            <button type="button" id="admin-inicio-atualizar" class="botao-secundario">Atualizar turmas</button>
+        </div>
+        <div class="admin-inicio-ferramentas">
+            <label for="admin-inicio-busca">Buscar turma</label>
+            <input id="admin-inicio-busca" type="search" placeholder="Ex.: 9º A" autocomplete="off">
+        </div>
+        <p id="admin-inicio-status" class="admin-inicio-status" role="status" aria-live="polite"></p>
+        <section>
+            <div class="admin-inicio-secao-titulo"><h2>Turmas ativas</h2><span id="admin-inicio-total-ativas">—</span></div>
+            <div id="admin-inicio-ativas" class="admin-inicio-grid"><div class="admin-inicio-vazio">Carregando...</div></div>
+        </section>
+        <section class="admin-inicio-arquivadas-secao">
+            <div class="admin-inicio-secao-titulo"><h2>Turmas arquivadas</h2><span id="admin-inicio-total-arquivadas">—</span></div>
+            <div id="admin-inicio-arquivadas" class="admin-inicio-grid"><div class="admin-inicio-vazio">Carregando...</div></div>
+        </section>
+    </section>
     <section class="admin-grid-links" aria-label="Ferramentas administrativas">
         <a class="admin-link-card" href="/materias.html">
             <span class="admin-link-icone">📚</span>
