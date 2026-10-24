@@ -12,12 +12,13 @@ module.exports = function registrarRotasTurmas(app, pool, exigirLogin, exigirAdm
 
     app.get("/api/turmas", exigirLogin, async (req, res) => {
         try {
-            const usuario = req.session.usuario;
+            const usuario = await usuarioAtual(req);
+            if (!usuario) return res.status(401).json({ sucesso: false, mensagem: "Conta não encontrada." });
             const resultado = usuario.tipo === "admin"
                 ? await pool.query("SELECT id, nome, ano_letivo AS \"anoLetivo\", ativa FROM turmas ORDER BY ativa DESC, ano_letivo DESC NULLS LAST, nome ASC")
                 : await pool.query("SELECT id, nome, ano_letivo AS \"anoLetivo\", ativa FROM turmas WHERE id = $1", [usuario.turma_id]);
             res.set("Cache-Control", "no-store");
-            res.json({ sucesso: true, turmas: resultado.rows, turmaId: usuario.turma_id ?? null });
+            res.json({ sucesso: true, turmas: resultado.rows, turmaId: usuario.turma_id == null ? null : Number(usuario.turma_id) });
         } catch (erro) {
             console.error("Erro ao listar turmas:", erro);
             res.status(500).json({ sucesso: false, mensagem: "Não foi possível carregar as turmas. Confirme se a migração foi aplicada." });
