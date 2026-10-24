@@ -1,4 +1,4 @@
-/* Configuração compartilhada do horário da turma. */
+/* Horário padrão e configurações isoladas por turma. */
 module.exports = function registrarRotasHorarioTurma(app, pool, exigirLogin, exigirAdmin) {
     const PADRAO = {
         turma: "8º B",
@@ -22,7 +22,7 @@ module.exports = function registrarRotasHorarioTurma(app, pool, exigirLogin, exi
 
     function validarConfiguracao(valor) {
         if (!valor || typeof valor !== "object" || typeof valor.turma !== "string" ||
-            !valor.turma.trim() || valor.turma.trim().length > 60 ||
+            !valor.turma.trim() || valor.turma.trim().length > 100 ||
             !Array.isArray(valor.dias) || valor.dias.length < 1 || valor.dias.length > 7 ||
             !Array.isArray(valor.periodos) || valor.periodos.length < 1 || valor.periodos.length > 16) return false;
 
@@ -43,7 +43,7 @@ module.exports = function registrarRotasHorarioTurma(app, pool, exigirLogin, exi
         });
     }
 
-    async function garantirTabela() {
+    async function garantirTabelas() {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS horario_turma (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -56,12 +56,48 @@ module.exports = function registrarRotasHorarioTurma(app, pool, exigirLogin, exi
             "INSERT INTO horario_turma (id, configuracao) VALUES (1, $1::jsonb) ON CONFLICT (id) DO NOTHING",
             [JSON.stringify(PADRAO)]
         );
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS horarios_turmas (
+                turma_id BIGINT PRIMARY KEY REFERENCES turmas(id) ON DELETE CASCADE,
+                configuracao JSONB NOT NULL,
+                atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                atualizado_por INTEGER REFERENCES usuarios(id) ON DELETE SET NULL
+            )
+        `);
+    }
+
+    async function obterUsuario(req) {
+        const r = await pool.query(
+            "SELECT u.id, u.tipo, u.turma_id, t.nome AS turma_nome, t.ativa AS turma_ativa FROM usuarios u LEFT JOIN turmas t ON t.id = u.turma_id WHERE u.id = $1",
+            [req.session.usuario.id]
+        );
+        return r.rows[0] || null;
     }
 
     app.get("/api/horario-turma", exigirLogin, async (req, res) => {
         try {
-            await garantirTabela();
-            const resultado = await pool.query("SELECT configuracao, atualizado_em FROM horario_turma WHERE id = 1");
+            await garantirTabelas();
+            const usuario = await obterUsuario(req);
+            if (!usuario) return res.status(401).json({ sucesso: false, mensagem: "Conta não encontrada." });
+
+            if (usuario.tipo !== "admin" && !usuario.turma_id) {
+                return res.status(403).json({ sucesso: false, mensagem: "Sua conta não está vinculada a uma turma." });
+            }
+
+            let resultado;
+            if (usuario.tipo === "admin") {
+                resultado = await pool.query("SELECT configuracao, atualizado_em FROM horario_turma WHERE id = 1");
+            } else {
+                resultado = await pool.query("SELECT configuracao, atualizado_em FROM horarios_turmas WHERE turma_id = $1", [usuario.turma_id]);
+                if (!resultado.rowCount) {
+                    resultado = await pool.query("SELECT configuracao, atualizado_em FROM horario_turma WHERE id = 1");
+                    resultado.rows[0] = {
+                        ...resultado.rows[0],
+                        configuracao: { ...resultado.rows[0].configuracao, turma: usuario.turma_nome || "Minha turma" }
+                    };
+                }
+            }
+
             res.set("Cache-Control", "no-store");
             res.json({ sucesso: true, configuracao: resultado.rows[0].configuracao, atualizadoEm: resultado.rows[0].atualizado_em });
         } catch (erro) {
@@ -70,22 +106,44 @@ module.exports = function registrarRotasHorarioTurma(app, pool, exigirLogin, exi
         }
     });
 
-    app.put("/api/horario-turma", exigirAdmin, async (req, res) => {
+    app.put("/api/horario-turma", exigirLogin, async (req, res) => {
         try {
+            const usuario = await obterUsuario(req);
+            if (!usuario) return res.status(401).json({ sucesso: false, mensagem: "Conta não encontrada." });
+            if (!["admin", "representante"].includes(usuario.tipo)) {
+                return res.status(403).json({ sucesso: false, mensagem: "Somente o administrador ou o representante da turma pode editar o horário." });
+            }
+            if (usuario.tipo === "representante" && (!usuario.turma_id || !usuario.turma_ativa)) {
+                return res.status(403).json({ sucesso: false, mensagem: "Sua conta não está vinculada a uma turma ativa." });
+            }
+
             const configuracao = req.body?.configuracao;
             if (!validarConfiguracao(configuracao)) {
                 return res.status(400).json({ sucesso: false, mensagem: "A configuração do horário é inválida. Confira os dias, períodos e horários." });
             }
 
-            await garantirTabela();
-            const resultado = await pool.query(
-                `INSERT INTO horario_turma (id, configuracao, atualizado_em, atualizado_por)
-                 VALUES (1, $1::jsonb, NOW(), $2)
-                 ON CONFLICT (id) DO UPDATE SET configuracao = EXCLUDED.configuracao,
-                    atualizado_em = NOW(), atualizado_por = EXCLUDED.atualizado_por
-                 RETURNING configuracao, atualizado_em`,
-                [JSON.stringify(configuracao), req.session.usuario.id]
-            );
+            await garantirTabelas();
+            let resultado;
+            if (usuario.tipo === "representante") {
+                const configuracaoDaTurma = { ...configuracao, turma: usuario.turma_nome || configuracao.turma };
+                resultado = await pool.query(
+                    `INSERT INTO horarios_turmas (turma_id, configuracao, atualizado_em, atualizado_por)
+                     VALUES ($1, $2::jsonb, NOW(), $3)
+                     ON CONFLICT (turma_id) DO UPDATE SET configuracao = EXCLUDED.configuracao,
+                        atualizado_em = NOW(), atualizado_por = EXCLUDED.atualizado_por
+                     RETURNING configuracao, atualizado_em`,
+                    [usuario.turma_id, JSON.stringify(configuracaoDaTurma), usuario.id]
+                );
+            } else {
+                resultado = await pool.query(
+                    `INSERT INTO horario_turma (id, configuracao, atualizado_em, atualizado_por)
+                     VALUES (1, $1::jsonb, NOW(), $2)
+                     ON CONFLICT (id) DO UPDATE SET configuracao = EXCLUDED.configuracao,
+                        atualizado_em = NOW(), atualizado_por = EXCLUDED.atualizado_por
+                     RETURNING configuracao, atualizado_em`,
+                    [JSON.stringify(configuracao), usuario.id]
+                );
+            }
             res.json({ sucesso: true, configuracao: resultado.rows[0].configuracao, atualizadoEm: resultado.rows[0].atualizado_em });
         } catch (erro) {
             console.error("Erro ao salvar horário da turma:", erro);
