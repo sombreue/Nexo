@@ -4,7 +4,8 @@
   "description": "Nexo — plataforma de organização escolar e estudos",
   "main": "server.js",
   "scripts": {
-    "start": "node start.js"
+    "start": "node start.js",
+    "db:migrate:multi-turmas": "node scripts/aplicar-migracao.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
