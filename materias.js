@@ -62,7 +62,18 @@ module.exports = function registrarRotasMaterias(app, pool, exigirLogin, exigirA
             if (!usuario) return res.status(401).json({ sucesso: false, mensagem: "Conta não encontrada." });
 
             let resultado;
-            if (usuario.tipo === "admin") {
+            const turmaIdAdmin = usuario.tipo === "admin" && req.query.turmaId != null ? Number(req.query.turmaId) : null;
+            if (usuario.tipo === "admin" && req.query.turmaId != null) {
+                if (!Number.isSafeInteger(turmaIdAdmin) || turmaIdAdmin <= 0) return res.status(400).json({ sucesso: false, mensagem: "Turma inválida." });
+                const turma = await pool.query("SELECT id FROM turmas WHERE id = $1", [turmaIdAdmin]);
+                if (!turma.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Turma não encontrada." });
+                await garantirMateriasDaTurma(turmaIdAdmin);
+                const incluirInativas = req.query.todas === "1";
+                resultado = await pool.query(
+                    `SELECT id, nome, ativa, 0 AS ordem FROM turma_materias WHERE turma_id = $1 ${incluirInativas ? "" : "AND ativa = TRUE"} ORDER BY nome ASC`,
+                    [turmaIdAdmin]
+                );
+            } else if (usuario.tipo === "admin") {
                 const incluirInativas = req.query.todas === "1";
                 resultado = await pool.query(
                     `SELECT id, nome, ativa, ordem FROM materias_catalogo ${incluirInativas ? "" : "WHERE ativa = TRUE"} ORDER BY ordem ASC, nome ASC`
@@ -92,12 +103,16 @@ module.exports = function registrarRotasMaterias(app, pool, exigirLogin, exigirA
             const nome = typeof req.body?.nome === "string" ? req.body.nome.trim() : "";
             if (!validarNome(nome)) return res.status(400).json({ sucesso: false, mensagem: "Informe uma matéria de até 80 caracteres." });
 
-            if (usuario.tipo === "representante") {
-                if (!usuario.turma_id) return res.status(403).json({ sucesso: false, mensagem: "Sua conta não está vinculada a uma turma." });
-                await garantirMateriasDaTurma(usuario.turma_id);
+            const turmaIdAdmin = usuario.tipo === "admin" && req.body?.turmaId != null && req.body.turmaId !== "" ? Number(req.body.turmaId) : null;
+            if (usuario.tipo === "representante" || (usuario.tipo === "admin" && turmaIdAdmin !== null)) {
+                const turmaId = usuario.tipo === "representante" ? usuario.turma_id : turmaIdAdmin;
+                if (!Number.isSafeInteger(Number(turmaId)) || Number(turmaId) <= 0) return res.status(400).json({ sucesso: false, mensagem: "Selecione uma turma válida." });
+                const turma = await pool.query("SELECT id FROM turmas WHERE id = $1", [Number(turmaId)]);
+                if (!turma.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Turma não encontrada." });
+                await garantirMateriasDaTurma(Number(turmaId));
                 const r = await pool.query(
                     "INSERT INTO turma_materias (turma_id, nome, ativa) VALUES ($1, $2, TRUE) RETURNING id, nome, ativa, 0 AS ordem",
-                    [usuario.turma_id, nome]
+                    [Number(turmaId), nome]
                 );
                 return res.status(201).json({ sucesso: true, materia: r.rows[0] });
             }
@@ -128,12 +143,14 @@ module.exports = function registrarRotasMaterias(app, pool, exigirLogin, exigirA
             const ativa = req.body?.ativa;
             const ordem = req.body?.ordem;
 
-            if (usuario.tipo === "representante") {
-                if (!usuario.turma_id) return res.status(403).json({ sucesso: false, mensagem: "Sua conta não está vinculada a uma turma." });
+            const turmaIdAdmin = usuario.tipo === "admin" && req.query.turmaId != null ? Number(req.query.turmaId) : null;
+            if (usuario.tipo === "representante" || (usuario.tipo === "admin" && req.query.turmaId != null)) {
+                const turmaId = usuario.tipo === "representante" ? usuario.turma_id : turmaIdAdmin;
+                if (!Number.isSafeInteger(Number(turmaId)) || Number(turmaId) <= 0) return res.status(400).json({ sucesso: false, mensagem: "Selecione uma turma válida." });
                 if (typeof ativa !== "boolean") return res.status(400).json({ sucesso: false, mensagem: "Informe se a matéria ficará ativa." });
                 const r = await pool.query(
                     "UPDATE turma_materias SET ativa = $1 WHERE id = $2 AND turma_id = $3 RETURNING id, nome, ativa, 0 AS ordem",
-                    [ativa, id, usuario.turma_id]
+                    [ativa, id, Number(turmaId)]
                 );
                 if (!r.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Matéria não encontrada nesta turma." });
                 return res.json({ sucesso: true, materia: r.rows[0] });

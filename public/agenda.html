@@ -91,14 +91,14 @@
     <section id="lista-tarefas"></section>
     <section id="modal-senha" class="modal-senha"><div class="conteudo-modal"><h2>Alterar senha</h2><p id="usuario-senha"></p><input type="password" id="senha-alterada" placeholder="Digite a nova senha"><div class="botoes-modal"><button onclick="confirmarAlteracaoSenha()">Alterar senha</button><button class="cancelar" onclick="fecharModalSenha()">Cancelar</button></div></div></section>
 </main>
-<script src="agenda-logica.js?v=20261024-representante"></script><script src="global-temas.js?v=20260907-lightfix5"></script><script src="agenda-temas-integracao.js?v=20260907-3"></script><script src="agenda-painel-admin.js?v=20260907-1"></script><script src="agenda-horarios.js?v=20260907-1"></script><script src="agenda-configuracao-horario.js?v=20261024-representante"></script><script src="global-notificacoes.js?v=20260918"></script>
+<script src="agenda-logica.js?v=20261024-admin-turmas"></script><script src="global-temas.js?v=20260907-lightfix5"></script><script src="agenda-temas-integracao.js?v=20260907-3"></script><script src="agenda-painel-admin.js?v=20260907-1"></script><script src="agenda-horarios.js?v=20260907-1"></script><script src="agenda-configuracao-horario.js?v=20261024-admin-turmas"></script><script src="global-notificacoes.js?v=20260918"></script>
 <script>
 (function () {
     const materias = () => Array.from(document.querySelectorAll('#painel-materias input[type="checkbox"]'));
 
     async function carregarMateriasDoCatalogo() {
         try {
-            const resposta = await fetch("/api/materias", { cache: "no-store" });
+            const resposta = await fetch("/api/materias" + (new URLSearchParams(window.location.search).get("turmaId") ? "?turmaId=" + encodeURIComponent(new URLSearchParams(window.location.search).get("turmaId")) : ""), { cache: "no-store" });
             if (!resposta.ok) return;
             const dados = await resposta.json();
             if (!dados.sucesso || !Array.isArray(dados.materias)) return;
