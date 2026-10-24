@@ -47,11 +47,12 @@ module.exports = function registrarRotasMaterias(app, pool, exigirLogin, exigirA
     }
 
     async function garantirMateriasDaTurma(turmaId) {
+        // O catálogo global não é copiado dinamicamente para cada turma.
         await pool.query(
             `INSERT INTO turma_materias (turma_id, nome, ativa)
-             SELECT $1, nome, TRUE FROM materias_catalogo WHERE ativa = TRUE
+             SELECT $1, nome, TRUE FROM unnest($2::text[]) AS nome
              ON CONFLICT (turma_id, nome) DO NOTHING`,
-            [turmaId]
+            [turmaId, PADRAO]
         );
     }
 
