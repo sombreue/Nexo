@@ -3,6 +3,10 @@
     const usuarioLogado = $("admin-usuario");
     const listaUsuarios = $("lista-usuarios");
     const listaSessoes = $("lista-sessoes");
+    const listaTurmas = $("lista-turmas");
+    const statusTurmas = $("status-turmas");
+    const seletorTurmaConta = $("turma-nova-conta");
+    const seletorTipoConta = $("tipo-nova-conta");
     const status = $("status-admin");
     const campoSenha = $("nova-senha");
     const botaoMostrarSenha = $("botao-mostrar-senha");
@@ -69,6 +73,41 @@
         }
     }
 
+
+    async function carregarTurmas() {
+        try {
+            const dados = await json(await fetch("/api/turmas", {credentials:"same-origin", cache:"no-store"}));
+            const ativas = dados.turmas.filter(t => t.ativa);
+            const anterior = seletorTurmaConta.value;
+            seletorTurmaConta.innerHTML = '<option value="">Selecione a turma</option>' + ativas.map(t =>
+                '<option value="' + escapar(t.id) + '">' + escapar(t.nome) + (t.anoLetivo ? ' · ' + escapar(t.anoLetivo) : '') + '</option>'
+            ).join("");
+            if (ativas.some(t => String(t.id) === anterior)) seletorTurmaConta.value = anterior;
+            atualizarSeletorTurmaConta();
+            listaTurmas.innerHTML = dados.turmas.map(t => `
+                <article class="usuario-admin-item">
+                    <div class="item-principal">
+                        <strong>${escapar(t.nome)}</strong>
+                        <span class="item-meta">${t.anoLetivo ? "Ano letivo " + escapar(t.anoLetivo) + " · " : ""}${t.ativa ? "Ativa" : "Arquivada"}</span>
+                    </div>
+                    <div class="usuario-acoes">
+                        <button type="button" data-alterar-turma="${escapar(t.id)}" data-ativa-turma="${t.ativa ? "false" : "true"}">${t.ativa ? "Arquivar" : "Reativar"}</button>
+                    </div>
+                </article>`
+            ).join("") || '<div class="estado-vazio">Nenhuma turma criada.</div>';
+        } catch (erro) {
+            listaTurmas.innerHTML = '<div class="estado-vazio">' + escapar(erro.message) + '</div>';
+            seletorTurmaConta.innerHTML = '<option value="">Não foi possível carregar turmas</option>';
+        }
+    }
+
+    function atualizarSeletorTurmaConta() {
+        const adminGlobal = seletorTipoConta.value === "admin";
+        seletorTurmaConta.disabled = adminGlobal;
+        seletorTurmaConta.required = !adminGlobal;
+        if (adminGlobal) seletorTurmaConta.value = "";
+    }
+
     async function carregarUsuarios() {
         try {
             const dados = await json(await fetch("/api/admin/usuarios", {credentials:"same-origin", cache:"no-store"}));
@@ -77,7 +116,7 @@
                 <article class="usuario-admin-item">
                     <div class="item-principal">
                         <strong>${escapar(usuario.usuario)}</strong>
-                        <span class="item-meta">${usuario.tipo === "admin" ? "Administrador" : "Usuário"}</span>
+                        <span class="item-meta">${usuario.tipo === "admin" ? "Administrador global" : usuario.tipo === "representante" ? "Representante de turma" : "Usuário"}${usuario.turmaNome ? " · " + escapar(usuario.turmaNome) : ""}</span>
                     </div>
                     <div class="usuario-acoes">
                         <button type="button" data-alterar-senha="${usuario.id}">Mudar senha</button>
@@ -157,6 +196,42 @@
         } catch (erro) { status.textContent = erro.message; }
     });
 
+
+    listaTurmas.addEventListener("click", async evento => {
+        const botao = evento.target.closest("[data-alterar-turma]");
+        if (!botao) return;
+        const ativa = botao.dataset.ativaTurma === "true";
+        if (!confirm(ativa ? "Reativar esta turma?" : "Arquivar esta turma? Os dados históricos serão mantidos.")) return;
+        try {
+            await json(await fetch("/api/turmas/" + encodeURIComponent(botao.dataset.alterarTurma), {
+                method:"PATCH", credentials:"same-origin",
+                headers:{"Content-Type":"application/json"}, body:JSON.stringify({ativa})
+            }));
+            statusTurmas.textContent = ativa ? "Turma reativada." : "Turma arquivada.";
+            await carregarTurmas();
+        } catch (erro) { statusTurmas.textContent = erro.message; }
+    });
+
+    $("form-criar-turma").addEventListener("submit", async evento => {
+        evento.preventDefault();
+        statusTurmas.textContent = "Criando turma...";
+        const nome = $("nova-turma-nome").value.trim();
+        const ano = $("nova-turma-ano").value;
+        try {
+            await json(await fetch("/api/turmas", {
+                method:"POST", credentials:"same-origin",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({nome, anoLetivo: ano ? Number(ano) : null})
+            }));
+            statusTurmas.textContent = "Turma criada com sucesso.";
+            evento.target.reset();
+            await carregarTurmas();
+        } catch (erro) { statusTurmas.textContent = erro.message; }
+    });
+
+    seletorTipoConta.addEventListener("change", atualizarSeletorTurmaConta);
+    $("botao-atualizar-turmas").addEventListener("click", carregarTurmas);
+
     listaSessoes.addEventListener("click", async evento => {
         const botao = evento.target.closest("[data-encerrar-sessao]");
         if (!botao) return;
@@ -178,7 +253,8 @@
                 body:JSON.stringify({
                     usuario:$("novo-usuario").value.trim(),
                     senha:campoSenha.value,
-                    tipo:$("tipo-nova-conta").value
+                    tipo:seletorTipoConta.value,
+                    turmaId:seletorTurmaConta.value || null
                 })
             }));
             status.textContent = "Usuário criado com sucesso.";
@@ -186,6 +262,7 @@
             campoSenha.type = "password";
             botaoMostrarSenha.textContent = "Mostrar";
             $("tipo-nova-conta").value = "usuario";
+            atualizarSeletorTurmaConta();
             carregarUsuarios();
         } catch (erro) { status.textContent = erro.message; }
     });
@@ -206,6 +283,6 @@
 
     (async () => {
         usuarioLogado.textContent = "Painel administrativo";
-        await Promise.all([carregarUsuarios(), carregarSessoes()]);
+        await Promise.all([carregarTurmas(), carregarUsuarios(), carregarSessoes()]);
     })();
 })();
