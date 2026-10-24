@@ -142,8 +142,12 @@ app.get("/", (req, res) => {
     // O detector considera apenas telefones, evitando tratar tablets como celular.
     const userAgent = String(req.headers["user-agent"] || "");
     const celular = /Mobi|Android.*Mobile|iPhone|iPod/i.test(userAgent);
-    const paginaInicial = celular ? "hoje.html" : "index.html";
+    // O administrador global começa pela página de seleção de turmas.
+    if (req.session.usuario.tipo === "admin") {
+        return res.sendFile(path.join(__dirname, "public", "admin-index.html"));
+    }
 
+    const paginaInicial = celular ? "hoje.html" : "index.html";
     res.sendFile(path.join(__dirname, "public", paginaInicial));
 });
 
