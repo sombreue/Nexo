@@ -64,6 +64,18 @@ module.exports = function registrarRotasHorarioTurma(app, pool, exigirLogin, exi
                 atualizado_por INTEGER REFERENCES usuarios(id) ON DELETE SET NULL
             )
         `);
+        // Migra o horário legado somente para a turma geral (menor ID).
+        // As turmas secundárias nunca herdam essa configuração.
+        await pool.query(`
+            INSERT INTO horarios_turmas (turma_id, configuracao, atualizado_em, atualizado_por)
+            SELECT t.id, h.configuracao, h.atualizado_em, h.atualizado_por
+            FROM turmas t
+            CROSS JOIN horario_turma h
+            WHERE t.id = (SELECT id FROM turmas ORDER BY id ASC LIMIT 1)
+              AND h.id = 1
+              AND NOT EXISTS (SELECT 1 FROM horarios_turmas ht WHERE ht.turma_id = t.id)
+            ON CONFLICT (turma_id) DO NOTHING
+        `);
     }
 
     async function obterUsuario(req) {
