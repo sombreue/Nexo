@@ -131,7 +131,12 @@ module.exports = function instalarRotasSugestoesContas(app, pool) {
                 await pool.query("DELETE FROM pedidos_conta WHERE id = $1", [id]);
                 return res.status(409).json({ sucesso: false, mensagem: "Esse usuário já existe. O pedido foi removido." });
             }
-            await pool.query("INSERT INTO usuarios (usuario, senha, tipo) VALUES ($1, $2, 'usuario')", [dados.usuario, dados.senha_hash]);
+            const turmaPadrao = await pool.query("SELECT id FROM turmas WHERE ativa = TRUE ORDER BY id ASC LIMIT 1");
+            if (!turmaPadrao.rowCount) return res.status(409).json({ sucesso: false, mensagem: "Crie uma turma ativa antes de aprovar contas." });
+            await pool.query(
+                "INSERT INTO usuarios (usuario, senha, tipo, turma_id) VALUES ($1, $2, 'usuario', $3)",
+                [dados.usuario, dados.senha_hash, turmaPadrao.rows[0].id]
+            );
             await pool.query("DELETE FROM pedidos_conta WHERE id = $1", [id]);
             res.json({ sucesso: true, mensagem: `Conta de ${dados.usuario} aprovada.` });
         } catch (e) {
