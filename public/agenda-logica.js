@@ -1391,6 +1391,9 @@ async function verificarSessao() {
 
         };
 
+        if (usuarioAtual.tipo === "admin") {
+            document.querySelectorAll('a[href="/index.html"]').forEach(link => { link.href = "/"; });
+        }
 
         console.log(
             "USUÁRIO LOGADO:",
