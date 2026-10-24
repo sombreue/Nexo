@@ -91,12 +91,33 @@ function atualizarMaterias(){
     if(materias.includes(atual)) filtroMateria.value = atual;
 }
 
-function ehAdmin(){
-    return usuarioSessao && String(usuarioSessao.tipo || '').toLowerCase() === 'admin';
+function podeGerenciarTrabalhos(){
+    return usuarioSessao && ['admin', 'representante'].includes(String(usuarioSessao.tipo || '').toLowerCase());
+}
+
+async function carregarTurmasTrabalho(){
+    const select = document.getElementById('turma-trabalho-admin');
+    const label = document.getElementById('label-turma-trabalho-admin');
+    if(!select || !label) return;
+    const ehAdminGlobal = usuarioSessao?.tipo === 'admin';
+    select.hidden = !ehAdminGlobal;
+    label.hidden = !ehAdminGlobal;
+    select.required = ehAdminGlobal;
+    if(!ehAdminGlobal) { select.innerHTML = '<option value="">Turma vinculada à conta</option>'; return; }
+    try {
+        const resposta = await fetch('/api/turmas', {cache:'no-store', credentials:'same-origin'});
+        const dados = await lerRespostaJson(resposta, 'Não foi possível carregar turmas.');
+        const turmas = dados.turmas.filter(t => t.ativa);
+        select.innerHTML = turmas.map(t => '<option value="' + escaparHtml(t.id) + '">' + escaparHtml(t.nome) + (t.anoLetivo ? ' · ' + escaparHtml(t.anoLetivo) : '') + '</option>').join('');
+        if(!turmas.length) select.innerHTML = '<option value="">Nenhuma turma ativa</option>';
+    } catch(e) {
+        select.innerHTML = '<option value="">Erro ao carregar turmas</option>';
+        statusAdmin.textContent = e.message;
+    }
 }
 
 function ativarPainelAdmin(){
-    if(!ehAdmin()) return;
+    if(!podeGerenciarTrabalhos()) return;
     painelAdmin.hidden = false;
     painelAdmin.removeAttribute('hidden');
     preencherCatalogoMaterias();
@@ -123,7 +144,7 @@ function renderizar(){
     lista.innerHTML = filtrados.map(t => {
         const prioridade = calcularPrioridade(t.prazo);
         const valePonto = t.vale_ponto !== false;
-        const controles = ehAdmin() ? `<div class="controles-trabalho"><button type="button" data-editar="${t.id}">Editar</button><button type="button" class="excluir" data-excluir="${t.id}">Excluir</button></div>` : '';
+        const controles = podeGerenciarTrabalhos() ? `<div class="controles-trabalho"><button type="button" data-editar="${t.id}">Editar</button><button type="button" class="excluir" data-excluir="${t.id}">Excluir</button></div>` : '';
         return `<article id="trabalho-${t.id}" class="trabalho">
             <div class="trabalho-topo"><div><div class="materia">${escaparHtml(t.materia)}</div><h2>${escaparHtml(t.titulo)}</h2></div><span class="prioridade ${prioridade.classe}">${prioridade.nome}</span></div>
             <div class="descricao markdown-conteudo">${renderizarMarkdown(t.descricao || '')}</div>
@@ -158,6 +179,7 @@ formAdmin.addEventListener('submit', async evento => {
         prazo: document.getElementById('admin-prazo').value,
         descricao: document.getElementById('admin-descricao').value.trim(),
         vale_ponto: document.getElementById('admin-vale-ponto').checked,
+        turmaId: document.getElementById('trabalho-id').value ? null : (document.getElementById('turma-trabalho-admin')?.value || null),
         status: 'pendente'
     };
     statusAdmin.textContent = id ? 'Salvando...' : 'Criando...';
@@ -200,7 +222,7 @@ async function inicializar(){
         usuarioSessao = null;
     }
 
-    if(!ehAdmin()){
+    if(!podeGerenciarTrabalhos()){
         try{
             const resposta = await fetch('/api/usuario', {cache:'no-store', credentials:'same-origin'});
             if(resposta.ok){
@@ -210,7 +232,7 @@ async function inicializar(){
         }catch(erro){ console.error('Falha ao consultar /api/usuario:', erro); }
     }
 
-    if(ehAdmin()) ativarPainelAdmin();
+    if(podeGerenciarTrabalhos()) { await carregarTurmasTrabalho(); ativarPainelAdmin(); }
     else preencherCatalogoMaterias();
     renderizar();
     await carregarTrabalhos();
