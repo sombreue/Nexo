@@ -50,7 +50,7 @@ UPDATE usuarios
 SET turma_id = (SELECT id FROM turmas ORDER BY id LIMIT 1)
 WHERE tipo <> 'admin' AND turma_id IS NULL;
 
-DO $
+DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint
@@ -61,7 +61,7 @@ BEGIN
             ADD CONSTRAINT usuarios_turma_fk
             FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE RESTRICT;
     END IF;
-END $;
+END $$;
 
 -- Administradores são globais; contas comuns e representantes precisam de turma.
 ALTER TABLE usuarios
@@ -92,7 +92,7 @@ WHERE turma_id IS NULL;
 ALTER TABLE tarefas
     ALTER COLUMN turma_id SET NOT NULL;
 
-DO $
+DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint
@@ -103,7 +103,7 @@ BEGIN
             ADD CONSTRAINT tarefas_turma_fk
             FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE RESTRICT;
     END IF;
-END $;
+END $$;
 
 CREATE INDEX IF NOT EXISTS tarefas_turma_data_idx
     ON tarefas (turma_id, data DESC, id DESC);
@@ -128,7 +128,7 @@ WHERE turma_id IS NULL;
 ALTER TABLE trabalhos
     ALTER COLUMN turma_id SET NOT NULL;
 
-DO $
+DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint
@@ -139,7 +139,7 @@ BEGIN
             ADD CONSTRAINT trabalhos_turma_fk
             FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE RESTRICT;
     END IF;
-END $;
+END $$;
 
 CREATE INDEX IF NOT EXISTS trabalhos_turma_prazo_idx
     ON trabalhos (turma_id, prazo, id DESC);
