@@ -179,7 +179,7 @@
         const item = excluir.closest(".usuario-admin-item");
         const nome = item?.querySelector("strong")?.textContent || "esta conta";
         const meta = item?.querySelector(".item-meta")?.textContent || "";
-        const ehAdmin = meta === "Administrador";
+        const ehAdmin = meta.startsWith("Administrador");
 
         if (!ehAdmin) {
             if (!confirm('Excluir o usuário "' + nome + '"?')) return;
