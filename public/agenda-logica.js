@@ -1445,17 +1445,17 @@ async function verificarSessao() {
                     const respostaTurmas = await fetch("/api/turmas", { cache: "no-store" });
                     const dadosTurmas = await respostaTurmas.json();
                     if (respostaTurmas.ok && dadosTurmas.sucesso) {
-                        const turmasAtivas = dadosTurmas.turmas.filter(t => t.ativa);
-                        seletorTurmaAgenda.innerHTML = turmasAtivas.map(t =>
+                        const turmasDisponiveis = dadosTurmas.turmas;
+                        seletorTurmaAgenda.innerHTML = turmasDisponiveis.map(t =>
                             '<option value="' + String(t.id).replace(/[^0-9]/g, '') + '">' +
                             String(t.nome).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) +
-                            (t.anoLetivo ? ' · ' + t.anoLetivo : '') + '</option>'
+                            (t.anoLetivo ? ' · ' + t.anoLetivo : '') + (t.ativa ? '' : ' · Arquivada') + '</option>'
                         ).join("");
-                        if (!turmasAtivas.length) {
-                            seletorTurmaAgenda.innerHTML = '<option value="">Nenhuma turma ativa</option>';
+                        if (!turmasDisponiveis.length) {
+                            seletorTurmaAgenda.innerHTML = '<option value="">Nenhuma turma cadastrada</option>';
                         } else {
                             const turmaUrl = new URLSearchParams(window.location.search).get("turmaId");
-                            if (turmaUrl && turmasAtivas.some(t => String(t.id) === String(turmaUrl))) {
+                            if (turmaUrl && turmasDisponiveis.some(t => String(t.id) === String(turmaUrl))) {
                                 seletorTurmaAgenda.value = String(turmaUrl);
                             }
                             seletorTurmaAgenda.addEventListener("change", () => {
