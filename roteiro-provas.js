@@ -65,20 +65,25 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
                 ORDER BY etapa ASC, CASE tipo WHEN 'parcial' THEN 1 ELSE 2 END, data_prova ASC, materia ASC, id ASC
             `, [turmaId]);
             res.set('Cache-Control', 'no-store');
-            res.json({ sucesso: true, provas: r.rows, podeEditar: usuario.tipo === 'admin', turmaId: Number(turmaId) });
+            res.json({ sucesso: true, provas: r.rows, podeEditar: usuario.tipo === 'admin', podeAdicionar: ['admin', 'representante'].includes(usuario.tipo), turmaId: Number(turmaId) });
         } catch (e) {
             console.error('Erro ao consultar roteiro de provas:', e);
             res.status(500).json({ sucesso: false, mensagem: 'Não foi possível carregar o roteiro de provas.' });
         }
     });
 
-    app.post('/api/roteiro-provas', exigirLogin, exigirAdmin, async (req, res) => {
+    app.post('/api/roteiro-provas', exigirLogin, async (req, res) => {
         try {
             await migracaoColunas;
+            const conta = await pool.query("SELECT u.tipo, u.turma_id, t.ativa AS turma_ativa FROM usuarios u LEFT JOIN turmas t ON t.id = u.turma_id WHERE u.id = $1", [req.session.usuario.id]);
+            const usuario = conta.rows[0];
+            if (!usuario || !['admin', 'representante'].includes(usuario.tipo)) return res.status(403).json({ sucesso: false, mensagem: "Somente o administrador ou representante pode adicionar provas." });
+            if (usuario.tipo === 'representante' && (!usuario.turma_id || !usuario.turma_ativa)) return res.status(403).json({ sucesso: false, mensagem: "Sua conta não está vinculada a uma turma ativa." });
             const d = validar(req.body);
             if (d.erro) return res.status(400).json({ sucesso: false, mensagem: d.erro });
             let turmaId;
-            if (req.body?.turmaId == null || req.body.turmaId === "") {
+            if (usuario.tipo === 'representante') turmaId = Number(usuario.turma_id);
+            else if (req.body?.turmaId == null || req.body.turmaId === "") {
                 const principal = await pool.query("SELECT id FROM turmas WHERE ativa = TRUE ORDER BY id ASC LIMIT 1");
                 turmaId = Number(principal.rows[0]?.id);
             } else turmaId = Number(req.body.turmaId);
