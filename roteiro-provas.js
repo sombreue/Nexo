@@ -7,7 +7,7 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
             conteudo TEXT NOT NULL DEFAULT '',
             etapa SMALLINT NOT NULL DEFAULT 1 CHECK (etapa BETWEEN 1 AND 4),
             tipo VARCHAR(12) NOT NULL DEFAULT 'parcial' CHECK (tipo IN ('parcial', 'bimestral')),
-            turma_id BIGINT REFERENCES turmas(id) ON DELETE CASCADE,
+            turma_id BIGINT,
             criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
@@ -17,7 +17,7 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
     const migracaoColunas = tabelaPronta.then(() => pool.query(`
         ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS etapa SMALLINT NOT NULL DEFAULT 1;
         ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS tipo VARCHAR(12) NOT NULL DEFAULT 'parcial';
-        ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS turma_id BIGINT REFERENCES turmas(id) ON DELETE CASCADE;
+        ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS turma_id BIGINT;
         UPDATE roteiro_provas SET turma_id = (SELECT id FROM turmas WHERE ativa = TRUE ORDER BY id ASC LIMIT 1)
         WHERE turma_id IS NULL AND EXISTS (SELECT 1 FROM turmas WHERE ativa = TRUE);
         CREATE INDEX IF NOT EXISTS roteiro_provas_etapa_tipo_idx ON roteiro_provas (etapa, tipo, data_prova);
