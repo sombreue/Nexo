@@ -21,12 +21,13 @@
 <main>
     <section id="painel-trabalhos-admin" class="painel-trabalhos-admin" hidden>
         <div class="painel-trabalhos-admin-cabecalho">
-            <div><h2>Administração dos trabalhos</h2><p>Somente administradores podem criar, editar ou excluir trabalhos.</p></div>
+            <div><h2>Administração dos trabalhos</h2><p>Administradores e representantes podem gerenciar trabalhos; representantes ficam restritos à própria turma.</p></div>
             <button type="button" id="botao-minimizar-trabalhos-admin" aria-expanded="true" aria-controls="conteudo-trabalhos-admin">−</button>
         </div>
         <div id="conteudo-trabalhos-admin">
             <form id="form-trabalho-admin" class="form-trabalho-admin">
                 <input type="hidden" id="trabalho-id">
+                <label id="label-turma-trabalho-admin">Turma<select id="turma-trabalho-admin" required><option value="">Carregando turmas...</option></select></label>
                 <label>Título<input id="admin-titulo" type="text" maxlength="160" required></label>
                 <label>Matéria<select id="admin-materia" required><option value="">Selecione a matéria</option></select></label>
                 <label>Data de entrega<input id="admin-prazo" type="date"></label>
@@ -45,6 +46,6 @@
 <script src="global-temas.js?v=20260916"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
-<script src="trabalhos-logica.js?v=20261001-markdown"></script><script src="global-notificacoes.js?v=20260918"></script>
+<script src="trabalhos-logica.js?v=20261024-turmas01-markdown"></script><script src="global-notificacoes.js?v=20260918"></script>
 </body>
 </html>

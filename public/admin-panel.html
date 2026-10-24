@@ -41,11 +41,28 @@
         </a>
     </section>
 
+    <section class="admin-section" id="gerenciar-turmas">
+        <div class="section-header">
+            <div>
+                <h2>Turmas</h2>
+                <p>Crie e arquive turmas. Arquivar mantém os dados históricos.</p>
+            </div>
+            <button type="button" class="botao-secundario" id="botao-atualizar-turmas">Atualizar</button>
+        </div>
+        <form id="form-criar-turma" class="form-criar-usuario">
+            <input id="nova-turma-nome" type="text" placeholder="Nome da turma (ex.: 9º A)" maxlength="100" required>
+            <input id="nova-turma-ano" type="number" placeholder="Ano letivo (opcional)" min="2000" max="2200">
+            <button type="submit">Criar turma</button>
+        </form>
+        <p id="status-turmas" class="status-admin" aria-live="polite"></p>
+        <div id="lista-turmas" class="lista-admin" aria-live="polite"></div>
+    </section>
+
     <section class="admin-section">
         <div class="section-header">
             <div>
                 <h2>Criar usuário</h2>
-                <p>Crie uma conta comum ou outra conta de administrador.</p>
+                <p>Crie uma conta comum, um representante de turma ou um administrador global.</p>
             </div>
         </div>
         <form id="form-criar-usuario" class="form-criar-usuario">
@@ -56,7 +73,11 @@
             </div>
             <select id="tipo-nova-conta" aria-label="Tipo da conta">
                 <option value="usuario">Usuário</option>
-                <option value="admin">Administrador</option>
+                <option value="representante">Representante de turma</option>
+                <option value="admin">Administrador global</option>
+            </select>
+            <select id="turma-nova-conta" aria-label="Turma da conta" required>
+                <option value="">Carregando turmas...</option>
             </select>
             <button type="submit">Criar conta</button>
         </form>
@@ -87,6 +108,6 @@
 </main>
 
 <script src="global-temas.js?v=20261007"></script>
-<script src="admin-panel.js?v=20261007"></script>
+<script src="admin-panel.js?v=20261024-turmas"></script>
 </body>
 </html>

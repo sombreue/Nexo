@@ -324,6 +324,7 @@ app.get("/api/sessao", (req, res) => {
 });
 
 require("./rotas-sugestoes-contas")(app, pool);
+require("./turmas")(app, pool, exigirLogin, exigirAdmin);
 
 // APIs individuais do aluno. Elas precisam ser registradas no processo real
 // do Render; os antigos scripts fix-*.js não devem ser executados em runtime.

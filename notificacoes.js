@@ -119,7 +119,8 @@ module.exports = function instalarNotificacoes(app, pool) {
                     SELECT id, data, materia, descricao
                     FROM tarefas
                     WHERE data = $1
-                `, [dataAlvo]);
+                      AND turma_id = (SELECT turma_id FROM usuarios WHERE id = $2)
+                `, [dataAlvo, usuario.id]);
 
                 for (const tarefa of tarefas.rows) {
                     const descricao = String(tarefa.descricao || "").trim();
@@ -143,7 +144,8 @@ module.exports = function instalarNotificacoes(app, pool) {
                     SELECT id, titulo, materia, prazo
                     FROM trabalhos
                     WHERE prazo = $1
-                `, [dataAlvo]);
+                      AND turma_id = (SELECT turma_id FROM usuarios WHERE id = $2)
+                `, [dataAlvo, usuario.id]);
 
                 for (const trabalho of trabalhos.rows) {
                     await pool.query(`

@@ -80,7 +80,13 @@
         </div>
         <button type="button" id="botao-mostrar-todas">Mostrar todas</button>
     </section>
-    <div class="area-adicionar" id="area-adicionar" style="display: none;"><button class="botao-adicionar" onclick="abrirFormulario()">+ Adicionar tarefas</button></div>
+    <div class="area-adicionar" id="area-adicionar" style="display: none;">
+        <label id="label-turma-agenda" for="turma-agenda-seletor" style="display:none;">Turma:</label>
+        <select id="turma-agenda-seletor" aria-label="Turma da agenda" style="display:none;max-width:260px;">
+            <option value="">Carregando turmas...</option>
+        </select>
+        <button class="botao-adicionar" onclick="abrirFormulario()">+ Adicionar tarefas</button>
+    </div>
     <section id="formulario" class="formulario" style="display: none;"><h2>Adicionar tarefas</h2><label for="nova-data">Data:</label><input type="date" id="nova-data" onchange="mostrarMateriasDoDia()"><div id="lista-materias-formulario"></div><div class="botoes-formulario"><button onclick="adicionarTarefasDoDia()">Adicionar tarefas</button><button class="cancelar" onclick="fecharFormulario()">Cancelar</button></div></section>
     <section id="lista-tarefas"></section>
     <section id="modal-senha" class="modal-senha"><div class="conteudo-modal"><h2>Alterar senha</h2><p id="usuario-senha"></p><input type="password" id="senha-alterada" placeholder="Digite a nova senha"><div class="botoes-modal"><button onclick="confirmarAlteracaoSenha()">Alterar senha</button><button class="cancelar" onclick="fecharModalSenha()">Cancelar</button></div></div></section>

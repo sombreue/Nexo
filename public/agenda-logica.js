@@ -467,6 +467,9 @@ async function adicionarTarefasDoDia() {
             materia:
                 campo.dataset.materia,
 
+            turmaId:
+                document.getElementById("turma-agenda-seletor")?.value || null,
+
             descricao:
                 descricao,
 
@@ -688,7 +691,7 @@ function criarTarefa(
 
     if (
         usuarioAtual &&
-        usuarioAtual.tipo === "admin"
+        ["admin", "representante"].includes(usuarioAtual.tipo)
     ) {
 
         const areaBotoes =
@@ -1423,12 +1426,34 @@ async function verificarSessao() {
 
 
         if (areaAdicionar) {
-
             areaAdicionar.style.display =
-                dados.tipo === "admin"
-                    ? "block"
-                    : "none";
+                ["admin", "representante"].includes(dados.tipo) ? "block" : "none";
+        }
 
+        const seletorTurmaAgenda = document.getElementById("turma-agenda-seletor");
+        const labelTurmaAgenda = document.getElementById("label-turma-agenda");
+        if (seletorTurmaAgenda && labelTurmaAgenda) {
+            const ehAdminGlobal = dados.tipo === "admin";
+            seletorTurmaAgenda.style.display = ehAdminGlobal ? "inline-block" : "none";
+            labelTurmaAgenda.style.display = ehAdminGlobal ? "inline-block" : "none";
+            if (ehAdminGlobal) {
+                try {
+                    const respostaTurmas = await fetch("/api/turmas", { cache: "no-store" });
+                    const dadosTurmas = await respostaTurmas.json();
+                    if (respostaTurmas.ok && dadosTurmas.sucesso) {
+                        const turmasAtivas = dadosTurmas.turmas.filter(t => t.ativa);
+                        seletorTurmaAgenda.innerHTML = turmasAtivas.map(t =>
+                            '<option value="' + String(t.id).replace(/[^0-9]/g, '') + '">' +
+                            String(t.nome).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) +
+                            (t.anoLetivo ? ' · ' + t.anoLetivo : '') + '</option>'
+                        ).join("");
+                        if (!turmasAtivas.length) seletorTurmaAgenda.innerHTML = '<option value="">Nenhuma turma ativa</option>';
+                    }
+                } catch (erroTurmas) {
+                    console.error("Não foi possível carregar as turmas:", erroTurmas);
+                    seletorTurmaAgenda.innerHTML = '<option value="">Erro ao carregar turmas</option>';
+                }
+            }
         }
 
 
