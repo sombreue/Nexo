@@ -24,8 +24,19 @@ if (!process.env.DATABASE_URL) {
     process.exit(1);
 }
 
+function normalizarModoSsl(connectionString) {
+    const url = new URL(connectionString);
+    const modo = url.searchParams.get("sslmode")?.toLowerCase();
+    if (["prefer", "require", "verify-ca"].includes(modo)) {
+        // Preserve pg-connection-string v2's current verify-full behavior and
+        // avoid an implicit SSL-mode change when pg v9 adopts libpq semantics.
+        url.searchParams.set("sslmode", "verify-full");
+    }
+    return url.toString();
+}
+
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: normalizarModoSsl(process.env.DATABASE_URL),
     ssl: { rejectUnauthorized: false }
 });
 
