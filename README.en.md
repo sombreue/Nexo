@@ -33,8 +33,8 @@
 
 ## Screenshots
 
-![Mobile home page](docs/screenshots/inicio-mobile)
-![Desktop home page](docs/screenshots/inicio-pc)
+![Mobile home page](docs/screenshots/inicio-mobile.png)
+![Desktop home page](docs/screenshots/inicio-pc.png)
 
 ## License
 

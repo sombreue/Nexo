@@ -34,7 +34,7 @@ Você precisará de:
 - Um banco de dados PostgreSQL.
 - Um serviço de hospedagem caso queira deixar o site acessível pela internet.
 
-O `package.json` atual declara dependências como Express, `pg` (cliente PostgreSQL), `express-session`, `bcrypt`, `dotenv` e `better-sqlite3`.
+O `package.json` atual declara dependências como Express, `pg` (cliente PostgreSQL), `express-session`, `bcrypt`, `dotenv` e `better-sqlite3` (usado apenas para importar dados de um SQLite legado).
 
 Serviços que você pode usar (são exemplos, não requisitos obrigatórios):
 
@@ -175,7 +175,7 @@ O usuário PostgreSQL precisa ter permissão para criar e alterar as tabelas e o
 
 ## 7. Inicializar o banco e executar o Nexo
 
-Em uma instalação nova, **não é necessário executar `migrar.js`**. A inicialização normal do servidor cria ou verifica as tabelas necessárias à versão atual da aplicação.
+Em uma instalação nova, **não é necessário executar `migrar.js`**. A inicialização normal do servidor cria ou verifica as tabelas-base. A migração `001_multi_turmas` é uma etapa separada e necessária para habilitar o esquema e as rotas de turmas.
 
 Depois de configurar o `.env`, execute:
 
@@ -184,6 +184,14 @@ npm start
 ```
 
 O comando executa `start.js`, que carrega as variáveis de ambiente e inicia `server.js`. Durante a inicialização, o servidor verifica a conexão com PostgreSQL e cria ou atualiza as tabelas previstas no código.
+
+Depois que a primeira inicialização terminar, pare o servidor com `Ctrl+C` e aplique a migração de turmas:
+
+```bash
+npm run db:migrate:multi-turmas
+```
+
+O script aplica `migrations/001_multi_turmas.sql` em uma transação e registra a versão aplicada. Faça backup do banco antes de executar essa migração. Em seguida, inicie novamente com `npm start`.
 
 Aguarde as mensagens indicando que o PostgreSQL conectou, que a preparação das tabelas terminou e que o servidor está ouvindo em uma porta. Se ocorrer um erro, leia a mensagem completa do terminal.
 

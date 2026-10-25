@@ -195,9 +195,15 @@ Keep the database credentials private and make sure the connection string is com
 
 ## 7. Initialize the database
 
-For a fresh installation, you do **not** need to run `migrar.js`. The normal server startup creates or checks the tables used by the current application.
+For a fresh installation, you do **not** need to run `migrar.js`. The normal server startup creates or checks the base tables. The `001_multi_turmas` migration is a separate step required for the class schema and routes.
 
-After configuring `.env`, start Nexo with `npm start` and wait for the table setup to finish. The PostgreSQL account must have permission to create and alter the application's tables and indexes.
+After configuring `.env`, start Nexo with `npm start` and wait for the base table setup to finish. Stop the server with `Ctrl+C`, then apply the class migration:
+
+```bash
+npm run db:migrate:multi-turmas
+```
+
+This runs `migrations/001_multi_turmas.sql` in a transaction and records the applied version. Back up the database before running it. Start Nexo again with `npm start`. The PostgreSQL account must have permission to create and alter the application's tables and indexes.
 
 The separate `migrar.js` script is for transferring data from a legacy SQLite file at `database/tarefas.db`. See [Section 12](#12-legacy-sqlite-migration). Do not run it for an empty installation.
 

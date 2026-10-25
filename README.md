@@ -33,8 +33,8 @@ O **Nexo** é uma plataforma web de organização da rotina escolar e dos estudo
 
 ## Capturas de tela
 
-![Página inicial no celular](docs/screenshots/inicio-mobile)
-![Página inicial no computador](docs/screenshots/inicio-pc)
+![Página inicial no celular](docs/screenshots/inicio-mobile.png)
+![Página inicial no computador](docs/screenshots/inicio-pc.png)
 
 ## Licença
 
