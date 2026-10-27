@@ -536,7 +536,12 @@ app.delete("/api/temas-personalizados/:id", exigirLogin, async (req, res) => {
 
 app.get("/api/admin/usuarios", exigirAdmin, async (req, res) => {
     try {
-        const resultado = await pool.query("SELECT id, usuario, tipo FROM usuarios ORDER BY id ASC");
+        const resultado = await pool.query(`
+            SELECT u.id, u.usuario, u.tipo, u.turma_id AS "turmaId", t.nome AS "turmaNome"
+            FROM usuarios u
+            LEFT JOIN turmas t ON t.id = u.turma_id
+            ORDER BY u.id ASC
+        `);
         res.json({ sucesso: true, usuarios: resultado.rows, usuarioLogadoId: req.session.usuario.id });
     } catch (erro) {
         console.error("Erro ao listar usuários:", erro);
@@ -547,18 +552,49 @@ app.get("/api/admin/usuarios", exigirAdmin, async (req, res) => {
 app.post("/api/admin/usuarios", exigirAdmin, async (req, res) => {
     try {
         const { usuario, senha, tipo = "usuario" } = req.body;
+        const turmaId = req.body.turmaId == null || req.body.turmaId === "" ? null : Number(req.body.turmaId);
         if (!usuario || !senha) return res.status(400).json({ sucesso: false, mensagem: "Preencha usuário e senha." });
-        if (!["admin", "usuario"].includes(tipo)) return res.status(400).json({ sucesso: false, mensagem: "Tipo de usuário inválido." });
+        if (!["admin", "usuario", "representante"].includes(tipo)) return res.status(400).json({ sucesso: false, mensagem: "Tipo de usuário inválido." });
+        if (tipo !== "admin" && (!Number.isSafeInteger(turmaId) || turmaId <= 0)) return res.status(400).json({ sucesso: false, mensagem: "Selecione uma turma para esta conta." });
+        if (turmaId !== null) {
+            const turma = await pool.query("SELECT id FROM turmas WHERE id = $1 AND ativa = TRUE", [turmaId]);
+            if (!turma.rowCount) return res.status(400).json({ sucesso: false, mensagem: "A turma selecionada não existe ou está arquivada." });
+        }
         const senhaHash = await bcrypt.hash(senha, 10);
         const resultado = await pool.query(
-            "INSERT INTO usuarios (usuario, senha, tipo) VALUES ($1, $2, $3) RETURNING id, usuario, tipo",
-            [usuario, senhaHash, tipo]
+            "INSERT INTO usuarios (usuario, senha, tipo, turma_id) VALUES ($1, $2, $3, $4) RETURNING id, usuario, tipo, turma_id AS \"turmaId\"",
+            [usuario, senhaHash, tipo, tipo === "admin" ? null : turmaId]
         );
         res.json({ sucesso: true, usuario: resultado.rows[0] });
     } catch (erro) {
         console.error("Erro ao criar usuário:", erro);
         if (erro.code === "23505") return res.status(409).json({ sucesso: false, mensagem: "Esse usuário já existe." });
         res.status(500).json({ sucesso: false, mensagem: "Erro ao criar usuário." });
+    }
+});
+
+app.put("/api/admin/usuarios/:id/turma", exigirAdmin, async (req, res) => {
+    const id = Number(req.params.id);
+    const turmaId = req.body?.turmaId == null || req.body.turmaId === "" ? NaN : Number(req.body.turmaId);
+    if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: "Conta inválida." });
+    if (!Number.isSafeInteger(turmaId) || turmaId <= 0) return res.status(400).json({ sucesso: false, mensagem: "Selecione uma turma válida." });
+    try {
+        const turma = await pool.query("SELECT id FROM turmas WHERE id = $1 AND ativa = TRUE", [turmaId]);
+        if (!turma.rowCount) return res.status(400).json({ sucesso: false, mensagem: "A turma selecionada não existe ou está arquivada." });
+        const resultado = await pool.query(
+            `UPDATE usuarios SET turma_id = $1 WHERE id = $2 AND tipo IN ('usuario', 'representante')
+             RETURNING id, usuario, tipo, turma_id AS "turmaId"`,
+            [turmaId, id]
+        );
+        if (!resultado.rowCount) {
+            const conta = await pool.query("SELECT id FROM usuarios WHERE id = $1", [id]);
+            return res.status(conta.rowCount ? 400 : 404).json({ sucesso: false, mensagem: conta.rowCount ? "Administradores globais não pertencem a uma turma." : "Conta não encontrada." });
+        }
+        res.json({ sucesso: true, usuario: resultado.rows[0] });
+    } catch (erro) {
+        if (erro.code === "23505") return res.status(409).json({ sucesso: false, mensagem: "Essa turma já possui um representante." });
+        console.error("Erro ao alterar turma da conta:", erro);
+        res.status(500).json({ sucesso: false, mensagem: "Erro ao alterar a turma da conta." });
     }
 });
 

@@ -12,6 +12,7 @@
     const botaoMostrarSenha = $("botao-mostrar-senha");
     const buscaTurmas = $("admin-inicio-busca");
     let turmasParaAbrir = [];
+    let turmasAtivas = [];
 
     usuarioLogado.textContent = "Carregando painel...";
 
@@ -80,6 +81,7 @@
         try {
             const dados = await json(await fetch("/api/turmas", {credentials:"same-origin", cache:"no-store"}));
             const ativas = dados.turmas.filter(t => t.ativa);
+            turmasAtivas = ativas;
             const anterior = seletorTurmaConta.value;
             seletorTurmaConta.innerHTML = '<option value="">Selecione a turma</option>' + ativas.map(t =>
                 '<option value="' + escapar(t.id) + '">' + escapar(t.nome) + (t.anoLetivo ? ' · ' + escapar(t.anoLetivo) : '') + '</option>'
@@ -160,6 +162,7 @@
                         <span class="item-meta">${usuario.tipo === "admin" ? "Administrador global" : usuario.tipo === "representante" ? "Representante de turma" : "Usuário"}${usuario.turmaNome ? " · " + escapar(usuario.turmaNome) : ""}</span>
                     </div>
                     <div class="usuario-acoes">
+                        ${usuario.tipo !== "admin" ? `<label class="turma-conta-edicao"><span class="sr-only">Turma de ${escapar(usuario.usuario)}</span><select data-turma-conta="${usuario.id}" aria-label="Turma de ${escapar(usuario.usuario)}">${[...turmasAtivas, ...(usuario.turmaId && !turmasAtivas.some(t => String(t.id) === String(usuario.turmaId)) ? [{id:usuario.turmaId,nome:usuario.turmaNome || "Turma arquivada",ativa:false}] : [])].map(t => `<option value="${escapar(t.id)}" ${String(t.id) === String(usuario.turmaId) ? "selected" : ""}>${escapar(t.nome)}${t.anoLetivo ? " · " + escapar(t.anoLetivo) : ""}${t.ativa ? "" : " (arquivada)"}</option>`).join("")}</select></label><button type="button" data-salvar-turma-conta="${usuario.id}">Salvar turma</button>` : ""}
                         <button type="button" data-alterar-senha="${usuario.id}">Mudar senha</button>
                         ${usuario.id === atual ? '<em>Conta atual</em>' : `<button type="button" data-excluir-usuario="${usuario.id}">${usuario.tipo === "admin" ? "Excluir administrador" : "Excluir"}</button>`}
                     </div>
@@ -207,6 +210,21 @@
     }
 
     listaUsuarios.addEventListener("click", async evento => {
+        const salvarTurma = evento.target.closest("[data-salvar-turma-conta]");
+        if (salvarTurma) {
+            const id = salvarTurma.dataset.salvarTurmaConta;
+            const select = listaUsuarios.querySelector(`[data-turma-conta="${CSS.escape(id)}"]`);
+            try {
+                await json(await fetch(`/api/admin/usuarios/${encodeURIComponent(id)}/turma`, {
+                    method:"PUT", credentials:"same-origin",
+                    headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({turmaId:select?.value})
+                }));
+                status.textContent = "Turma da conta alterada com sucesso.";
+                await carregarUsuarios();
+            } catch (erro) { status.textContent = erro.message; }
+            return;
+        }
         const alterar = evento.target.closest("[data-alterar-senha]");
         if (alterar) {
             const item = alterar.closest(".usuario-admin-item");
@@ -326,6 +344,7 @@
 
     (async () => {
         usuarioLogado.textContent = "Painel administrativo";
-        await Promise.all([carregarTurmas(), carregarUsuarios(), carregarSessoes(), carregarTurmasParaAbrir()]);
+        await carregarTurmas();
+        await Promise.all([carregarUsuarios(), carregarSessoes(), carregarTurmasParaAbrir()]);
     })();
 })();
