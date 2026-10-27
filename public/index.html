@@ -28,7 +28,7 @@
         <a href="/index.html" class="ativo" aria-current="page">Início</a>
         <a href="/hoje.html">Hoje</a>
         <a href="/agenda.html">Agenda</a>
-        <a href="/expec.html">EXPEC</a>
+        <a href="/expec.html" data-expec-link hidden>EXPEC</a>
     </nav>
 </header>
 <header class="home-header">
@@ -65,5 +65,5 @@
 </section>
 <section id="sugestoes-secao" class="sugestoes-secao" aria-labelledby="titulo-sugestoes"><div class="sugestoes-cabecalho"><div class="sugestoes-titulo"><h2 id="titulo-sugestoes">Sugestões e problemas</h2><p>Encontrou um bug ou tem uma ideia? Avise por aqui.</p></div><button type="button" id="botao-aba-sugestoes" class="botao-aba-sugestoes" aria-expanded="true" aria-controls="conteudo-sugestoes" aria-label="Minimizar sugestões" title="Minimizar sugestões">−</button></div><div id="conteudo-sugestoes" class="sugestoes-conteudo"><form id="formulario-sugestao" class="sugestoes-formulario"><label for="tipo-sugestao">O que você quer enviar?</label><select id="tipo-sugestao" name="tipo" required><option value="sugestao">Sugestão</option><option value="bug">Bug / erro</option></select><label for="texto-sugestao">Mensagem:</label><textarea id="texto-sugestao" name="sugestao" placeholder="Conte a ideia, bug ou erro que você encontrou." maxlength="1000" required></textarea><p class="sugestao-aviso">O formulário enviará seu nome de usuário juntamente à sugestão/bug.</p><button type="submit" class="botao-enviar-sugestao">Enviar</button><p id="status-sugestao" class="sugestao-status" aria-live="polite"></p></form></div></section>
 <footer class="home-footer"><span>Nexo · Organização escolar</span><a class="github-link" href="https://github.com/sombreue/site" target="_blank" rel="noopener noreferrer" aria-label="Abrir repositório do Nexo no GitHub" title="GitHub"><svg class="github-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2.17c-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18A11 11 0 0 1 12 5.17c.98 0 1.97.13 2.89.38 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.12 3.06.74.81 1.19 1.84 1.19 3.1 0 4.43-2.71 5.4-5.29 5.69.41.36.78 1.08.78 2.18v3.24c0 .31.21.67.8.56A10.99 10.99 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg></a></footer></main>
-<script src="global-temas.js?v=20261003"></script><script src="inicio-admin.js?v=20261024-turma-representante"></script><script src="inicio-sugestoes.js?v=20260914-usuario"></script><script src="global-notificacoes.js?v=20260918"></script>
+<script src="global-temas.js?v=20261003"></script><script src="inicio-admin.js?v=20261024-turma-representante"></script><script src="inicio-sugestoes.js?v=20260914-usuario"></script><script src="global-notificacoes.js?v=20260918"></script><script src="expec-visibilidade.js?v=20261027-admin-toggle"></script>
 </body></html>

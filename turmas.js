@@ -15,8 +15,20 @@ module.exports = function registrarRotasTurmas(app, pool, exigirLogin, exigirAdm
             const usuario = await usuarioAtual(req);
             if (!usuario) return res.status(401).json({ sucesso: false, mensagem: "Conta não encontrada." });
             const resultado = usuario.tipo === "admin"
-                ? await pool.query("SELECT id, nome, ano_letivo AS \"anoLetivo\", ativa FROM turmas ORDER BY ativa DESC, ano_letivo DESC NULLS LAST, nome ASC")
-                : await pool.query("SELECT id, nome, ano_letivo AS \"anoLetivo\", ativa FROM turmas WHERE id = $1", [usuario.turma_id]);
+                ? await pool.query(`
+                    SELECT t.id, t.nome, t.ano_letivo AS "anoLetivo", t.ativa,
+                           COALESCE(f.ativa, FALSE) AS "expecVisivel"
+                    FROM turmas t
+                    LEFT JOIN feira_config f ON f.turma_id = t.id
+                    ORDER BY t.ativa DESC, t.ano_letivo DESC NULLS LAST, t.nome ASC
+                `)
+                : await pool.query(`
+                    SELECT t.id, t.nome, t.ano_letivo AS "anoLetivo", t.ativa,
+                           COALESCE(f.ativa, FALSE) AS "expecVisivel"
+                    FROM turmas t
+                    LEFT JOIN feira_config f ON f.turma_id = t.id
+                    WHERE t.id = $1
+                `, [usuario.turma_id]);
             res.set("Cache-Control", "no-store");
             res.json({ sucesso: true, turmas: resultado.rows, turmaId: usuario.turma_id == null ? null : Number(usuario.turma_id) });
         } catch (erro) {

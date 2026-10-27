@@ -13,7 +13,7 @@ button{cursor:pointer}
 .admin-header button,.admin-header a,.botao-secundario,.form-criar-usuario>button,.campo-senha button,.usuario-acoes button,.sessao-acoes button{border:1px solid var(--theme-border);border-radius:10px;padding:10px 14px;background:var(--theme-button);color:var(--theme-text);font-weight:700;text-decoration:none}
 .admin-header button:hover,.admin-header a:hover,.botao-secundario:hover,.form-criar-usuario>button:hover,.campo-senha button:hover,.usuario-acoes button:hover,.sessao-acoes button:hover{background:var(--theme-button-hover);border-color:var(--theme-border-hover)}
 .admin-container{padding:26px 0 40px}
-.admin-grid-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:18px}
+.admin-grid-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px}
 .admin-link-card,.admin-section{border:1px solid var(--theme-border);border-radius:18px;background:var(--theme-surface)}
 .admin-link-card{display:flex;flex-direction:column;gap:7px;padding:20px;color:var(--theme-text);text-decoration:none}
 .admin-link-card:hover{transform:translateY(-2px);border-color:var(--theme-accent)}
@@ -24,19 +24,32 @@ button{cursor:pointer}
 .section-header h2{margin:0 0 5px}
 .section-header p{margin:0;color:var(--theme-muted)}
 .form-criar-usuario{display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px}
+.form-criar-turma{display:grid;grid-template-columns:minmax(0,2fr) minmax(150px,1fr) auto;gap:10px}
 .form-criar-usuario input,.form-criar-usuario select{width:100%;min-width:0;padding:11px 12px;border:1px solid var(--theme-border);border-radius:10px;background:var(--theme-input);color:var(--theme-text);outline:none}
+.form-criar-turma input{width:100%;min-width:0;padding:11px 12px;border:1px solid var(--theme-border);border-radius:10px;background:var(--theme-input);color:var(--theme-text);outline:none}
+.form-criar-turma button{border:1px solid var(--theme-border);border-radius:10px;padding:10px 14px;background:var(--theme-button);color:var(--theme-text);font-weight:700}
 .form-criar-usuario input:focus,.form-criar-usuario select:focus{border-color:var(--theme-accent)}
 .campo-senha{display:flex;min-width:0}
 .campo-senha input{border-radius:10px 0 0 10px!important}
 .campo-senha button{border-left:0;border-radius:0 10px 10px 0;white-space:nowrap}
 .status-admin{min-height:20px;margin:12px 0 0;color:var(--theme-muted)}
 .lista-admin{display:grid;gap:9px}
+.filtro-lista-admin{display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.filtro-lista-admin label{font-weight:700}
+.filtro-lista-admin input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--theme-border);border-radius:10px;background:var(--theme-input);color:var(--theme-text)}
 .usuario-admin-item,.sessao-admin-item{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;border:1px solid var(--theme-border);border-radius:12px;background:var(--theme-surface-2)}
 .item-principal{display:flex;align-items:center;gap:10px;min-width:0}
 .item-principal strong{overflow-wrap:anywhere}
 .item-meta{color:var(--theme-muted);font-size:.86rem}
 .usuario-acoes,.sessao-acoes{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .usuario-acoes em{color:var(--theme-muted);font-size:.85rem;font-style:normal}
+.admin-turma-card-painel{display:flex;min-width:0;flex-direction:column;gap:8px}
+.admin-turma-card-painel .admin-turma-card{flex:1}
+.admin-turma-card-expec{display:inline-flex;width:max-content;align-items:center;gap:6px;margin-top:14px;padding:4px 9px;border:1px solid var(--theme-border);border-radius:999px;color:var(--theme-muted);font-size:.78rem;font-weight:700}
+.admin-turma-card-expec.visivel{border-color:var(--theme-accent);color:var(--theme-accent)}
+#admin-expec-status:empty{display:none}
+.botao-visibilidade-expec{width:100%;padding:9px 12px;border:1px solid var(--theme-border);border-radius:10px;background:var(--theme-button);color:var(--theme-text);font-weight:700}
+.botao-visibilidade-expec:hover{border-color:var(--theme-accent);background:var(--theme-button-hover)}
 .turma-conta-edicao select{max-width:220px;padding:9px 10px;border:1px solid var(--theme-border);border-radius:9px;background:var(--theme-input);color:var(--theme-text)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .sessao-atual{border-color:var(--theme-accent)}
@@ -48,8 +61,11 @@ body{padding:14px}
 .admin-header{align-items:flex-start;flex-direction:column}
 .admin-header-acoes{width:100%}
 .admin-header-acoes>*{flex:1;text-align:center}
-.admin-grid-links{grid-template-columns:1fr}
+.admin-grid-links{grid-template-columns:repeat(2,minmax(0,1fr))}
 .form-criar-usuario{grid-template-columns:1fr}
+.form-criar-turma{grid-template-columns:1fr}
+.filtro-lista-admin{align-items:stretch;flex-direction:column;gap:7px}
 .usuario-admin-item,.sessao-admin-item{align-items:flex-start;flex-direction:column}
 .usuario-acoes,.sessao-acoes{width:100%;justify-content:flex-start}
 }
+@media(max-width:520px){.admin-grid-links{grid-template-columns:1fr}}

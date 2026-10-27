@@ -6,7 +6,7 @@
     <link rel="icon" href="/favicon.ico?v=20260914" type="image/x-icon">
     <title>Painel de administração</title>
     <link rel="stylesheet" href="global-temas-estilos.css?v=20261006">
-    <link rel="stylesheet" href="admin-panel-estilos.css?v=20261027-contas-turmas">
+    <link rel="stylesheet" href="admin-panel-estilos.css?v=20261027-expec-visibility">
     <link rel="stylesheet" href="/admin-index-estilos.css?v=20261024-unificado">
     <script>document.documentElement.dataset.theme = localStorage.getItem('agenda-auruda-tema') || 'ruby';</script>
 </head>
@@ -28,7 +28,7 @@
         <div class="admin-inicio-intro">
             <div>
                 <h2 id="titulo-selecao-turmas">Acessar uma turma</h2>
-                <p>Selecione uma turma para abrir sua agenda. Abaixo ficam as ferramentas de administração global.</p>
+                <p>Selecione uma turma para abrir a agenda ou controlar a visibilidade da EXPEC. Abaixo ficam as ferramentas globais.</p>
             </div>
             <button type="button" id="admin-inicio-atualizar" class="botao-secundario">Atualizar turmas</button>
         </div>
@@ -37,6 +37,7 @@
             <input id="admin-inicio-busca" type="search" placeholder="Ex.: 9º A" autocomplete="off">
         </div>
         <p id="admin-inicio-status" class="admin-inicio-status" role="status" aria-live="polite"></p>
+        <p id="admin-expec-status" class="admin-inicio-status" role="status" aria-live="polite"></p>
         <section>
             <div class="admin-inicio-secao-titulo"><h2>Turmas ativas</h2><span id="admin-inicio-total-ativas">—</span></div>
             <div id="admin-inicio-ativas" class="admin-inicio-grid"><div class="admin-inicio-vazio">Carregando...</div></div>
@@ -72,8 +73,10 @@
             </div>
             <button type="button" class="botao-secundario" id="botao-atualizar-turmas">Atualizar</button>
         </div>
-        <form id="form-criar-turma" class="form-criar-usuario">
+        <form id="form-criar-turma" class="form-criar-turma">
+            <label class="sr-only" for="nova-turma-nome">Nome da turma</label>
             <input id="nova-turma-nome" type="text" placeholder="Nome da turma (ex.: 9º A)" maxlength="100" required>
+            <label class="sr-only" for="nova-turma-ano">Ano letivo, opcional</label>
             <input id="nova-turma-ano" type="number" placeholder="Ano letivo (opcional)" min="2000" max="2200">
             <button type="submit">Criar turma</button>
         </form>
@@ -115,6 +118,10 @@
             </div>
             <button type="button" class="botao-secundario" id="botao-atualizar-usuarios">Atualizar</button>
         </div>
+        <div class="filtro-lista-admin">
+            <label for="busca-usuarios">Buscar usuário</label>
+            <input id="busca-usuarios" type="search" placeholder="Nome, tipo ou turma" autocomplete="off">
+        </div>
         <div id="lista-usuarios" class="lista-admin" aria-live="polite"></div>
     </section>
 
@@ -131,6 +138,6 @@
 </main>
 
 <script src="global-temas.js?v=20261007"></script>
-<script src="admin-panel.js?v=20261027-contas-turmas"></script>
+<script src="admin-panel.js?v=20261027-admin-hud"></script>
 </body>
 </html>

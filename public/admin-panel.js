@@ -8,11 +8,14 @@
     const seletorTurmaConta = $("turma-nova-conta");
     const seletorTipoConta = $("tipo-nova-conta");
     const status = $("status-admin");
+    const buscaUsuarios = $("busca-usuarios");
+    const statusExpecAdmin = $("admin-expec-status");
     const campoSenha = $("nova-senha");
     const botaoMostrarSenha = $("botao-mostrar-senha");
     const buscaTurmas = $("admin-inicio-busca");
     let turmasParaAbrir = [];
     let turmasAtivas = [];
+    let usuariosCadastrados = [];
 
     usuarioLogado.textContent = "Carregando painel...";
 
@@ -120,9 +123,11 @@
             const nome = escapar(turma.nome);
             const ano = turma.anoLetivo ? "Ano letivo " + escapar(turma.anoLetivo) : "Turma do Nexo";
             const estado = turma.ativa ? "Ativa" : "Arquivada";
-            return '<a class="admin-turma-card" href="/agenda.html?turmaId=' + encodeURIComponent(turma.id) + '">' +
+            const expecVisivel = Boolean(turma.expecVisivel);
+            return '<article class="admin-turma-card-painel"><a class="admin-turma-card" href="/agenda.html?turmaId=' + encodeURIComponent(turma.id) + '">' +
                 '<div class="admin-turma-card-topo"><span class="admin-turma-card-icone" aria-hidden="true">▦</span><span class="admin-turma-card-status">' + estado + '</span></div>' +
-                '<h3>' + nome + '</h3><p>' + ano + '</p><span class="admin-turma-card-abrir">Acessar turma →</span></a>';
+                '<h3>' + nome + '</h3><p>' + ano + '</p><span class="admin-turma-card-expec ' + (expecVisivel ? 'visivel' : '') + '">EXPEC ' + (expecVisivel ? 'visível' : 'escondida') + '</span><span class="admin-turma-card-abrir">Acessar agenda →</span></a>' +
+                '<button class="botao-visibilidade-expec" type="button" data-toggle-expec="' + escapar(turma.id) + '" data-expec-visivel="' + expecVisivel + '">' + (expecVisivel ? 'Esconder EXPEC' : 'Exibir EXPEC') + '</button></article>';
         };
         $("admin-inicio-ativas").innerHTML = ativas.map(card).join("") || '<div class="admin-inicio-vazio">Nenhuma turma ativa corresponde à busca.</div>';
         $("admin-inicio-arquivadas").innerHTML = arquivadas.map(card).join("") || '<div class="admin-inicio-vazio">Nenhuma turma arquivada corresponde à busca.</div>';
@@ -144,6 +149,29 @@
         }
     }
 
+    document.querySelector(".admin-inicio-selecao-turmas").addEventListener("click", async evento => {
+        const botao = evento.target.closest("[data-toggle-expec]");
+        if (!botao) return;
+        const turmaId = botao.dataset.toggleExpec;
+        const visivel = botao.dataset.expecVisivel !== "true";
+        botao.disabled = true;
+        statusExpecAdmin.textContent = visivel ? "Exibindo EXPEC para a turma..." : "Escondendo EXPEC para a turma...";
+        try {
+            await json(await fetch(`/api/feira/status?turmaId=${encodeURIComponent(turmaId)}`, {
+                method:"PUT", credentials:"same-origin",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({ativa:visivel})
+            }));
+            statusExpecAdmin.textContent = visivel
+                ? "EXPEC exibida para a turma."
+                : "EXPEC escondida para a turma. Os dados foram mantidos.";
+            await Promise.all([carregarTurmas(), carregarTurmasParaAbrir()]);
+        } catch (erro) {
+            statusExpecAdmin.textContent = erro.message;
+            botao.disabled = false;
+        }
+    });
+
     function atualizarSeletorTurmaConta() {
         const adminGlobal = seletorTipoConta.value === "admin";
         seletorTurmaConta.disabled = adminGlobal;
@@ -151,11 +179,13 @@
         if (adminGlobal) seletorTurmaConta.value = "";
     }
 
-    async function carregarUsuarios() {
-        try {
-            const dados = await json(await fetch("/api/admin/usuarios", {credentials:"same-origin", cache:"no-store"}));
-            const atual = dados.usuarioLogadoId ?? null;
-            listaUsuarios.innerHTML = dados.usuarios.map(usuario => `
+    function renderizarUsuarios() {
+        const atual = usuariosCadastrados.usuarioLogadoId ?? null;
+        const termo = buscaUsuarios.value.trim().toLocaleLowerCase("pt-BR");
+        const filtrados = usuariosCadastrados.filter(usuario =>
+            `${usuario.usuario} ${usuario.tipo} ${usuario.turmaNome || ""}`.toLocaleLowerCase("pt-BR").includes(termo)
+        );
+        listaUsuarios.innerHTML = filtrados.map(usuario => `
                 <article class="usuario-admin-item">
                     <div class="item-principal">
                         <strong>${escapar(usuario.usuario)}</strong>
@@ -167,7 +197,15 @@
                         ${usuario.id === atual ? '<em>Conta atual</em>' : `<button type="button" data-excluir-usuario="${usuario.id}">${usuario.tipo === "admin" ? "Excluir administrador" : "Excluir"}</button>`}
                     </div>
                 </article>`
-            ).join("") || '<div class="estado-vazio">Nenhum usuário cadastrado.</div>';
+            ).join("") || `<div class="estado-vazio">${usuariosCadastrados.length ? "Nenhum usuário corresponde à busca." : "Nenhum usuário cadastrado."}</div>`;
+    }
+
+    async function carregarUsuarios() {
+        try {
+            const dados = await json(await fetch("/api/admin/usuarios", {credentials:"same-origin", cache:"no-store"}));
+            usuariosCadastrados = dados.usuarios || [];
+            usuariosCadastrados.usuarioLogadoId = dados.usuarioLogadoId ?? null;
+            renderizarUsuarios();
         } catch (erro) {
             listaUsuarios.innerHTML = `<div class="estado-vazio">${escapar(erro.message)}</div>`;
         }
@@ -267,7 +305,7 @@
                 headers:{"Content-Type":"application/json"}, body:JSON.stringify({ativa})
             }));
             statusTurmas.textContent = ativa ? "Turma reativada." : "Turma arquivada.";
-            await carregarTurmas();
+            await Promise.all([carregarTurmas(), carregarTurmasParaAbrir()]);
         } catch (erro) { statusTurmas.textContent = erro.message; }
     });
 
@@ -284,11 +322,12 @@
             }));
             statusTurmas.textContent = "Turma criada com sucesso.";
             evento.target.reset();
-            await carregarTurmas();
+            await Promise.all([carregarTurmas(), carregarTurmasParaAbrir()]);
         } catch (erro) { statusTurmas.textContent = erro.message; }
     });
 
     seletorTipoConta.addEventListener("change", atualizarSeletorTurmaConta);
+    buscaUsuarios.addEventListener("input", renderizarUsuarios);
     $("botao-atualizar-turmas").addEventListener("click", carregarTurmas);
     if (buscaTurmas) buscaTurmas.addEventListener("input", renderizarTurmasParaAbrir);
     $("admin-inicio-atualizar")?.addEventListener("click", carregarTurmasParaAbrir);
