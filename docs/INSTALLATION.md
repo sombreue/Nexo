@@ -195,7 +195,7 @@ Keep the database credentials private and make sure the connection string is com
 
 ## 7. Initialize the database
 
-For a fresh installation, you do **not** need to run `migrar.js`. The normal server startup creates or checks the base tables. The `001_multi_turmas` migration is a separate step required for the class schema and routes.
+For a fresh installation, you do **not** need to run `migrar.js`. The normal server startup creates or checks the base tables. The `001_multi_turmas` and `002_expec_por_turma` migrations prepare the class schema and class-specific EXPEC data.
 
 After configuring `.env`, start Nexo with `npm start` and wait for the base table setup to finish. Stop the server with `Ctrl+C`, then apply the class migration:
 
@@ -203,7 +203,7 @@ After configuring `.env`, start Nexo with `npm start` and wait for the base tabl
 npm run db:migrate:multi-turmas
 ```
 
-This runs `migrations/001_multi_turmas.sql` in a transaction and records the applied version. Back up the database before running it. Start Nexo again with `npm start`. The PostgreSQL account must have permission to create and alter the application's tables and indexes.
+This runs `migrations/001_multi_turmas.sql` and `migrations/002_expec_por_turma.sql` in transactions and records their versions. The second migration separates EXPEC settings, teams, and decorations by class. Existing global EXPEC data is assigned to the oldest class to preserve it without duplicating it. Back up the database before running the migrations. Start Nexo again with `npm start`. The PostgreSQL account must have permission to create and alter the application's tables and indexes.
 
 The separate `migrar.js` script is for transferring data from a legacy SQLite file at `database/tarefas.db`. See [Section 12](#12-legacy-sqlite-migration). Do not run it for an empty installation.
 

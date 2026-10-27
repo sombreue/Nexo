@@ -112,20 +112,57 @@ app.get("/favicon.ico", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "imagens", "favicon.ico"));
 });
 
-// A EXPEC pode ser desativada pelo administrador. Quando estiver inativa,
-// usuários comuns não conseguem acessá-la nem diretamente pelo endereço.
-// Administradores continuam podendo entrar para reativá-la.
+async function contextoTurmaExpec(req, res, permitirAdminSemTurma = false) {
+    const conta = await pool.query(
+        "SELECT id, tipo, turma_id FROM usuarios WHERE id = $1",
+        [req.session.usuario.id]
+    );
+    const usuario = conta.rows[0];
+    if (!usuario) {
+        res.status(401).json({ sucesso: false, mensagem: "Conta não encontrada." });
+        return null;
+    }
+
+    let turmaId;
+    if (usuario.tipo === "admin") {
+        if ((req.query.turmaId == null || req.query.turmaId === "") && permitirAdminSemTurma) {
+            return { usuario, turmaId: null, turmaAtiva: true };
+        }
+        turmaId = Number(req.query.turmaId);
+    } else {
+        turmaId = Number(usuario.turma_id);
+    }
+
+    if (!Number.isSafeInteger(turmaId) || turmaId <= 0) {
+        res.status(usuario.tipo === "admin" ? 400 : 403).json({
+            sucesso: false,
+            mensagem: usuario.tipo === "admin" ? "Selecione uma turma para gerenciar a EXPEC." : "Sua conta não está vinculada a uma turma."
+        });
+        return null;
+    }
+
+    const turma = await pool.query("SELECT id, ativa FROM turmas WHERE id = $1", [turmaId]);
+    if (!turma.rowCount) {
+        res.status(404).json({ sucesso: false, mensagem: "Turma não encontrada." });
+        return null;
+    }
+    if (usuario.tipo !== "admin" && !turma.rows[0].ativa) {
+        res.status(403).json({ sucesso: false, mensagem: "Esta turma está arquivada." });
+        return null;
+    }
+    return { usuario, turmaId, turmaAtiva: turma.rows[0].ativa };
+}
+
+// A página e o estado de ativação da EXPEC são isolados por turma.
 app.get("/expec.html", async (req, res, next) => {
     try {
         if (!req.session?.usuario) return res.redirect("/login.html");
-
-        const resultado = await pool.query("SELECT ativa FROM feira_config WHERE id = 1");
-        const ativa = resultado.rows[0]?.ativa ?? false;
-
-        if (!ativa && req.session.usuario.tipo !== "admin") {
-            return res.redirect("/");
+        const contexto = await contextoTurmaExpec(req, res, true);
+        if (!contexto) return;
+        if (contexto.usuario.tipo !== "admin") {
+            const resultado = await pool.query("SELECT ativa FROM feira_config WHERE turma_id = $1", [contexto.turmaId]);
+            if (!resultado.rows[0]?.ativa) return res.redirect("/");
         }
-
         res.sendFile(path.join(__dirname, "public", "expec.html"));
     } catch (erro) {
         console.error("Erro ao verificar acesso à EXPEC:", erro);
@@ -697,18 +734,21 @@ app.delete("/api/admin/sessoes/:sid", exigirAdmin, async (req, res) => {
 
 app.get("/api/feira/contagem", exigirLogin, async (req, res) => {
     try {
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
         await pool.query(`
-            INSERT INTO feira_config (id, data_apresentacao, ativa)
-            VALUES (1, '2026-09-13 08:00:00', true)
-            ON CONFLICT (id) DO NOTHING
-        `);
+            INSERT INTO feira_config (turma_id, data_apresentacao, ativa)
+            VALUES ($1, NOW() + INTERVAL '30 days', FALSE)
+            ON CONFLICT (turma_id) DO NOTHING
+        `, [contexto.turmaId]);
         const resultado = await pool.query(`
-            SELECT id,
+            SELECT id, turma_id AS "turmaId",
                    (to_char(data_apresentacao, 'YYYY-MM-DD"T"HH24:MI:SS') || '-03:00') AS data_apresentacao,
                    ativa
             FROM feira_config
-            WHERE id = 1
-        `);
+            WHERE turma_id = $1
+        `, [contexto.turmaId]);
+        res.set("Cache-Control", "no-store");
         res.json({ sucesso: true, ...resultado.rows[0] });
     } catch (erro) {
         console.error("Erro ao buscar contagem da EXPEC:", erro);
@@ -718,14 +758,18 @@ app.get("/api/feira/contagem", exigirLogin, async (req, res) => {
 
 app.put("/api/feira/contagem", exigirAdmin, async (req, res) => {
     try {
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
         const { data, ativa } = req.body;
         if (!data) return res.status(400).json({ sucesso: false, mensagem: "Informe a data da apresentação." });
         const dataLocal = String(data).slice(0, 16).replace("T", " ") + ":00";
         await pool.query(
-            `INSERT INTO feira_config (id, data_apresentacao, ativa)
-             VALUES (1, $1::timestamp, COALESCE($2, true))
-             ON CONFLICT (id) DO UPDATE SET data_apresentacao = EXCLUDED.data_apresentacao, ativa = COALESCE($2, feira_config.ativa)`,
-            [dataLocal, typeof ativa === "boolean" ? ativa : null]
+            `INSERT INTO feira_config (turma_id, data_apresentacao, ativa)
+             VALUES ($1, $2::timestamp, FALSE)
+             ON CONFLICT (turma_id) DO UPDATE SET
+                data_apresentacao = EXCLUDED.data_apresentacao,
+                ativa = COALESCE($3, feira_config.ativa)`,
+            [contexto.turmaId, dataLocal, typeof ativa === "boolean" ? ativa : null]
         );
         res.json({ sucesso: true });
     } catch (erro) {
@@ -736,7 +780,9 @@ app.put("/api/feira/contagem", exigirAdmin, async (req, res) => {
 
 app.get("/api/feira/status", exigirLogin, async (req, res) => {
     try {
-        const resultado = await pool.query("SELECT ativa FROM feira_config WHERE id = 1");
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
+        const resultado = await pool.query("SELECT ativa FROM feira_config WHERE turma_id = $1", [contexto.turmaId]);
         res.json({ sucesso: true, ativa: resultado.rows[0]?.ativa ?? false });
     } catch (erro) {
         console.error("Erro ao buscar status da EXPEC:", erro);
@@ -746,9 +792,16 @@ app.get("/api/feira/status", exigirLogin, async (req, res) => {
 
 app.put("/api/feira/status", exigirAdmin, async (req, res) => {
     try {
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
         const { ativa } = req.body;
         if (typeof ativa !== "boolean") return res.status(400).json({ sucesso: false, mensagem: "Status inválido." });
-        await pool.query("UPDATE feira_config SET ativa = $1 WHERE id = 1", [ativa]);
+        await pool.query(
+            `INSERT INTO feira_config (turma_id, data_apresentacao, ativa)
+             VALUES ($1, NOW() + INTERVAL '30 days', $2)
+             ON CONFLICT (turma_id) DO UPDATE SET ativa = EXCLUDED.ativa`,
+            [contexto.turmaId, ativa]
+        );
         res.json({ sucesso: true });
     } catch (erro) {
         console.error("Erro ao atualizar status da EXPEC:", erro);
@@ -758,7 +811,13 @@ app.put("/api/feira/status", exigirAdmin, async (req, res) => {
 
 app.get("/api/feira/equipes", exigirLogin, async (req, res) => {
     try {
-        const resultado = await pool.query("SELECT id, nome, tema, professor, integrantes, lider FROM feira_equipes ORDER BY id ASC");
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
+        const resultado = await pool.query(
+            `SELECT id, nome, tema, professor, integrantes, lider, turma_id AS "turmaId"
+             FROM feira_equipes WHERE turma_id = $1 ORDER BY id ASC`,
+            [contexto.turmaId]
+        );
         res.json({ sucesso: true, equipes: resultado.rows });
     } catch (erro) {
         console.error("Erro ao buscar equipes:", erro);
@@ -768,11 +827,13 @@ app.get("/api/feira/equipes", exigirLogin, async (req, res) => {
 
 app.post("/api/feira/equipes", exigirAdmin, async (req, res) => {
     try {
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
         const { nome, tema, professor = "", integrantes = "", lider = "" } = req.body;
         if (!nome || !tema) return res.status(400).json({ sucesso: false, mensagem: "Preencha nome e tema da equipe." });
         const resultado = await pool.query(
-            "INSERT INTO feira_equipes (nome, tema, professor, integrantes, lider) VALUES ($1, $2, $3, $4, $5) RETURNING id, nome, tema, professor, integrantes, lider",
-            [nome, tema, professor, integrantes, lider]
+            "INSERT INTO feira_equipes (nome, tema, professor, integrantes, lider, turma_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, nome, tema, professor, integrantes, lider, turma_id AS \"turmaId\"",
+            [nome, tema, professor, integrantes, lider, contexto.turmaId]
         );
         res.json({ sucesso: true, equipe: resultado.rows[0] });
     } catch (erro) {
@@ -783,11 +844,13 @@ app.post("/api/feira/equipes", exigirAdmin, async (req, res) => {
 
 app.put("/api/feira/equipes/:id", exigirAdmin, async (req, res) => {
     try {
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
         const { nome, tema, professor = "", integrantes = "", lider = "" } = req.body;
         if (!nome || !tema) return res.status(400).json({ sucesso: false, mensagem: "Preencha nome e tema da equipe." });
         const resultado = await pool.query(
-            "UPDATE feira_equipes SET nome = $1, tema = $2, professor = $3, integrantes = $4, lider = $5 WHERE id = $6 RETURNING id, nome, tema, professor, integrantes, lider",
-            [nome, tema, professor, integrantes, lider, req.params.id]
+            "UPDATE feira_equipes SET nome = $1, tema = $2, professor = $3, integrantes = $4, lider = $5 WHERE id = $6 AND turma_id = $7 RETURNING id, nome, tema, professor, integrantes, lider, turma_id AS \"turmaId\"",
+            [nome, tema, professor, integrantes, lider, req.params.id, contexto.turmaId]
         );
         if (!resultado.rows.length) return res.status(404).json({ sucesso: false, mensagem: "Equipe não encontrada." });
         res.json({ sucesso: true, equipe: resultado.rows[0] });
@@ -799,7 +862,10 @@ app.put("/api/feira/equipes/:id", exigirAdmin, async (req, res) => {
 
 app.delete("/api/feira/equipes/:id", exigirAdmin, async (req, res) => {
     try {
-        await pool.query("DELETE FROM feira_equipes WHERE id = $1", [req.params.id]);
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
+        const resultado = await pool.query("DELETE FROM feira_equipes WHERE id = $1 AND turma_id = $2", [req.params.id, contexto.turmaId]);
+        if (!resultado.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Equipe não encontrada nesta turma." });
         res.json({ sucesso: true });
     } catch (erro) {
         console.error("Erro ao excluir equipe:", erro);
@@ -813,7 +879,9 @@ app.delete("/api/feira/equipes/:id", exigirAdmin, async (req, res) => {
 
 app.get("/api/feira/decoracoes", exigirLogin, async (req, res) => {
     try {
-        const resultado = await pool.query("SELECT id, nome, preco FROM feira_decoracoes ORDER BY id ASC");
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
+        const resultado = await pool.query("SELECT id, nome, preco FROM feira_decoracoes WHERE turma_id = $1 ORDER BY id ASC", [contexto.turmaId]);
         res.json({ sucesso: true, decoracoes: resultado.rows });
     } catch (erro) {
         console.error("Erro ao buscar decorações:", erro);
@@ -823,13 +891,15 @@ app.get("/api/feira/decoracoes", exigirLogin, async (req, res) => {
 
 app.post("/api/feira/decoracoes", exigirAdmin, async (req, res) => {
     try {
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
         const nome = String(req.body.nome ?? req.body.descricao ?? "").trim();
         const preco = Number(req.body.preco ?? 0);
         if (!nome) return res.status(400).json({ sucesso: false, mensagem: "Informe a decoração." });
         if (!Number.isFinite(preco) || preco < 0) return res.status(400).json({ sucesso: false, mensagem: "Preço inválido." });
         const resultado = await pool.query(
-            "INSERT INTO feira_decoracoes (nome, preco) VALUES ($1, $2) RETURNING id, nome, preco",
-            [nome, preco]
+            "INSERT INTO feira_decoracoes (nome, preco, turma_id) VALUES ($1, $2, $3) RETURNING id, nome, preco",
+            [nome, preco, contexto.turmaId]
         );
         res.status(201).json({ sucesso: true, decoracao: resultado.rows[0] });
     } catch (erro) {
@@ -840,13 +910,15 @@ app.post("/api/feira/decoracoes", exigirAdmin, async (req, res) => {
 
 app.put("/api/feira/decoracoes/:id", exigirAdmin, async (req, res) => {
     try {
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
         const nome = String(req.body.nome ?? req.body.descricao ?? "").trim();
         const preco = Number(req.body.preco ?? 0);
         if (!nome) return res.status(400).json({ sucesso: false, mensagem: "Informe a decoração." });
         if (!Number.isFinite(preco) || preco < 0) return res.status(400).json({ sucesso: false, mensagem: "Preço inválido." });
         const resultado = await pool.query(
-            "UPDATE feira_decoracoes SET nome = $1, preco = $2, atualizado_em = NOW() WHERE id = $3 RETURNING id, nome, preco",
-            [nome, preco, req.params.id]
+            "UPDATE feira_decoracoes SET nome = $1, preco = $2, atualizado_em = NOW() WHERE id = $3 AND turma_id = $4 RETURNING id, nome, preco",
+            [nome, preco, req.params.id, contexto.turmaId]
         );
         if (!resultado.rows.length) return res.status(404).json({ sucesso: false, mensagem: "Decoração não encontrada." });
         res.json({ sucesso: true, decoracao: resultado.rows[0] });
@@ -858,7 +930,9 @@ app.put("/api/feira/decoracoes/:id", exigirAdmin, async (req, res) => {
 
 app.delete("/api/feira/decoracoes/:id", exigirAdmin, async (req, res) => {
     try {
-        const resultado = await pool.query("DELETE FROM feira_decoracoes WHERE id = $1", [req.params.id]);
+        const contexto = await contextoTurmaExpec(req, res);
+        if (!contexto) return;
+        const resultado = await pool.query("DELETE FROM feira_decoracoes WHERE id = $1 AND turma_id = $2", [req.params.id, contexto.turmaId]);
         if (!resultado.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Decoração não encontrada." });
         res.json({ sucesso: true });
     } catch (erro) {

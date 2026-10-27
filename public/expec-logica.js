@@ -1,5 +1,13 @@
 let equipeEditando = null;
 let tipoUsuarioAtual = null;
+let turmaExpecAtual = null;
+
+function urlFeira(caminho) {
+    const url = `/api/feira/${caminho}`;
+    return tipoUsuarioAtual === "admin" && turmaExpecAtual
+        ? `${url}?turmaId=${encodeURIComponent(turmaExpecAtual)}`
+        : url;
+}
 
 async function verificarSessao() {
     try {
@@ -12,6 +20,42 @@ async function verificarSessao() {
         const dados = await resposta.json();
         const usuario = dados.usuario || {};
         tipoUsuarioAtual = usuario.tipo;
+        const respostaTurmas = await fetch("/api/turmas", { credentials: "same-origin", cache: "no-store" });
+        const dadosTurmas = await respostaTurmas.json();
+        if (!respostaTurmas.ok || !dadosTurmas.sucesso) throw new Error(dadosTurmas.mensagem || "Não foi possível carregar as turmas.");
+
+        if (tipoUsuarioAtual === "admin") {
+            const seletor = document.getElementById("seletorTurmaExpec");
+            const campoTurma = document.getElementById("turmaExpec");
+            const turmas = Array.isArray(dadosTurmas.turmas) ? dadosTurmas.turmas : [];
+            seletor.style.display = "flex";
+            campoTurma.innerHTML = turmas.map(t => `<option value="${String(t.id)}">${String(t.nome).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}${t.anoLetivo ? " · " + t.anoLetivo : ""}${t.ativa ? "" : " (arquivada)"}</option>`).join("");
+            const solicitado = new URLSearchParams(window.location.search).get("turmaId");
+            turmaExpecAtual = turmas.some(t => String(t.id) === solicitado)
+                ? solicitado
+                : String((turmas.find(t => t.ativa) || turmas[0] || {}).id || "");
+            if (!turmaExpecAtual) {
+                campoTurma.innerHTML = '<option value="">Nenhuma turma cadastrada</option>';
+                document.getElementById("listaEquipes").innerHTML = "<p>Crie uma turma para configurar sua EXPEC.</p>";
+                return false;
+            }
+            campoTurma.value = turmaExpecAtual;
+            const url = new URL(window.location.href);
+            if (url.searchParams.get("turmaId") !== turmaExpecAtual) {
+                url.searchParams.set("turmaId", turmaExpecAtual);
+                window.history.replaceState(null, "", url);
+            }
+            campoTurma.addEventListener("change", () => {
+                const novaUrl = new URL(window.location.href);
+                novaUrl.searchParams.set("turmaId", campoTurma.value);
+                window.location.assign(novaUrl);
+            });
+        } else {
+            turmaExpecAtual = dadosTurmas.turmaId == null ? null : String(dadosTurmas.turmaId);
+            const turma = dadosTurmas.turmas?.[0];
+            if (turma) document.querySelector("header h1").textContent = `EXPEC — ${turma.nome}`;
+            if (!turmaExpecAtual) throw new Error("Sua conta não está vinculada a uma turma.");
+        }
 
         const ehAdmin = tipoUsuarioAtual === "admin";
         const configContador = document.getElementById("configContador");
@@ -37,7 +81,7 @@ async function verificarSessao() {
 
 async function carregarEquipes(tipoUsuario) {
     try {
-        const resposta = await fetch("/api/feira/equipes", { credentials: "same-origin", cache: "no-store" });
+        const resposta = await fetch(urlFeira("equipes"), { credentials: "same-origin", cache: "no-store" });
         if (!resposta.ok) throw new Error("Erro ao buscar equipes.");
         const payload = await resposta.json();
         const equipes = Array.isArray(payload) ? payload : (payload.equipes || []);
@@ -87,7 +131,7 @@ async function carregarEquipes(tipoUsuario) {
 
 async function carregarDecoracoes(tipoUsuario) {
     try {
-        const resposta = await fetch("/api/feira/decoracoes", { credentials: "same-origin", cache: "no-store" });
+        const resposta = await fetch(urlFeira("decoracoes"), { credentials: "same-origin", cache: "no-store" });
         if (!resposta.ok) throw new Error("Erro ao buscar decorações.");
         const payload = await resposta.json();
         const decoracoes = Array.isArray(payload) ? payload : (payload.decoracoes || []);
@@ -138,7 +182,7 @@ if (btnAdicionarDecoracao) btnAdicionarDecoracao.addEventListener("click", async
     if (!nome) return alert("Informe a decoração.");
     if (!Number.isFinite(preco) || preco < 0) return alert("Informe um preço válido.");
     try {
-        const resposta = await fetch("/api/feira/decoracoes", {
+        const resposta = await fetch(urlFeira("decoracoes"), {
             method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin",
             body: JSON.stringify({ nome, preco })
         });
@@ -158,7 +202,7 @@ async function editarDecoracao(id, nomeAtual, precoAtual) {
     const preco = Number(String(precoTexto).replace(",", "."));
     if (!nome.trim() || !Number.isFinite(preco) || preco < 0) return alert("Dados inválidos.");
     try {
-        const resposta = await fetch(`/api/feira/decoracoes/${id}`, {
+        const resposta = await fetch(urlFeira(`decoracoes/${id}`), {
             method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "same-origin",
             body: JSON.stringify({ nome: nome.trim(), preco })
         });
@@ -171,7 +215,7 @@ async function editarDecoracao(id, nomeAtual, precoAtual) {
 async function excluirDecoracao(id) {
     if (!confirm("Tem certeza que deseja excluir esta decoração?")) return;
     try {
-        const resposta = await fetch(`/api/feira/decoracoes/${id}`, { method: "DELETE", credentials: "same-origin" });
+        const resposta = await fetch(urlFeira(`decoracoes/${id}`), { method: "DELETE", credentials: "same-origin" });
         const resultado = await resposta.json();
         if (!resposta.ok) return alert(resultado.mensagem || "Erro ao excluir decoração.");
         carregarDecoracoes(tipoUsuarioAtual);
@@ -203,7 +247,7 @@ if (formEquipe) formEquipe.addEventListener("submit", async evento => {
         integrantes: document.getElementById("integrantesEquipe").value
     };
     try {
-        const resposta = await fetch(equipeEditando !== null ? `/api/feira/equipes/${equipeEditando}` : "/api/feira/equipes", {
+        const resposta = await fetch(urlFeira(equipeEditando !== null ? `equipes/${equipeEditando}` : "equipes"), {
             method: equipeEditando !== null ? "PUT" : "POST",
             headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify(dados)
         });
@@ -217,7 +261,7 @@ if (formEquipe) formEquipe.addEventListener("submit", async evento => {
 
 async function editarEquipe(id) {
     try {
-        const resposta = await fetch("/api/feira/equipes", { credentials: "same-origin", cache: "no-store" });
+        const resposta = await fetch(urlFeira("equipes"), { credentials: "same-origin", cache: "no-store" });
         if (!resposta.ok) throw new Error("Erro ao buscar equipes.");
         const payload = await resposta.json();
         const equipes = Array.isArray(payload) ? payload : (payload.equipes || []);
@@ -237,7 +281,7 @@ async function editarEquipe(id) {
 async function excluirEquipe(id) {
     if (!confirm("Tem certeza que deseja excluir esta equipe?")) return;
     try {
-        const resposta = await fetch(`/api/feira/equipes/${id}`, { method: "DELETE", credentials: "same-origin" });
+        const resposta = await fetch(urlFeira(`equipes/${id}`), { method: "DELETE", credentials: "same-origin" });
         const resultado = await resposta.json();
         if (!resposta.ok) return alert(resultado.mensagem || "Erro ao excluir equipe.");
         verificarSessao();
@@ -246,7 +290,7 @@ async function excluirEquipe(id) {
 
 async function carregarContagem() {
     try {
-        const resposta = await fetch("/api/feira/contagem", { credentials: "same-origin", cache: "no-store" });
+        const resposta = await fetch(urlFeira("contagem"), { credentials: "same-origin", cache: "no-store" });
         const dados = await resposta.json();
         if (!resposta.ok) throw new Error(dados.mensagem || "Erro ao carregar contagem.");
         const dataValor = dados.data_apresentacao ?? dados.data;
@@ -281,7 +325,7 @@ if (btnSalvarData) btnSalvarData.addEventListener("click", async () => {
     const campo = document.getElementById("novaDataApresentacao");
     if (!campo.value) return alert("Escolha uma data e horário.");
     try {
-        const resposta = await fetch("/api/feira/contagem", { method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ data: campo.value }) });
+        const resposta = await fetch(urlFeira("contagem"), { method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ data: campo.value }) });
         const resultado = await resposta.json();
         if (!resposta.ok) return alert(resultado.mensagem || "Erro ao salvar data.");
         alert("Data da apresentação atualizada!"); carregarContagem();
@@ -290,7 +334,7 @@ if (btnSalvarData) btnSalvarData.addEventListener("click", async () => {
 
 async function carregarStatusExpec() {
     try {
-        const resposta = await fetch("/api/feira/status", {
+        const resposta = await fetch(urlFeira("status"), {
             credentials: "same-origin",
             cache: "no-store",
             headers: { "Accept": "application/json" }
@@ -314,7 +358,7 @@ async function carregarStatusExpec() {
             const novoStatus = !ativa;
 
             try {
-                const r = await fetch("/api/feira/status", {
+                const r = await fetch(urlFeira("status"), {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
@@ -343,5 +387,7 @@ async function carregarStatusExpec() {
     }
 }
 
-carregarContagem();
-verificarSessao().then(() => carregarStatusExpec());
+verificarSessao().then(ok => {
+    if (!ok || !turmaExpecAtual) return;
+    return Promise.allSettled([carregarContagem(), carregarStatusExpec()]);
+});

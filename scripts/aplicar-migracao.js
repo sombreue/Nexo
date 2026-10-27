@@ -15,19 +15,23 @@ const pool = new Pool({
 });
 
 async function aplicar() {
-    const arquivo = path.join(__dirname, "..", "migrations", "001_multi_turmas.sql");
-    const sql = fs.readFileSync(arquivo, "utf8");
     const cliente = await pool.connect();
 
     try {
-        console.log("[MIGRAÇÃO] Aplicando 001_multi_turmas.sql...");
-        await cliente.query(sql);
+        for (const nome of ["001_multi_turmas.sql", "002_expec_por_turma.sql"]) {
+            const arquivo = path.join(__dirname, "..", "migrations", nome);
+            const sql = fs.readFileSync(arquivo, "utf8");
+            console.log(`[MIGRAÇÃO] Aplicando ${nome}...`);
+            await cliente.query(sql);
+        }
         const resultado = await cliente.query(`
             SELECT
                 (SELECT COUNT(*)::int FROM turmas) AS turmas,
                 (SELECT COUNT(*)::int FROM usuarios) AS usuarios,
                 (SELECT COUNT(*)::int FROM tarefas) AS tarefas,
-                (SELECT COUNT(*)::int FROM trabalhos) AS trabalhos
+                (SELECT COUNT(*)::int FROM trabalhos) AS trabalhos,
+                (SELECT COUNT(*)::int FROM feira_equipes) AS "equipesExpec",
+                (SELECT COUNT(*)::int FROM feira_decoracoes) AS "decoracoesExpec"
         `);
         console.log("[MIGRAÇÃO] Concluída. Resumo do banco:");
         console.table(resultado.rows[0]);

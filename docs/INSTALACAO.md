@@ -175,7 +175,7 @@ O usuário PostgreSQL precisa ter permissão para criar e alterar as tabelas e o
 
 ## 7. Inicializar o banco e executar o Nexo
 
-Em uma instalação nova, **não é necessário executar `migrar.js`**. A inicialização normal do servidor cria ou verifica as tabelas-base. A migração `001_multi_turmas` é uma etapa separada e necessária para habilitar o esquema e as rotas de turmas.
+Em uma instalação nova, **não é necessário executar `migrar.js`**. A inicialização normal do servidor cria ou verifica as tabelas-base. As migrações `001_multi_turmas` e `002_expec_por_turma` preparam o esquema de turmas e os dados isolados da EXPEC.
 
 Depois de configurar o `.env`, execute:
 
@@ -191,7 +191,7 @@ Depois que a primeira inicialização terminar, pare o servidor com `Ctrl+C` e a
 npm run db:migrate:multi-turmas
 ```
 
-O script aplica `migrations/001_multi_turmas.sql` em uma transação e registra a versão aplicada. Faça backup do banco antes de executar essa migração. Em seguida, inicie novamente com `npm start`.
+O script aplica `migrations/001_multi_turmas.sql` e `migrations/002_expec_por_turma.sql` em transações e registra as versões. A segunda migração separa configurações, equipes e decorações da EXPEC por turma. Os dados globais antigos são vinculados à turma mais antiga para preservar o conteúdo sem duplicá-lo. Faça backup do banco antes de executar as migrações. Em seguida, inicie novamente com `npm start`.
 
 Aguarde as mensagens indicando que o PostgreSQL conectou, que a preparação das tabelas terminou e que o servidor está ouvindo em uma porta. Se ocorrer um erro, leia a mensagem completa do terminal.
 

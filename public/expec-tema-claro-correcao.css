@@ -1,4 +1,8 @@
 /* Correção de contraste das equipes da EXPEC nos temas claros */
+.seletor-turma-expec{display:flex;align-items:center;gap:12px}
+.seletor-turma-expec label{font-weight:700}
+.seletor-turma-expec select{min-width:220px;padding:10px;border:1px solid var(--theme-border);border-radius:9px;background:var(--theme-input);color:var(--theme-text);font:inherit}
+@media(max-width:600px){.seletor-turma-expec{align-items:stretch;flex-direction:column}.seletor-turma-expec select{min-width:0;width:100%}}
 html[data-theme$="-light"] .feira-equipes .equipe,
 html[data-theme$="-light"] .feira-equipes .equipe h3,
 html[data-theme$="-light"] .feira-equipes .equipe p,
