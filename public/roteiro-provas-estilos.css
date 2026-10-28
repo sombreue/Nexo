@@ -26,3 +26,4 @@
 .prioridade-materias{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.prioridade-materia{display:flex;flex-direction:column;gap:3px;max-width:100%;padding:7px 9px;border-radius:7px;background:var(--theme-surface,#19191f)}.prioridade-materia small{font-size:.77rem;color:var(--theme-muted,#aaa)}
 .prioridade-vazia,.prioridade-carregando{padding:12px;color:var(--theme-muted,#aaa);line-height:1.5}
 @media(max-width:700px){.prioridade-estudos{grid-template-columns:1fr;gap:15px;padding:15px}.prioridade-cabecalho h2{font-size:1.25rem}.prioridade-data>span{display:inline-block;margin-left:3px}}
+.seletor-turma-provas{display:flex;flex-direction:column;gap:7px;width:min(100%,360px);margin:0 0 20px;font-weight:700}.seletor-turma-provas[hidden]{display:none}.seletor-turma-provas select{padding:11px;border:1px solid var(--theme-border,#333);border-radius:9px;background:var(--theme-input,#202027);color:var(--theme-text,#fff);font:inherit}

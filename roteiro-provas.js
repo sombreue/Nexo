@@ -65,7 +65,7 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
                 ORDER BY etapa ASC, CASE tipo WHEN 'parcial' THEN 1 ELSE 2 END, data_prova ASC, materia ASC, id ASC
             `, [turmaId]);
             res.set('Cache-Control', 'no-store');
-            res.json({ sucesso: true, provas: r.rows, podeEditar: usuario.tipo === 'admin', podeAdicionar: ['admin', 'representante'].includes(usuario.tipo), turmaId: Number(turmaId) });
+            res.json({ sucesso: true, provas: r.rows, podeEditar: ['admin', 'representante'].includes(usuario.tipo), podeAdicionar: ['admin', 'representante'].includes(usuario.tipo), turmaId: Number(turmaId) });
         } catch (e) {
             console.error('Erro ao consultar roteiro de provas:', e);
             res.status(500).json({ sucesso: false, mensagem: 'Não foi possível carregar o roteiro de provas.' });
@@ -102,14 +102,17 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
         }
     });
 
-    app.put('/api/roteiro-provas/:id', exigirLogin, exigirAdmin, async (req, res) => {
+    app.put('/api/roteiro-provas/:id', exigirLogin, async (req, res) => {
         try {
             await migracaoColunas;
+            const conta = await pool.query("SELECT tipo, turma_id FROM usuarios WHERE id = $1", [req.session.usuario.id]);
+            const usuario = conta.rows[0];
+            if (!usuario || !['admin', 'representante'].includes(usuario.tipo)) return res.status(403).json({ sucesso: false, mensagem: "Somente o administrador ou representante pode editar provas." });
             const id = Number(req.params.id);
             if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: 'Prova inválida.' });
             const d = validar(req.body);
             if (d.erro) return res.status(400).json({ sucesso: false, mensagem: d.erro });
-            const turmaId = Number(req.body?.turmaId);
+            const turmaId = usuario.tipo === 'representante' ? Number(usuario.turma_id) : Number(req.body?.turmaId);
             if (!Number.isSafeInteger(turmaId) || turmaId <= 0) return res.status(400).json({ sucesso: false, mensagem: "Selecione uma turma válida." });
             const r = await pool.query(`
                 UPDATE roteiro_provas SET materia=$1, data_prova=$2, conteudo=$3, etapa=$4, tipo=$5, atualizado_em=NOW()
@@ -124,12 +127,15 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
         }
     });
 
-    app.delete('/api/roteiro-provas/:id', exigirLogin, exigirAdmin, async (req, res) => {
+    app.delete('/api/roteiro-provas/:id', exigirLogin, async (req, res) => {
         try {
             await migracaoColunas;
+            const conta = await pool.query("SELECT tipo, turma_id FROM usuarios WHERE id = $1", [req.session.usuario.id]);
+            const usuario = conta.rows[0];
+            if (!usuario || !['admin', 'representante'].includes(usuario.tipo)) return res.status(403).json({ sucesso: false, mensagem: "Somente o administrador ou representante pode excluir provas." });
             const id = Number(req.params.id);
             if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: 'Prova inválida.' });
-            const turmaId = Number(req.query.turmaId);
+            const turmaId = usuario.tipo === 'representante' ? Number(usuario.turma_id) : Number(req.query.turmaId);
             if (!Number.isSafeInteger(turmaId) || turmaId <= 0) return res.status(400).json({ sucesso: false, mensagem: "Selecione uma turma válida." });
             const r = await pool.query('DELETE FROM roteiro_provas WHERE id=$1 AND turma_id=$2 RETURNING id', [id, turmaId]);
             if (!r.rowCount) return res.status(404).json({ sucesso: false, mensagem: 'Prova não encontrada.' });
