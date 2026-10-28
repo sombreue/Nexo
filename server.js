@@ -159,9 +159,25 @@ app.get("/expec.html", async (req, res, next) => {
         if (!req.session?.usuario) return res.redirect("/login.html");
         const contexto = await contextoTurmaExpec(req, res, true);
         if (!contexto) return;
-        if (contexto.usuario.tipo !== "admin") {
-            const resultado = await pool.query("SELECT ativa FROM feira_config WHERE turma_id = $1", [contexto.turmaId]);
-            if (!resultado.rows[0]?.ativa) return res.redirect("/");
+        let turmaId = contexto.turmaId;
+        if (contexto.usuario.tipo === "admin" && turmaId == null) {
+            const turmaVisivel = await pool.query(`
+                SELECT t.id
+                FROM turmas t
+                JOIN feira_config f ON f.turma_id = t.id
+                WHERE t.ativa = TRUE AND f.ativa = TRUE
+                ORDER BY t.ano_letivo DESC NULLS LAST, t.nome ASC
+                LIMIT 1
+            `);
+            if (!turmaVisivel.rowCount) return res.redirect("/admin-panel.html");
+            turmaId = Number(turmaVisivel.rows[0].id);
+            const url = new URL(req.originalUrl, "http://localhost");
+            url.searchParams.set("turmaId", String(turmaId));
+            return res.redirect(`${url.pathname}${url.search}`);
+        }
+        const resultado = await pool.query("SELECT ativa FROM feira_config WHERE turma_id = $1", [turmaId]);
+        if (!resultado.rows[0]?.ativa) {
+            return res.redirect(contexto.usuario.tipo === "admin" ? "/admin-panel.html" : "/");
         }
         res.sendFile(path.join(__dirname, "public", "expec.html"));
     } catch (erro) {
