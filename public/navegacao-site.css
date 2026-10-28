@@ -26,6 +26,7 @@
 .site-logo{width:48px;height:48px;object-fit:contain;border-radius:12px;display:block}
 .site-tabs{display:flex;align-items:center;justify-content:flex-start;gap:5px}
 .site-tabs a{display:block;padding:10px 18px;border-radius:11px;color:var(--theme-muted,var(--muted,#a4a4ad));text-decoration:none;font-weight:700;transition:background .18s,color .18s,transform .18s}
+.site-tabs a[hidden]{display:none}
 .site-tabs a:hover{color:var(--theme-text,var(--text,#f5f5f5));background:var(--theme-surface-2,var(--surface-2,#1b1b20));transform:translateY(-1px)}
 .site-tabs a.ativo{color:var(--theme-text,var(--text,#f5f5f5));background:var(--theme-button,var(--surface-2,#1b1b20));box-shadow:inset 0 0 0 1px var(--theme-border,var(--border,#2c2c34))}
 .navegacao-site{display:none}
