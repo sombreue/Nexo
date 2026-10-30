@@ -9,6 +9,7 @@
     const seletorTipoConta = $("tipo-nova-conta");
     const status = $("status-admin");
     const buscaUsuarios = $("busca-usuarios");
+    const sugestoesContas = $("sugestoes-contas");
     const statusExpecAdmin = $("admin-expec-status");
     const campoSenha = $("nova-senha");
     const botaoMostrarSenha = $("botao-mostrar-senha");
@@ -16,12 +17,15 @@
     let turmasParaAbrir = [];
     let turmasAtivas = [];
     let usuariosCadastrados = [];
+    let indiceSugestaoAtiva = -1;
 
     usuarioLogado.textContent = "Carregando painel...";
 
     const escapar = valor => String(valor ?? "").replace(/[&<>'"]/g, c => ({
         "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"
     }[c]));
+
+    const normalizarBusca = valor => String(valor ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").trim();
 
     const dataLocal = valor => {
         if (!valor) return "sem data";
@@ -181,9 +185,9 @@
 
     function renderizarUsuarios() {
         const atual = usuariosCadastrados.usuarioLogadoId ?? null;
-        const termo = buscaUsuarios.value.trim().toLocaleLowerCase("pt-BR");
+        const termo = normalizarBusca(buscaUsuarios.value);
         const filtrados = usuariosCadastrados.filter(usuario =>
-            `${usuario.usuario} ${usuario.tipo} ${usuario.turmaNome || ""}`.toLocaleLowerCase("pt-BR").includes(termo)
+            normalizarBusca(`${usuario.usuario} ${usuario.tipo} ${usuario.turmaNome || ""}`).includes(termo)
         );
         listaUsuarios.innerHTML = filtrados.map(usuario => `
                 <article class="usuario-admin-item">
@@ -192,13 +196,83 @@
                         <span class="item-meta">${usuario.tipo === "admin" ? "Administrador global" : usuario.tipo === "representante" ? "Representante de turma" : "Usuário"}${usuario.turmaNome ? " · " + escapar(usuario.turmaNome) : ""}</span>
                     </div>
                     <div class="usuario-acoes">
-                        ${usuario.tipo !== "admin" ? `<label class="turma-conta-edicao"><span class="sr-only">Turma de ${escapar(usuario.usuario)}</span><select data-turma-conta="${usuario.id}" aria-label="Turma de ${escapar(usuario.usuario)}">${[...turmasAtivas, ...(usuario.turmaId && !turmasAtivas.some(t => String(t.id) === String(usuario.turmaId)) ? [{id:usuario.turmaId,nome:usuario.turmaNome || "Turma arquivada",ativa:false}] : [])].map(t => `<option value="${escapar(t.id)}" ${String(t.id) === String(usuario.turmaId) ? "selected" : ""}>${escapar(t.nome)}${t.anoLetivo ? " · " + escapar(t.anoLetivo) : ""}${t.ativa ? "" : " (arquivada)"}</option>`).join("")}</select></label><button type="button" data-salvar-turma-conta="${usuario.id}">Salvar turma</button>` : ""}
+                        <label class="turma-conta-edicao"><span class="sr-only">Tipo da conta de ${escapar(usuario.usuario)}</span><select data-tipo-conta="${usuario.id}" aria-label="Tipo da conta de ${escapar(usuario.usuario)}">
+                            <option value="usuario" ${usuario.tipo === "usuario" ? "selected" : ""}>Usuário</option>
+                            <option value="representante" ${usuario.tipo === "representante" ? "selected" : ""}>Representante</option>
+                            <option value="admin" ${usuario.tipo === "admin" ? "selected" : ""}>Administrador global</option>
+                        </select></label>
+                        <label class="turma-conta-edicao" data-turma-conta-wrap="${usuario.id}" ${usuario.tipo === "admin" ? "hidden" : ""}><span class="sr-only">Turma de ${escapar(usuario.usuario)}</span><select data-turma-conta="${usuario.id}" aria-label="Turma de ${escapar(usuario.usuario)}" ${usuario.tipo === "admin" ? "disabled" : ""}>${[...turmasAtivas, ...(usuario.turmaId && !turmasAtivas.some(t => String(t.id) === String(usuario.turmaId)) ? [{id:usuario.turmaId,nome:usuario.turmaNome || "Turma arquivada",ativa:false}] : [])].map(t => `<option value="${escapar(t.id)}" ${String(t.id) === String(usuario.turmaId) ? "selected" : ""}>${escapar(t.nome)}${t.anoLetivo ? " · " + escapar(t.anoLetivo) : ""}${t.ativa ? "" : " (arquivada)"}</option>`).join("")}</select></label>
+                        ${usuario.id !== atual ? `<button type="button" data-salvar-tipo-conta="${usuario.id}">Salvar tipo</button>` : ""}
                         <button type="button" data-alterar-senha="${usuario.id}">Mudar senha</button>
                         ${usuario.id === atual ? '<em>Conta atual</em>' : `<button type="button" data-excluir-usuario="${usuario.id}">${usuario.tipo === "admin" ? "Excluir administrador" : "Excluir"}</button>`}
                     </div>
                 </article>`
             ).join("") || `<div class="estado-vazio">${usuariosCadastrados.length ? "Nenhum usuário corresponde à busca." : "Nenhum usuário cadastrado."}</div>`;
     }
+
+    function atualizarSugestoes() {
+        const termo = normalizarBusca(buscaUsuarios.value);
+        indiceSugestaoAtiva = -1;
+        if (!termo) {
+            sugestoesContas.hidden = true;
+            sugestoesContas.innerHTML = "";
+            buscaUsuarios.setAttribute("aria-expanded", "false");
+            return;
+        }
+
+        const correspondencias = usuariosCadastrados
+            .filter(usuario => normalizarBusca(usuario.usuario).includes(termo))
+            .sort((a, b) => {
+                const aComeca = normalizarBusca(a.usuario).startsWith(termo);
+                const bComeca = normalizarBusca(b.usuario).startsWith(termo);
+                return Number(bComeca) - Number(aComeca) || String(a.usuario).localeCompare(String(b.usuario), "pt-BR");
+            })
+            .slice(0, 8);
+
+        sugestoesContas.innerHTML = correspondencias.length
+            ? correspondencias.map((usuario, indice) => `<button type="button" id="sugestao-conta-${usuario.id}" class="sugestao-conta" role="option" aria-selected="false" data-sugestao-conta="${usuario.id}" data-indice-sugestao="${indice}"><strong>${escapar(usuario.usuario)}</strong><small>${usuario.tipo === "admin" ? "Administrador" : usuario.tipo === "representante" ? "Representante" : "Usuário"}${usuario.turmaNome ? " · " + escapar(usuario.turmaNome) : ""}</small></button>`).join("")
+            : '<div class="sugestoes-vazias">Nenhuma conta encontrada.</div>';
+        sugestoesContas.hidden = false;
+        buscaUsuarios.setAttribute("aria-expanded", "true");
+    }
+
+    function ocultarSugestoes() {
+        sugestoesContas.hidden = true;
+        buscaUsuarios.setAttribute("aria-expanded", "false");
+        buscaUsuarios.removeAttribute("aria-activedescendant");
+    }
+
+    buscaUsuarios.addEventListener("input", () => {
+        renderizarUsuarios();
+        atualizarSugestoes();
+    });
+    buscaUsuarios.addEventListener("keydown", evento => {
+        const opcoes = [...sugestoesContas.querySelectorAll("[data-sugestao-conta]")];
+        if (evento.key === "Escape") { ocultarSugestoes(); return; }
+        if (!opcoes.length) return;
+        if (evento.key === "ArrowDown" || evento.key === "ArrowUp") {
+            evento.preventDefault();
+            const delta = evento.key === "ArrowDown" ? 1 : -1;
+            indiceSugestaoAtiva = (indiceSugestaoAtiva + delta + opcoes.length) % opcoes.length;
+            opcoes.forEach((opcao, indice) => opcao.setAttribute("aria-selected", String(indice === indiceSugestaoAtiva)));
+            buscaUsuarios.setAttribute("aria-activedescendant", `sugestao-conta-${opcoes[indiceSugestaoAtiva].dataset.sugestaoConta}`);
+        } else if (evento.key === "Enter" && indiceSugestaoAtiva >= 0) {
+            evento.preventDefault();
+            opcoes[indiceSugestaoAtiva].click();
+        }
+    });
+    sugestoesContas.addEventListener("click", evento => {
+        const opcao = evento.target.closest("[data-sugestao-conta]");
+        if (!opcao) return;
+        const usuario = usuariosCadastrados.find(item => String(item.id) === opcao.dataset.sugestaoConta);
+        if (!usuario) return;
+        buscaUsuarios.value = usuario.usuario;
+        renderizarUsuarios();
+        ocultarSugestoes();
+    });
+    document.addEventListener("click", evento => {
+        if (!evento.target.closest(".busca-contas")) ocultarSugestoes();
+    });
 
     async function carregarUsuarios() {
         try {
@@ -219,7 +293,7 @@
                     <div class="item-principal">
                         <div>
                             <strong>${escapar(sessao.usuario || "Sessão sem usuário")}</strong>
-                            <div class="item-meta">${sessao.tipo === "admin" ? "Administrador" : "Usuário"} · expira em ${escapar(dataLocal(sessao.expiraEm))}</div>
+                            <div class="item-meta">${sessao.tipo === "admin" ? "Administrador" : sessao.tipo === "representante" ? "Representante" : "Usuário"} · expira em ${escapar(dataLocal(sessao.expiraEm))}</div>
                         </div>
                     </div>
                     <div class="sessao-acoes">
@@ -248,19 +322,21 @@
     }
 
     listaUsuarios.addEventListener("click", async evento => {
-        const salvarTurma = evento.target.closest("[data-salvar-turma-conta]");
-        if (salvarTurma) {
-            const id = salvarTurma.dataset.salvarTurmaConta;
+        const salvarTipo = evento.target.closest("[data-salvar-tipo-conta]");
+        if (salvarTipo) {
+            const id = salvarTipo.dataset.salvarTipoConta;
             const select = listaUsuarios.querySelector(`[data-turma-conta="${CSS.escape(id)}"]`);
+            const tipo = listaUsuarios.querySelector(`[data-tipo-conta="${CSS.escape(id)}"]`);
+            salvarTipo.disabled = true;
             try {
-                await json(await fetch(`/api/admin/usuarios/${encodeURIComponent(id)}/turma`, {
+                await json(await fetch(`/api/admin/usuarios/${encodeURIComponent(id)}/tipo`, {
                     method:"PUT", credentials:"same-origin",
                     headers:{"Content-Type":"application/json"},
-                    body:JSON.stringify({turmaId:select?.value})
+                    body:JSON.stringify({tipo:tipo?.value, turmaId:select?.value || null})
                 }));
-                status.textContent = "Turma da conta alterada com sucesso.";
-                await carregarUsuarios();
-            } catch (erro) { status.textContent = erro.message; }
+                status.textContent = "Tipo e vínculo da conta atualizados. A conta precisará entrar novamente.";
+                await Promise.all([carregarUsuarios(), carregarSessoes()]);
+            } catch (erro) { status.textContent = erro.message; salvarTipo.disabled = false; }
             return;
         }
         const alterar = evento.target.closest("[data-alterar-senha]");
@@ -291,6 +367,17 @@
             carregarUsuarios();
             carregarSessoes();
         } catch (erro) { status.textContent = erro.message; }
+    });
+
+    listaUsuarios.addEventListener("change", evento => {
+        const tipo = evento.target.closest("[data-tipo-conta]");
+        if (!tipo) return;
+        const turma = listaUsuarios.querySelector(`[data-turma-conta="${CSS.escape(tipo.dataset.tipoConta)}"]`);
+        const campoTurma = listaUsuarios.querySelector(`[data-turma-conta-wrap="${CSS.escape(tipo.dataset.tipoConta)}"]`);
+        if (turma) {
+            turma.disabled = tipo.value === "admin";
+            if (campoTurma) campoTurma.hidden = tipo.value === "admin";
+        }
     });
 
 
@@ -327,7 +414,6 @@
     });
 
     seletorTipoConta.addEventListener("change", atualizarSeletorTurmaConta);
-    buscaUsuarios.addEventListener("input", renderizarUsuarios);
     $("botao-atualizar-turmas").addEventListener("click", carregarTurmas);
     if (buscaTurmas) buscaTurmas.addEventListener("input", renderizarTurmasParaAbrir);
     $("admin-inicio-atualizar")?.addEventListener("click", carregarTurmasParaAbrir);

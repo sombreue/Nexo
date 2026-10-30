@@ -114,13 +114,16 @@
         <div class="section-header">
             <div>
                 <h2>Usuários cadastrados</h2>
-                <p>Altere senhas ou remova contas comuns.</p>
+                <p>Altere o tipo e a turma das contas, redefina senhas ou remova contas.</p>
             </div>
             <button type="button" class="botao-secundario" id="botao-atualizar-usuarios">Atualizar</button>
         </div>
         <div class="filtro-lista-admin">
             <label for="busca-usuarios">Buscar usuário</label>
-            <input id="busca-usuarios" type="search" placeholder="Nome, tipo ou turma" autocomplete="off">
+            <div class="busca-contas">
+                <input id="busca-usuarios" type="search" placeholder="Digite um nome ou trecho" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="sugestoes-contas" aria-expanded="false">
+                <div id="sugestoes-contas" class="sugestoes-contas" role="listbox" hidden></div>
+            </div>
         </div>
         <div id="lista-usuarios" class="lista-admin" aria-live="polite"></div>
     </section>

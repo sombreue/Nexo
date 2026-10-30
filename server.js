@@ -651,6 +651,55 @@ app.put("/api/admin/usuarios/:id/turma", exigirAdmin, async (req, res) => {
     }
 });
 
+app.put("/api/admin/usuarios/:id/tipo", exigirAdmin, async (req, res) => {
+    const id = Number(req.params.id);
+    const tipo = req.body?.tipo;
+    const turmaIdInformada = req.body?.turmaId;
+    if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: "Conta inválida." });
+    if (id === Number(req.session.usuario.id)) return res.status(400).json({ sucesso: false, mensagem: "Por segurança, não é possível alterar o tipo da própria conta." });
+    if (!["admin", "usuario", "representante"].includes(tipo)) return res.status(400).json({ sucesso: false, mensagem: "Tipo de conta inválido." });
+
+    let turmaId = null;
+    if (tipo !== "admin") {
+        turmaId = Number(turmaIdInformada);
+        if (!Number.isSafeInteger(turmaId) || turmaId <= 0) return res.status(400).json({ sucesso: false, mensagem: "Selecione uma turma válida para esta conta." });
+    }
+
+    const cliente = await pool.connect();
+    try {
+        await cliente.query("BEGIN");
+        if (turmaId !== null) {
+            const turma = await cliente.query("SELECT id FROM turmas WHERE id = $1 AND ativa = TRUE", [turmaId]);
+            if (!turma.rowCount) {
+                await cliente.query("ROLLBACK");
+                return res.status(400).json({ sucesso: false, mensagem: "A turma selecionada não existe ou está inativa." });
+            }
+        }
+
+        const resultado = await cliente.query(
+            `UPDATE usuarios SET tipo = $1, turma_id = $2 WHERE id = $3
+             RETURNING id, usuario, tipo, turma_id AS "turmaId"`,
+            [tipo, turmaId, id]
+        );
+        if (!resultado.rowCount) {
+            await cliente.query("ROLLBACK");
+            return res.status(404).json({ sucesso: false, mensagem: "Conta não encontrada." });
+        }
+
+        // Revoga as sessões antigas para que permissões e vínculos novos tenham efeito imediato.
+        await cliente.query("DELETE FROM sessoes WHERE sess->'usuario'->>'id' = $1::text", [String(id)]);
+        await cliente.query("COMMIT");
+        res.json({ sucesso: true, usuario: resultado.rows[0] });
+    } catch (erro) {
+        await cliente.query("ROLLBACK").catch(() => {});
+        if (erro.code === "23505") return res.status(409).json({ sucesso: false, mensagem: "Esta turma já possui um representante principal." });
+        console.error("Erro ao alterar tipo da conta:", erro);
+        res.status(500).json({ sucesso: false, mensagem: "Não foi possível alterar o tipo da conta." });
+    } finally {
+        cliente.release();
+    }
+});
+
 app.delete("/api/admin/usuarios/:id", exigirAdmin, async (req, res) => {
     try {
         const id = Number(req.params.id);
