@@ -10,6 +10,8 @@ const conteudoAdmin = document.getElementById('conteudo-trabalhos-admin');
 const botaoMinAdmin = document.getElementById('botao-minimizar-trabalhos-admin');
 const formAdmin = document.getElementById('form-trabalho-admin');
 const statusAdmin = document.getElementById('status-admin-trabalhos');
+const modalEquipes = document.getElementById('modal-equipes');
+let trabalhoModalEquipe = null;
 let catalogoMaterias = Array.isArray(window.MATERIAS_AGENDA) ? window.MATERIAS_AGENDA.slice() : [];
 window.addEventListener('nexo:materias-carregadas', evento => {
     catalogoMaterias = Array.isArray(evento.detail) ? evento.detail.slice() : [];
@@ -144,12 +146,12 @@ function renderizar(){
     lista.innerHTML = filtrados.map(t => {
         const prioridade = calcularPrioridade(t.prazo);
         const valePonto = t.vale_ponto !== false;
-        const controles = podeGerenciarTrabalhos() ? `<div class="controles-trabalho"><button type="button" data-editar="${t.id}">Editar</button><button type="button" class="excluir" data-excluir="${t.id}">Excluir</button></div>` : '';
+        const controlesGestao = podeGerenciarTrabalhos() ? `<button type="button" data-editar="${t.id}">Editar</button><button type="button" class="excluir" data-excluir="${t.id}">Excluir</button>` : '';
         return `<article id="trabalho-${t.id}" class="trabalho">
             <div class="trabalho-topo"><div><div class="materia">${escaparHtml(t.materia)}</div><h2>${escaparHtml(t.titulo)}</h2></div><span class="prioridade ${prioridade.classe}">${prioridade.nome}</span></div>
             <div class="descricao markdown-conteudo">${renderizarMarkdown(t.descricao || '')}</div>
             <div class="meta"><span class="tag">Prazo: ${formatarData(t.prazo)}</span><span class="tag">${textoPrazo(t.prazo)}</span>${valePonto ? '<span class="tag">Vale ponto</span>' : ''}</div>
-            ${controles}
+            <div class="controles-trabalho"><button type="button" data-equipes="${t.id}">Equipes</button>${controlesGestao}</div>
         </article>`;
     }).join('');
 }
@@ -199,9 +201,46 @@ formAdmin.addEventListener('submit', async evento => {
 document.getElementById('botao-cancelar-trabalho').addEventListener('click',()=>{preencherFormulario(null);statusAdmin.textContent='';});
 
 lista.addEventListener('click',async evento=>{
-    const editar=evento.target.closest('[data-editar]'); const excluir=evento.target.closest('[data-excluir]');
+    const abrirEquipes=evento.target.closest('[data-equipes]'); const editar=evento.target.closest('[data-editar]'); const excluir=evento.target.closest('[data-excluir]');
+    if(abrirEquipes){ const trabalho=trabalhos.find(t=>String(t.id)===abrirEquipes.dataset.equipes); if(trabalho) await abrirModalEquipes(trabalho); }
     if(editar){const trabalho=trabalhos.find(t=>String(t.id)===editar.dataset.editar);if(trabalho){preencherFormulario(trabalho);painelAdmin.scrollIntoView({behavior:'smooth',block:'start'});}}
     if(excluir){const id=excluir.dataset.excluir;if(!confirm('Tem certeza que deseja excluir este trabalho?'))return;try{await lerRespostaJson(await fetch(`/api/trabalhos/${id}`,{method:'DELETE'}),'Não foi possível excluir.');statusAdmin.textContent='Trabalho excluído.';await carregarTrabalhos();}catch(erro){statusAdmin.textContent=erro.message;}}
+});
+
+async function abrirModalEquipes(trabalho){
+    trabalhoModalEquipe=trabalho;
+    document.getElementById('trabalho-modal-equipes').textContent=`${trabalho.materia} · ${trabalho.titulo}`;
+    document.getElementById('equipe-tema').value='';
+    document.getElementById('equipe-integrantes').value='';
+    document.getElementById('status-equipe').textContent='';
+    modalEquipes.showModal();
+    await carregarEquipesModal();
+}
+
+async function carregarEquipesModal(){
+    const alvo=document.getElementById('lista-equipes-modal');
+    alvo.innerHTML='<p class="equipes-vazio">Carregando equipes...</p>';
+    try{
+        const dados=await lerRespostaJson(await fetch(`/api/trabalhos/${trabalhoModalEquipe.id}/equipes`,{cache:'no-store',credentials:'same-origin'}),'Não foi possível carregar as equipes.');
+        alvo.innerHTML=dados.equipes.length ? dados.equipes.map(e=>`<article class="equipe-item"><strong>${escaparHtml(e.tema)}</strong><p><b>Integrantes:</b> ${escaparHtml(e.integrantes).replace(/\r?\n/g,'<br>')}</p></article>`).join('') : '<p class="equipes-vazio">Ainda não há equipes neste trabalho.</p>';
+    }catch(erro){alvo.innerHTML=`<p class="equipes-vazio">${escaparHtml(erro.message)}</p>`;}
+}
+
+document.getElementById('fechar-modal-equipes').addEventListener('click',()=>modalEquipes.close());
+modalEquipes.addEventListener('click',evento=>{if(evento.target===modalEquipes)modalEquipes.close();});
+document.getElementById('form-equipe').addEventListener('submit',async evento=>{
+    evento.preventDefault();
+    if(!trabalhoModalEquipe)return;
+    const status=document.getElementById('status-equipe');
+    const botao=document.getElementById('salvar-equipe');
+    botao.disabled=true; status.textContent='Salvando equipe...';
+    try{
+        await lerRespostaJson(await fetch(`/api/trabalhos/${trabalhoModalEquipe.id}/equipes`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({tema:document.getElementById('equipe-tema').value,integrantes:document.getElementById('equipe-integrantes').value})}),'Não foi possível criar a equipe.');
+        status.textContent='Equipe criada.';
+        document.getElementById('equipe-tema').value=''; document.getElementById('equipe-integrantes').value='';
+        await carregarEquipesModal();
+    }catch(erro){status.textContent=erro.message;}
+    finally{botao.disabled=false;}
 });
 
 botaoMinAdmin.addEventListener('click',()=>{const minimizado=conteudoAdmin.hidden;conteudoAdmin.hidden=!minimizado;botaoMinAdmin.textContent=minimizado?'−':'+';botaoMinAdmin.setAttribute('aria-expanded',String(minimizado));});

@@ -91,6 +91,35 @@ module.exports = function registrarRotasTurmas(app, pool, exigirLogin, exigirAdm
         }
     });
 
+    app.delete("/api/turmas/:id", exigirAdmin, async (req, res) => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: "Turma inválida." });
+        let client;
+        try {
+            client = await pool.connect();
+            await client.query("BEGIN");
+            const turma = await client.query("SELECT id, nome, ano_letivo AS \"anoLetivo\" FROM turmas WHERE id = $1 FOR UPDATE", [id]);
+            if (!turma.rowCount) {
+                await client.query("ROLLBACK");
+                return res.status(404).json({ sucesso: false, mensagem: "Turma não encontrada." });
+            }
+
+            const usuarios = await client.query("DELETE FROM usuarios WHERE turma_id = $1", [id]);
+            const tarefas = await client.query("DELETE FROM tarefas WHERE turma_id = $1", [id]);
+            const trabalhos = await client.query("DELETE FROM trabalhos WHERE turma_id = $1", [id]);
+            await client.query("INSERT INTO auditoria_turmas (ator_usuario_id, turma_id, acao, entidade, entidade_id, detalhes) VALUES ($1, $2, 'turma_excluida', 'turma', $2::text, $3::jsonb)", [req.session.usuario.id, id, JSON.stringify({ nome: turma.rows[0].nome, anoLetivo: turma.rows[0].anoLetivo, usuarios: usuarios.rowCount, tarefas: tarefas.rowCount, trabalhos: trabalhos.rowCount })]);
+            await client.query("DELETE FROM turmas WHERE id = $1", [id]);
+            await client.query("COMMIT");
+            res.json({ sucesso: true, mensagem: "Turma e dados vinculados excluídos permanentemente." });
+        } catch (erro) {
+            if (client) await client.query("ROLLBACK").catch(() => {});
+            console.error("Erro ao excluir turma:", erro);
+            res.status(500).json({ sucesso: false, mensagem: "Não foi possível excluir a turma e seus dados." });
+        } finally {
+            client?.release();
+        }
+    });
+
     // Rotas da agenda compartilhada. São registradas antes das rotas legadas
     // de server.js para que o isolamento por turma seja aplicado no servidor.
     async function usuarioAtual(req) {

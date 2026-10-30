@@ -38,6 +38,14 @@ module.exports = function instalarRotasTrabalhos(app, pool) {
         await pool.query(`ALTER TABLE trabalhos ALTER COLUMN descricao SET DEFAULT ''`);
         await pool.query(`ALTER TABLE trabalhos ALTER COLUMN vale_ponto SET DEFAULT TRUE`);
         await pool.query(`ALTER TABLE trabalhos ALTER COLUMN criado_em SET DEFAULT NOW()`);
+        await pool.query(`CREATE TABLE IF NOT EXISTS trabalho_equipes (
+            id SERIAL PRIMARY KEY,
+            trabalho_id INTEGER NOT NULL REFERENCES trabalhos(id) ON DELETE CASCADE,
+            tema TEXT NOT NULL,
+            integrantes TEXT NOT NULL DEFAULT '',
+            criado_por BIGINT REFERENCES usuarios(id) ON DELETE SET NULL,
+            criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`);
     })();
     tabelaPronta.catch(e => console.error("Erro ao preparar tabela de trabalhos:", e));
 
@@ -62,6 +70,47 @@ module.exports = function instalarRotasTrabalhos(app, pool) {
         } catch (e) {
             console.error("Erro ao buscar trabalhos:", e);
             res.status(500).json({ sucesso: false, mensagem: "Erro ao buscar trabalhos." });
+        }
+    });
+
+    app.get("/api/trabalhos/:id/equipes", exigirLogin, async (req, res) => {
+        try {
+            await tabelaPronta;
+            const usuario = await usuarioAtual(req);
+            const id = Number(req.params.id);
+            if (!usuario || !Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: "Trabalho inválido." });
+            const trabalho = usuario.tipo === "admin"
+                ? await pool.query("SELECT id FROM trabalhos WHERE id = $1", [id])
+                : await pool.query("SELECT id FROM trabalhos WHERE id = $1 AND turma_id = $2", [id, usuario.turma_id]);
+            if (!trabalho.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Trabalho não encontrado nesta turma." });
+            const equipes = await pool.query("SELECT id, tema, integrantes, criado_em FROM trabalho_equipes WHERE trabalho_id = $1 ORDER BY id", [id]);
+            res.set("Cache-Control", "no-store");
+            res.json({ sucesso: true, equipes: equipes.rows });
+        } catch (e) {
+            console.error("Erro ao buscar equipes do trabalho:", e);
+            res.status(500).json({ sucesso: false, mensagem: "Erro ao buscar equipes." });
+        }
+    });
+
+    app.post("/api/trabalhos/:id/equipes", exigirLogin, async (req, res) => {
+        try {
+            await tabelaPronta;
+            const usuario = await usuarioAtual(req);
+            const id = Number(req.params.id);
+            if (!usuario || !Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: "Trabalho inválido." });
+            const tema = String(req.body.tema || "").trim();
+            const integrantes = String(req.body.integrantes || "").trim();
+            if (!tema || !integrantes) return res.status(400).json({ sucesso: false, mensagem: "Preencha o tema e os integrantes da equipe." });
+            if (tema.length > 160 || integrantes.length > 1000) return res.status(400).json({ sucesso: false, mensagem: "Tema ou integrantes ultrapassaram o limite permitido." });
+            const trabalho = usuario.tipo === "admin"
+                ? await pool.query("SELECT id FROM trabalhos WHERE id = $1", [id])
+                : await pool.query("SELECT id FROM trabalhos WHERE id = $1 AND turma_id = $2", [id, usuario.turma_id]);
+            if (!trabalho.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Trabalho não encontrado nesta turma." });
+            const resultado = await pool.query("INSERT INTO trabalho_equipes (trabalho_id, tema, integrantes, criado_por) VALUES ($1, $2, $3, $4) RETURNING id, tema, integrantes, criado_em", [id, tema, integrantes, usuario.id]);
+            res.status(201).json({ sucesso: true, equipe: resultado.rows[0] });
+        } catch (e) {
+            console.error("Erro ao criar equipe do trabalho:", e);
+            res.status(500).json({ sucesso: false, mensagem: "Erro ao criar equipe." });
         }
     });
 

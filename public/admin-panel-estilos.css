@@ -64,6 +64,7 @@ button{cursor:pointer}
 .sessao-atual{border-color:var(--theme-accent)}
 .sessao-atual .sessao-tag{color:var(--theme-accent);font-weight:800}
 .botao-perigo{background:var(--theme-button)!important}
+.usuario-acoes .botao-perigo{border-color:#b42332;color:#d92d3a}
 .estado-vazio{padding:20px;text-align:center;color:var(--theme-muted);border:1px dashed var(--theme-border);border-radius:12px}
 @media(max-width:760px){
 body{padding:14px}

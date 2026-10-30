@@ -103,6 +103,7 @@
                     </div>
                     <div class="usuario-acoes">
                         <button type="button" data-alterar-turma="${escapar(t.id)}" data-ativa-turma="${t.ativa ? "false" : "true"}">${t.ativa ? "Arquivar" : "Reativar"}</button>
+                        <button type="button" class="botao-perigo" data-excluir-turma="${escapar(t.id)}" data-nome-turma="${escapar(t.nome)}">Excluir definitivamente</button>
                     </div>
                 </article>`
             ).join("") || '<div class="estado-vazio">Nenhuma turma criada.</div>';
@@ -382,6 +383,27 @@
 
 
     listaTurmas.addEventListener("click", async evento => {
+        const excluir = evento.target.closest("[data-excluir-turma]");
+        if (excluir) {
+            const nome = excluir.dataset.nomeTurma;
+            if (!confirm(`Excluir definitivamente a turma “${nome}”? As contas dos alunos e os dados pessoais delas, além de tarefas, trabalhos, equipes e dados da EXPEC vinculados, serão removidos.`)) return;
+            if (prompt(`Para confirmar, digite exatamente o nome da turma: ${nome}`) !== nome) {
+                statusTurmas.textContent = "Exclusão cancelada: o nome informado não corresponde à turma.";
+                return;
+            }
+            excluir.disabled = true;
+            try {
+                await json(await fetch("/api/turmas/" + encodeURIComponent(excluir.dataset.excluirTurma), {
+                    method:"DELETE", credentials:"same-origin"
+                }));
+                statusTurmas.textContent = `A turma “${nome}” e os dados vinculados foram excluídos.`;
+                await Promise.all([carregarTurmas(), carregarTurmasParaAbrir()]);
+            } catch (erro) {
+                statusTurmas.textContent = erro.message;
+                excluir.disabled = false;
+            }
+            return;
+        }
         const botao = evento.target.closest("[data-alterar-turma]");
         if (!botao) return;
         const ativa = botao.dataset.ativaTurma === "true";
