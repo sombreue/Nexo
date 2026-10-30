@@ -52,6 +52,10 @@
             <input type="date" id="data" onchange="filtrarPorData()">
         </div>
         <div class="filtro-campo">
+            <label for="data-entrega-filtro">Pesquisar por data de entrega:</label>
+            <input type="date" id="data-entrega-filtro" onchange="filtrarPorDataEntrega()">
+        </div>
+        <div class="filtro-campo">
             <label for="botao-materias">Pesquisar por matéria:</label>
             <div class="seletor-materias">
                 <button type="button" id="botao-materias" class="botao-materias" aria-expanded="false" aria-controls="painel-materias">
@@ -128,6 +132,7 @@
     function obterFiltros() {
         return {
             data: document.getElementById("data")?.value || "",
+            dataEntrega: document.getElementById("data-entrega-filtro")?.value || "",
             materias: materias().filter(c => c.checked).map(c => c.value)
         };
     }
@@ -147,6 +152,7 @@
     }
 
     window.filtrarPorData = function () { aplicarFiltros(); };
+    window.filtrarPorDataEntrega = function () { aplicarFiltros(); };
     window.filtrarPorMateria = aplicarFiltroMateria;
 
     // Limpa os dois filtros de forma direta, sem depender de onclick inline.
@@ -157,6 +163,7 @@
         }
 
         const data = document.getElementById("data");
+        const dataEntrega = document.getElementById("data-entrega-filtro");
         const painel = document.getElementById("painel-materias");
         const botao = document.getElementById("botao-materias");
 
@@ -164,6 +171,7 @@
             data.value = "";
             data.dispatchEvent(new Event("input", { bubbles: true }));
         }
+        if (dataEntrega) dataEntrega.value = "";
 
         materias().forEach(c => {
             c.checked = false;
@@ -187,7 +195,7 @@
     async function aplicarFiltros() {
         const lista = document.getElementById("lista-tarefas");
         if (!lista) return;
-        const { data, materias: materiasSelecionadas } = obterFiltros();
+        const { data, dataEntrega, materias: materiasSelecionadas } = obterFiltros();
         try {
             // Os filtros também precisam respeitar a turma selecionada pelo admin.
             const turmaSelecionada = document.getElementById("turma-agenda-seletor")?.value;
@@ -203,6 +211,7 @@
             lista.innerHTML = "";
             const tarefas = dados.tarefas
                 .filter(tarefa => !data || tarefa.data === data)
+                .filter(tarefa => !dataEntrega || tarefa.dataEntrega === dataEntrega)
                 .filter(tarefa => materiasSelecionadas.length === 0 || materiasSelecionadas.includes(tarefa.materia))
                 .sort((a, b) => {
                     const comparacaoData = b.data.localeCompare(a.data);
@@ -211,7 +220,7 @@
             tarefas.forEach(tarefa => criarTarefa(tarefa.id, tarefa.data, tarefa.materia, tarefa.descricao, tarefa.dataEntrega, tarefa.subtitulo));
             if (tarefas.length === 0) {
                 const mensagem = document.createElement("p");
-                mensagem.textContent = data || materiasSelecionadas.length > 0
+                mensagem.textContent = data || dataEntrega || materiasSelecionadas.length > 0
                     ? "Nenhuma tarefa encontrada com esses filtros."
                     : "Nenhuma tarefa cadastrada.";
                 lista.appendChild(mensagem);
