@@ -1,5 +1,6 @@
 /* Gestão administrativa de turmas e consulta da turma vinculada à sessão. */
 module.exports = function registrarRotasTurmas(app, pool, exigirLogin, exigirAdmin) {
+    const conclusoesAgendaProntas = pool.query(`CREATE TABLE IF NOT EXISTS tarefas_concluidas_usuarios (usuario_id INTEGER NOT NULL, tarefa_id INTEGER NOT NULL, concluida_em TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (usuario_id, tarefa_id))`);
     const nomeValido = nome => typeof nome === "string" && nome.trim().length >= 1 && nome.trim().length <= 100;
 
     async function auditar(atorId, turmaId, acao, detalhes = {}) {
@@ -34,6 +35,33 @@ module.exports = function registrarRotasTurmas(app, pool, exigirLogin, exigirAdm
         } catch (erro) {
             console.error("Erro ao listar turmas:", erro);
             res.status(500).json({ sucesso: false, mensagem: "Não foi possível carregar as turmas. Confirme se a migração foi aplicada." });
+        }
+    });
+
+    app.get("/api/turmas/:id", exigirLogin, async (req, res) => {
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            return res.status(400).json({ sucesso: false, mensagem: "Turma inválida." });
+        }
+        try {
+            const usuario = await usuarioAtual(req);
+            if (!usuario) return res.status(401).json({ sucesso: false, mensagem: "Conta não encontrada." });
+            if (usuario.tipo !== "admin" && Number(usuario.turma_id) !== id) {
+                return res.status(403).json({ sucesso: false, mensagem: "Você não pode consultar esta turma." });
+            }
+            const resultado = await pool.query(`
+                SELECT t.id, t.nome, t.ano_letivo AS "anoLetivo", t.ativa,
+                       COALESCE(f.ativa, FALSE) AS "expecVisivel"
+                FROM turmas t
+                LEFT JOIN feira_config f ON f.turma_id = t.id
+                WHERE t.id = $1
+            `, [id]);
+            if (!resultado.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Turma não encontrada." });
+            res.set("Cache-Control", "no-store");
+            res.json({ sucesso: true, turma: resultado.rows[0] });
+        } catch (erro) {
+            console.error("Erro ao consultar turma:", erro);
+            res.status(500).json({ sucesso: false, mensagem: "Não foi possível carregar a turma." });
         }
     });
 
@@ -149,18 +177,39 @@ module.exports = function registrarRotasTurmas(app, pool, exigirLogin, exigirAdm
             if (usuario.tipo === "admin" && req.query.turmaId != null) {
                 const id = Number(req.query.turmaId);
                 if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: "Turma inválida." });
-                const r = await pool.query('SELECT id, data, materia, descricao, subtitulo, data_entrega AS "dataEntrega", turma_id AS "turmaId" FROM tarefas WHERE turma_id = $1 ORDER BY data DESC, id DESC', [id]);
+                await conclusoesAgendaProntas;
+                const r = await pool.query('SELECT t.id, t.data, t.materia, t.descricao, t.subtitulo, t.data_entrega AS "dataEntrega", t.turma_id AS "turmaId", EXISTS(SELECT 1 FROM tarefas_concluidas_usuarios c WHERE c.tarefa_id=t.id AND c.usuario_id=$2) AS feito, (SELECT c.concluida_em FROM tarefas_concluidas_usuarios c WHERE c.tarefa_id=t.id AND c.usuario_id=$2) AS "concluidaEm" FROM tarefas t WHERE t.turma_id = $1 ORDER BY t.data DESC, t.id DESC', [id, usuario.id]);
                 return res.json({ sucesso: true, tarefas: r.rows });
             }
+            await conclusoesAgendaProntas;
             const r = usuario.tipo === "admin"
-                ? await pool.query('SELECT id, data, materia, descricao, subtitulo, data_entrega AS "dataEntrega", turma_id AS "turmaId" FROM tarefas ORDER BY data DESC, id DESC')
-                : await pool.query('SELECT id, data, materia, descricao, subtitulo, data_entrega AS "dataEntrega", turma_id AS "turmaId" FROM tarefas WHERE turma_id = $1 ORDER BY data DESC, id DESC', [turmaId]);
+                ? await pool.query('SELECT t.id, t.data, t.materia, t.descricao, t.subtitulo, t.data_entrega AS "dataEntrega", t.turma_id AS "turmaId", EXISTS(SELECT 1 FROM tarefas_concluidas_usuarios c WHERE c.tarefa_id=t.id AND c.usuario_id=$1) AS feito, (SELECT c.concluida_em FROM tarefas_concluidas_usuarios c WHERE c.tarefa_id=t.id AND c.usuario_id=$1) AS "concluidaEm" FROM tarefas t ORDER BY t.data DESC, t.id DESC', [usuario.id])
+                : await pool.query('SELECT t.id, t.data, t.materia, t.descricao, t.subtitulo, t.data_entrega AS "dataEntrega", t.turma_id AS "turmaId", EXISTS(SELECT 1 FROM tarefas_concluidas_usuarios c WHERE c.tarefa_id=t.id AND c.usuario_id=$2) AS feito, (SELECT c.concluida_em FROM tarefas_concluidas_usuarios c WHERE c.tarefa_id=t.id AND c.usuario_id=$2) AS "concluidaEm" FROM tarefas t WHERE t.turma_id = $1 ORDER BY t.data DESC, t.id DESC', [turmaId, usuario.id]);
             res.set("Cache-Control", "no-store");
             res.json({ sucesso: true, tarefas: r.rows });
         } catch (e) {
             console.error("Erro ao listar agenda por turma:", e);
             res.status(500).json({ sucesso: false, mensagem: "Não foi possível carregar a agenda da turma." });
         }
+    });
+
+    app.put("/api/tarefas/:id/feito", exigirLogin, async (req, res) => {
+        try {
+            const contexto = await turmaPermitida(req, res);
+            if (!contexto) return;
+            await conclusoesAgendaProntas;
+            const id = Number(req.params.id);
+            if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: "Tarefa inválida." });
+            const tarefa = contexto.usuario.tipo === "admin"
+                ? await pool.query("SELECT id FROM tarefas WHERE id=$1", [id])
+                : await pool.query("SELECT id FROM tarefas WHERE id=$1 AND turma_id=$2", [id, contexto.turmaId]);
+            if (!tarefa.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Tarefa não encontrada nesta turma." });
+            if (req.body?.feito) {
+                await pool.query("INSERT INTO tarefas_concluidas_usuarios(usuario_id,tarefa_id) VALUES($1,$2) ON CONFLICT DO NOTHING", [contexto.usuario.id, id]);
+            }
+            else await pool.query("DELETE FROM tarefas_concluidas_usuarios WHERE usuario_id=$1 AND tarefa_id=$2", [contexto.usuario.id, id]);
+            res.json({ sucesso: true, feito: Boolean(req.body?.feito) });
+        } catch (e) { console.error("Erro ao atualizar conclusão da tarefa:", e); res.status(500).json({ sucesso: false, mensagem: "Não foi possível atualizar a tarefa." }); }
     });
 
     app.post("/api/tarefas", exigirLogin, async (req, res) => {

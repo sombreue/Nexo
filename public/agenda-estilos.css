@@ -501,6 +501,10 @@ textarea {
     line-height: 1.6;
     white-space: pre-line;
 }
+.tarefa-feito{display:inline-flex;align-items:center;gap:7px;margin:0 0 8px;color:var(--theme-muted,#a1a1aa);font-size:.9rem;cursor:pointer}
+.tarefa-feito input{width:17px;height:17px;accent-color:var(--theme-accent,#ef3340);cursor:pointer}
+.tarefa-concluida{opacity:.62}
+.tarefa-concluida h3,.tarefa-concluida p{text-decoration:line-through}
 
 .arquivo {
     display: inline-block;

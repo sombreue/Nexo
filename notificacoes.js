@@ -120,6 +120,7 @@ module.exports = function instalarNotificacoes(app, pool) {
                     FROM tarefas
                     WHERE data = $1
                       AND turma_id = (SELECT turma_id FROM usuarios WHERE id = $2)
+                      AND NOT EXISTS (SELECT 1 FROM tarefas_concluidas_usuarios c WHERE c.tarefa_id = tarefas.id AND c.usuario_id = $2)
                 `, [dataAlvo, usuario.id]);
 
                 for (const tarefa of tarefas.rows) {
@@ -176,6 +177,7 @@ module.exports = function instalarNotificacoes(app, pool) {
                 SELECT id, tipo, titulo, mensagem, link, data_atividade, criado_em, lida_em
                 FROM notificacoes
                 WHERE usuario_id = $1
+                  AND NOT (origem_tipo = 'tarefa' AND EXISTS (SELECT 1 FROM tarefas_concluidas_usuarios c WHERE c.tarefa_id = notificacoes.origem_id AND c.usuario_id = notificacoes.usuario_id))
                 ORDER BY lida_em NULLS FIRST, criado_em DESC
                 LIMIT 50
             `, [req.session.usuario.id]);

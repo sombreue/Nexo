@@ -8,8 +8,8 @@ async function jsonFetch(url){const r=await fetch(url,{cache:'no-store'});if(r.s
 async function carregar(){
  const sessao=await jsonFetch('/api/sessao');
  if(!sessao?.logado){location.href='/login.html';return;}
- const [tarefasData,notasData]=await Promise.all([jsonFetch('/api/tarefas-pessoais'),jsonFetch('/api/notas')]);
- const tarefas=tarefasData?.tarefas||[],notas=notasData?.notas||[];
+ const [tarefasData,notasData,agendaData]=await Promise.all([jsonFetch('/api/tarefas-pessoais'),jsonFetch('/api/notas'),jsonFetch('/api/tarefas')]);
+ const tarefas=[...(tarefasData?.tarefas||[]),...(agendaData?.tarefas||[]).filter(t=>t.feito).map(t=>({status:'concluida',criado_em:t.concluidaEm,materia:t.materia,origem_tipo:'agenda'}))],notas=notasData?.notas||[];
  const agora=hoje();
  const pendentes=tarefas.filter(t=>t.status!=='concluida');
  const atrasadas=pendentes.filter(t=>{const d=dataLocal(t.prazo);return d&&d<agora;});

@@ -15,7 +15,10 @@ async function inicializar(){
   const tarefasRes=await fetch('/api/tarefas-pessoais'); const dados=await tarefasRes.json();
   if(!tarefasRes.ok||!dados.sucesso) throw new Error(dados.mensagem||'Não foi possível carregar suas tarefas.');
   const tarefas=dados.tarefas||[];
-  $('total').textContent=tarefas.length;
+  const agendaRes=await fetch('/api/tarefas',{cache:'no-store'});
+  const agendaData=agendaRes.ok?await agendaRes.json():{};
+  const concluidasAgenda=(agendaData.tarefas||[]).filter(t=>t.feito).length;
+  $('total').textContent=tarefas.length+concluidasAgenda;
   $('planejadas').textContent=tarefas.filter(t=>t.data_planejada).length;
   const agora=hoje();
   const proximas=tarefas.filter(t=>{const d=t.data_planejada||t.prazo;if(!d)return false;return new Date(`${d}T00:00:00`)>=agora;}).sort((a,b)=>(a.data_planejada||a.prazo).localeCompare(b.data_planejada||b.prazo)).slice(0,5);

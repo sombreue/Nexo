@@ -9,6 +9,9 @@ module.exports = function registrarEstatisticas(app, pool, exigirLogin) {
 
             const temTarefas = Boolean(tarefasTabela.rows[0]?.tabela);
             const temNotas = Boolean(notasTabela.rows[0]?.tabela);
+            const agendaConcluidas = await pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE concluida_em >= date_trunc('week', NOW()))::int AS semana FROM tarefas_concluidas_usuarios WHERE usuario_id=$1`, [usuarioId]);
+            const totalAgendaConcluidas = agendaConcluidas.rows[0]?.total || 0;
+            const concluidasAgendaSemana = agendaConcluidas.rows[0]?.semana || 0;
 
             let tarefas = [], notas = [];
             if (temTarefas) {
@@ -62,7 +65,8 @@ module.exports = function registrarEstatisticas(app, pool, exigirLogin) {
                 return {periodo,media:itens.length?itens.reduce((s,n)=>s+Number(n.nota)*Number(n.peso||1),0)/peso:null};
             });
 
-            res.json({sucesso:true, resumo:{totalTarefas:tarefas.length,pendentes:pendentes.length,concluidas:concluidas.length,atrasadas:atrasadas.length,planejadas:planejadas.length,percentualConclusao:tarefas.length?(concluidas.length/tarefas.length)*100:0,concluidasSemana,criadasSemana,mediaGeral,materiasLancadas:notas.length}, materias, melhorMateria, piorMateria, bimestres});
+            const totalTarefas = tarefas.length + totalAgendaConcluidas;
+            res.json({sucesso:true, resumo:{totalTarefas,pendentes:pendentes.length,concluidas:concluidas.length+totalAgendaConcluidas,atrasadas:atrasadas.length,planejadas:planejadas.length,percentualConclusao:totalTarefas?((concluidas.length+totalAgendaConcluidas)/totalTarefas)*100:0,concluidasSemana:concluidasSemana+concluidasAgendaSemana,criadasSemana,mediaGeral,materiasLancadas:notas.length}, materias, melhorMateria, piorMateria, bimestres});
         } catch (e) {
             console.error(e);
             res.status(500).json({sucesso:false,mensagem:'Não foi possível calcular suas estatísticas.'});
