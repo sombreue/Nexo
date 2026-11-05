@@ -657,26 +657,28 @@ function criarTarefa(
     descricaoTarefa.textContent = descricao || "";
 
     novaTarefa.appendChild(tituloTarefa);
-    const controleFeito = document.createElement("label");
-    controleFeito.className = "tarefa-feito";
-    const checkboxFeito = document.createElement("input");
-    checkboxFeito.type = "checkbox";
-    checkboxFeito.checked = Boolean(feito);
-    checkboxFeito.setAttribute("aria-label", "Feito");
-    const textoFeito = document.createElement("span");
-    textoFeito.textContent = "Feito";
-    controleFeito.append(checkboxFeito, textoFeito);
-    novaTarefa.appendChild(controleFeito);
-    novaTarefa.classList.toggle("tarefa-concluida", Boolean(feito));
-    checkboxFeito.addEventListener("change", async () => {
-        checkboxFeito.disabled = true;
-        try {
-            const r = await fetch(`/api/tarefas/${encodeURIComponent(id)}/feito`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ feito: checkboxFeito.checked }) });
-            if (!r.ok) throw new Error("Falha ao salvar");
-            novaTarefa.classList.toggle("tarefa-concluida", checkboxFeito.checked);
-        } catch (e) { checkboxFeito.checked = !checkboxFeito.checked; }
-        finally { checkboxFeito.disabled = false; }
-    });
+    if (String(descricao || "").trim()) {
+        const controleFeito = document.createElement("label");
+        controleFeito.className = "tarefa-feito";
+        const checkboxFeito = document.createElement("input");
+        checkboxFeito.type = "checkbox";
+        checkboxFeito.checked = Boolean(feito);
+        checkboxFeito.setAttribute("aria-label", "Feito");
+        const textoFeito = document.createElement("span");
+        textoFeito.textContent = "Feito";
+        controleFeito.append(checkboxFeito, textoFeito);
+        novaTarefa.appendChild(controleFeito);
+        novaTarefa.classList.toggle("tarefa-concluida", Boolean(feito));
+        checkboxFeito.addEventListener("change", async () => {
+            checkboxFeito.disabled = true;
+            try {
+                const r = await fetch(`/api/tarefas/${encodeURIComponent(id)}/feito`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ feito: checkboxFeito.checked }) });
+                if (!r.ok) throw new Error("Falha ao salvar");
+                novaTarefa.classList.toggle("tarefa-concluida", checkboxFeito.checked);
+            } catch (e) { checkboxFeito.checked = !checkboxFeito.checked; }
+            finally { checkboxFeito.disabled = false; }
+        });
+    }
     if (subtitulo) novaTarefa.appendChild(subtituloTarefa);
     if (descricao) novaTarefa.appendChild(descricaoTarefa);
 

@@ -15,11 +15,10 @@ function criarCardTarefa(t){
   el.tabIndex=0;
   el.setAttribute("role","link");
   el.addEventListener("click",()=>{ window.location.href=`/agenda.html#tarefa-${encodeURIComponent(t.id)}`; });
-  el.innerHTML="<label class=\"tarefa-feito\"><input type=\"checkbox\"><span>Feito</span></label><div class=\"materia\"></div><h3></h3><p></p><small></small>";
-  const checkbox=el.querySelector('input');checkbox.checked=Boolean(t.feito);
-  el.classList.toggle('tarefa-concluida',checkbox.checked);
-  checkbox.addEventListener('click',e=>e.stopPropagation());
-  checkbox.addEventListener('change',async e=>{e.stopPropagation();checkbox.disabled=true;try{const r=await fetch(`/api/tarefas/${encodeURIComponent(t.id)}/feito`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({feito:checkbox.checked})});if(!r.ok)throw new Error();el.classList.toggle('tarefa-concluida',checkbox.checked);}catch{checkbox.checked=!checkbox.checked;}finally{checkbox.disabled=false;}});
+  const temTarefa=String(t.descricao||'').trim().length>0;
+  el.innerHTML=`${temTarefa?'<label class="tarefa-feito"><input type="checkbox"><span>Feito</span></label>':''}<div class="materia"></div><h3></h3><p></p><small></small>`;
+  const checkbox=el.querySelector('input');
+  if(checkbox){checkbox.checked=Boolean(t.feito);el.classList.toggle('tarefa-concluida',checkbox.checked);checkbox.addEventListener('click',e=>e.stopPropagation());checkbox.addEventListener('change',async e=>{e.stopPropagation();checkbox.disabled=true;try{const r=await fetch(`/api/tarefas/${encodeURIComponent(t.id)}/feito`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({feito:checkbox.checked})});if(!r.ok)throw new Error();el.classList.toggle('tarefa-concluida',checkbox.checked);}catch{checkbox.checked=!checkbox.checked;}finally{checkbox.disabled=false;}});}
   el.querySelector(".materia").textContent=t.materia;
   el.querySelector("h3").textContent="Entrega amanhã";
   el.querySelector("p").textContent=t.descricao;
