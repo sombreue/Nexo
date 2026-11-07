@@ -18,6 +18,7 @@
     let turmasAtivas = [];
     let usuariosCadastrados = [];
     let indiceSugestaoAtiva = -1;
+    const contasSelecionadas = new Set();
 
     usuarioLogado.textContent = "Carregando painel...";
 
@@ -95,6 +96,10 @@
             ).join("");
             if (ativas.some(t => String(t.id) === anterior)) seletorTurmaConta.value = anterior;
             atualizarSeletorTurmaConta();
+            const turmaLote = $("turma-lote-contas");
+            if (turmaLote) turmaLote.innerHTML = '<option value="">Selecione a turma</option>' + ativas.map(t =>
+                '<option value="' + escapar(t.id) + '">' + escapar(t.nome) + (t.anoLetivo ? ' · ' + escapar(t.anoLetivo) : '') + '</option>'
+            ).join("");
             listaTurmas.innerHTML = dados.turmas.map(t => `
                 <article class="usuario-admin-item">
                     <div class="item-principal">
@@ -184,6 +189,20 @@
         if (adminGlobal) seletorTurmaConta.value = "";
     }
 
+    function atualizarControlesLote() {
+        const selecionadas = [...contasSelecionadas].filter(id => usuariosCadastrados.some(u => String(u.id) === id));
+        $("contador-contas-selecionadas").textContent = `${selecionadas.length} ${selecionadas.length === 1 ? "selecionada" : "selecionadas"}`;
+        $("aplicar-lote-contas").disabled = selecionadas.length === 0;
+        const tipoAdmin = $("tipo-lote-contas").value === "admin";
+        $("turma-lote-contas").disabled = tipoAdmin;
+        $("turma-lote-wrap").hidden = tipoAdmin;
+        const visiveis = usuariosCadastrados.filter(u => normalizarBusca(`${u.usuario} ${u.tipo} ${u.turmaNome || ""}`).includes(normalizarBusca(buscaUsuarios.value)));
+        const elegiveis = visiveis.filter(u => String(u.id) !== String(usuariosCadastrados.usuarioLogadoId));
+        const marcar = $("selecionar-todas-contas");
+        marcar.checked = elegiveis.length > 0 && elegiveis.every(u => contasSelecionadas.has(String(u.id)));
+        marcar.indeterminate = elegiveis.some(u => contasSelecionadas.has(String(u.id))) && !marcar.checked;
+    }
+
     function renderizarUsuarios() {
         const atual = usuariosCadastrados.usuarioLogadoId ?? null;
         const termo = normalizarBusca(buscaUsuarios.value);
@@ -193,6 +212,7 @@
         listaUsuarios.innerHTML = filtrados.map(usuario => `
                 <article class="usuario-admin-item">
                     <div class="item-principal">
+                        <input type="checkbox" data-selecionar-conta="${usuario.id}" aria-label="Selecionar conta ${escapar(usuario.usuario)}" ${usuario.id === atual ? "disabled" : ""} ${contasSelecionadas.has(String(usuario.id)) ? "checked" : ""}>
                         <strong>${escapar(usuario.usuario)}</strong>
                         <span class="item-meta">${usuario.tipo === "admin" ? "Administrador global" : usuario.tipo === "representante" ? "Representante de turma" : "Usuário"}${usuario.turmaNome ? " · " + escapar(usuario.turmaNome) : ""}</span>
                     </div>
@@ -209,6 +229,7 @@
                     </div>
                 </article>`
             ).join("") || `<div class="estado-vazio">${usuariosCadastrados.length ? "Nenhum usuário corresponde à busca." : "Nenhum usuário cadastrado."}</div>`;
+        atualizarControlesLote();
     }
 
     function atualizarSugestoes() {
@@ -371,6 +392,13 @@
     });
 
     listaUsuarios.addEventListener("change", evento => {
+        const selecao = evento.target.closest("[data-selecionar-conta]");
+        if (selecao) {
+            const id = String(selecao.dataset.selecionarConta);
+            if (selecao.checked) contasSelecionadas.add(id); else contasSelecionadas.delete(id);
+            atualizarControlesLote();
+            return;
+        }
         const tipo = evento.target.closest("[data-tipo-conta]");
         if (!tipo) return;
         const turma = listaUsuarios.querySelector(`[data-turma-conta="${CSS.escape(tipo.dataset.tipoConta)}"]`);
@@ -379,6 +407,32 @@
             turma.disabled = tipo.value === "admin";
             if (campoTurma) campoTurma.hidden = tipo.value === "admin";
         }
+    });
+
+    $("selecionar-todas-contas").addEventListener("change", evento => {
+        const termo = normalizarBusca(buscaUsuarios.value);
+        usuariosCadastrados.filter(u => String(u.id) !== String(usuariosCadastrados.usuarioLogadoId) && normalizarBusca(`${u.usuario} ${u.tipo} ${u.turmaNome || ""}`).includes(termo)).forEach(u => {
+            if (evento.target.checked) contasSelecionadas.add(String(u.id)); else contasSelecionadas.delete(String(u.id));
+        });
+        renderizarUsuarios();
+    });
+
+    $("tipo-lote-contas").addEventListener("change", atualizarControlesLote);
+    $("aplicar-lote-contas").addEventListener("click", async () => {
+        const ids = [...contasSelecionadas].map(Number);
+        if (!ids.length) return;
+        const tipo = $("tipo-lote-contas").value;
+        const turmaId = tipo === "admin" ? null : Number($("turma-lote-contas").value);
+        if (tipo !== "admin" && !turmaId) { status.textContent = "Selecione a turma que será aplicada às contas."; return; }
+        const nomes = usuariosCadastrados.filter(u => ids.includes(Number(u.id))).map(u => u.usuario);
+        if (!confirm(`Aplicar tipo “${tipo === "admin" ? "Administrador global" : tipo === "representante" ? "Representante" : "Usuário"}”${turmaId ? ` e a turma selecionada` : ""} a ${ids.length} conta(s)?\n\n${nomes.join(", ")}\n\nAs sessões dessas contas serão encerradas.`)) return;
+        const botao = $("aplicar-lote-contas"); botao.disabled = true; status.textContent = "Aplicando alteração às contas...";
+        try {
+            const dados = await json(await fetch("/api/admin/usuarios/lote/tipo", {method:"PUT", credentials:"same-origin", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ids, tipo, turmaId})}));
+            status.textContent = `Alteração aplicada a ${dados.atualizados} conta(s). As sessões foram encerradas.`;
+            contasSelecionadas.clear();
+            await Promise.all([carregarUsuarios(), carregarSessoes()]);
+        } catch (erro) { status.textContent = erro.message; botao.disabled = false; }
     });
 
 

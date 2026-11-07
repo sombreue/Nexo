@@ -651,6 +651,58 @@ app.put("/api/admin/usuarios/:id/turma", exigirAdmin, async (req, res) => {
     }
 });
 
+app.put("/api/admin/usuarios/lote/tipo", exigirAdmin, async (req, res) => {
+    const idsRecebidos = req.body?.ids;
+    const tipo = req.body?.tipo;
+    const turmaInformada = req.body?.turmaId;
+    if (!Array.isArray(idsRecebidos) || idsRecebidos.length < 1 || idsRecebidos.length > 200) {
+        return res.status(400).json({ sucesso: false, mensagem: "Selecione de 1 a 200 contas." });
+    }
+    const ids = idsRecebidos.map(Number);
+    if (ids.some(id => !Number.isSafeInteger(id) || id <= 0) || new Set(ids).size !== ids.length) {
+        return res.status(400).json({ sucesso: false, mensagem: "A seleção contém contas inválidas ou repetidas." });
+    }
+    if (ids.includes(Number(req.session.usuario.id))) {
+        return res.status(400).json({ sucesso: false, mensagem: "A própria conta não pode ser incluída na alteração coletiva." });
+    }
+    if (!["admin", "usuario", "representante"].includes(tipo)) {
+        return res.status(400).json({ sucesso: false, mensagem: "Tipo de conta inválido." });
+    }
+    let turmaId = null;
+    if (tipo !== "admin") {
+        turmaId = Number(turmaInformada);
+        if (!Number.isSafeInteger(turmaId) || turmaId <= 0) return res.status(400).json({ sucesso: false, mensagem: "Selecione uma turma válida para estas contas." });
+    }
+
+    const cliente = await pool.connect();
+    try {
+        await cliente.query("BEGIN");
+        if (turmaId !== null) {
+            const turma = await cliente.query("SELECT id FROM turmas WHERE id = $1 AND ativa = TRUE", [turmaId]);
+            if (!turma.rowCount) {
+                await cliente.query("ROLLBACK");
+                return res.status(400).json({ sucesso: false, mensagem: "A turma selecionada não existe ou está arquivada." });
+            }
+        }
+        const existentes = await cliente.query("SELECT id FROM usuarios WHERE id = ANY($1::int[])", [ids]);
+        if (existentes.rowCount !== ids.length) {
+            await cliente.query("ROLLBACK");
+            return res.status(404).json({ sucesso: false, mensagem: "Uma ou mais contas selecionadas não existem mais. Atualize a lista." });
+        }
+        await cliente.query("UPDATE usuarios SET tipo = $1, turma_id = $2 WHERE id = ANY($3::int[])", [tipo, turmaId, ids]);
+        await cliente.query("DELETE FROM sessoes WHERE sess->'usuario'->>'id' = ANY($1::text[])", [ids.map(String)]);
+        await cliente.query("COMMIT");
+        res.json({ sucesso: true, atualizados: ids.length });
+    } catch (erro) {
+        await cliente.query("ROLLBACK").catch(() => {});
+        if (erro.code === "23505") return res.status(409).json({ sucesso: false, mensagem: "A alteração não foi aplicada: esta turma já possui um representante principal." });
+        console.error("Erro ao alterar tipo de várias contas:", erro);
+        res.status(500).json({ sucesso: false, mensagem: "Não foi possível alterar as contas selecionadas." });
+    } finally {
+        cliente.release();
+    }
+});
+
 app.put("/api/admin/usuarios/:id/tipo", exigirAdmin, async (req, res) => {
     const id = Number(req.params.id);
     const tipo = req.body?.tipo;

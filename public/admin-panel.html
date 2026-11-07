@@ -6,7 +6,7 @@
     <link rel="icon" href="/favicon.ico?v=20260914" type="image/x-icon">
     <title>Painel de administração</title>
     <link rel="stylesheet" href="global-temas-estilos.css?v=20261006">
-    <link rel="stylesheet" href="admin-panel-estilos.css?v=20261027-expec-visibility">
+    <link rel="stylesheet" href="admin-panel-estilos.css?v=20261107-lote-contas">
     <link rel="stylesheet" href="/admin-index-estilos.css?v=20261024-unificado">
     <script>document.documentElement.dataset.theme = localStorage.getItem('agenda-auruda-tema') || 'ruby';</script>
 </head>
@@ -125,6 +125,13 @@
                 <div id="sugestoes-contas" class="sugestoes-contas" role="listbox" hidden></div>
             </div>
         </div>
+        <div class="alteracao-em-lote" aria-label="Alteração para várias contas">
+            <label class="selecionar-visiveis"><input type="checkbox" id="selecionar-todas-contas"> Selecionar contas exibidas</label>
+            <span id="contador-contas-selecionadas" role="status">0 selecionadas</span>
+            <label>Aplicar tipo<select id="tipo-lote-contas"><option value="usuario">Usuário</option><option value="representante">Representante de turma</option><option value="admin">Administrador global</option></select></label>
+            <label id="turma-lote-wrap">Aplicar turma<select id="turma-lote-contas"><option value="">Selecione a turma</option></select></label>
+            <button type="button" id="aplicar-lote-contas" disabled>Aplicar às selecionadas</button>
+        </div>
         <div id="lista-usuarios" class="lista-admin" aria-live="polite"></div>
     </section>
 
@@ -141,6 +148,6 @@
 </main>
 
 <script src="global-temas.js?v=20261007"></script>
-<script src="admin-panel.js?v=20261027-admin-hud"></script>
+<script src="admin-panel.js?v=20261107-lote-contas"></script>
 </body>
 </html>

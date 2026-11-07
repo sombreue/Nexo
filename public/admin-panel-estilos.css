@@ -35,6 +35,13 @@ button{cursor:pointer}
 .status-admin{min-height:20px;margin:12px 0 0;color:var(--theme-muted)}
 .lista-admin{display:grid;gap:9px}
 .filtro-lista-admin{display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.alteracao-em-lote{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:12px;border:1px solid var(--theme-border);border-radius:12px;background:var(--theme-surface-2)}
+.alteracao-em-lote label{display:flex;align-items:center;gap:7px;color:var(--theme-muted);font-size:.9rem;font-weight:700}
+.alteracao-em-lote select,.alteracao-em-lote button{padding:9px 11px;border:1px solid var(--theme-border);border-radius:9px;background:var(--theme-input);color:var(--theme-text)}
+.alteracao-em-lote button{background:var(--theme-button);font-weight:700;cursor:pointer}
+.alteracao-em-lote button:disabled{opacity:.5;cursor:not-allowed}
+.alteracao-em-lote #contador-contas-selecionadas{font-size:.9rem;color:var(--theme-accent);font-weight:800}
+.item-principal>input[type=checkbox]{width:18px;height:18px;accent-color:var(--theme-accent);flex:none}
 .filtro-lista-admin label{font-weight:700}
 .busca-contas{position:relative;flex:1;min-width:0}
 .busca-contas input{width:100%;min-width:0;padding:11px 14px;border:1px solid var(--theme-border);border-radius:12px;background:var(--theme-input);color:var(--theme-text);outline:none;box-shadow:0 2px 8px #00000012;transition:border-color .18s,box-shadow .18s}
