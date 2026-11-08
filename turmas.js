@@ -141,8 +141,20 @@ module.exports = function registrarRotasTurmas(app, pool, exigirLogin, exigirAdm
             res.json({ sucesso: true, mensagem: "Turma e dados vinculados excluídos permanentemente." });
         } catch (erro) {
             if (client) await client.query("ROLLBACK").catch(() => {});
-            console.error("Erro ao excluir turma:", erro);
-            res.status(500).json({ sucesso: false, mensagem: "Não foi possível excluir a turma e seus dados." });
+            console.error("Erro ao excluir turma:", {
+                code: erro.code,
+                constraint: erro.constraint,
+                table: erro.table,
+                detail: erro.detail,
+                message: erro.message
+            });
+            const bloqueioFk = erro.code === "23503";
+            res.status(500).json({
+                sucesso: false,
+                mensagem: bloqueioFk
+                    ? "O banco ainda encontrou registros vinculados a esta turma. Confira o log do servidor para identificar a tabela e aplique as migrações pendentes."
+                    : "Não foi possível excluir a turma e seus dados. Confira o log do servidor para identificar o erro."
+            });
         } finally {
             client?.release();
         }
