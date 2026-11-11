@@ -31,7 +31,7 @@
         p.style.setProperty("--theme-header",v[1]);
         p.style.setProperty("--theme-header-2",v[0]);
         p.style.setProperty("--theme-input",v[0]);
-        $("preview-logo").src=logoAtual || "/imagens/favicon.ico";
+        $("preview-logo").src=logoAtual || "/imagens/svg-nexo.svg";
     }
 
     function carregarEditor(tema=null) {

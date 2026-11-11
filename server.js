@@ -109,7 +109,7 @@ app.get("/favicon.ico", (req, res) => {
     res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     res.set("Pragma", "no-cache");
     res.set("Expires", "0");
-    res.sendFile(path.join(__dirname, "public", "imagens", "favicon.ico"));
+    res.sendFile(path.join(__dirname, "public", "imagens", "svg-nexo.svg"));
 });
 
 async function contextoTurmaExpec(req, res, permitirAdminSemTurma = false) {

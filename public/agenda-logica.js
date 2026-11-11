@@ -657,7 +657,7 @@ function criarTarefa(
     descricaoTarefa.textContent = descricao || "";
 
     novaTarefa.appendChild(tituloTarefa);
-    if (String(descricao || "").trim()) {
+    if (String(descricao || "").trim() && String(materia || "").trim().toLowerCase() !== "lembrete") {
         const controleFeito = document.createElement("label");
         controleFeito.className = "tarefa-feito";
         const checkboxFeito = document.createElement("input");
