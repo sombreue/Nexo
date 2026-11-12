@@ -117,8 +117,8 @@
                 const conteudo = dados.map((linha, i) => linha.map((valor, j) => `<rect x="${j * largura}" y="${i * altura}" width="${largura}" height="${altura}" fill="${i ? (i % 2 ? "#fff" : "#f2f2f2") : "#e8e8e8"}" stroke="#999"/><text x="${j * largura + 8}" y="${i * altura + 26}" font-family="Arial,sans-serif" font-size="13">${xml(valor)}</text>`).join("")).join("");
                 baixarHorario(new Blob([`<svg xmlns="http://www.w3.org/2000/svg" width="${colunas * largura}" height="${dados.length * altura}">${conteudo}</svg>`], { type: "image/svg+xml;charset=utf-8" }), nomeArquivoHorario(formato));
             } else {
-                if (!window.html2canvas) throw new Error("Biblioteca de imagem indisponível.");
-                const canvas = await html2canvas(tabela, { scale: 2, backgroundColor: "#fff", logging: false });
+                if (!window.NexoGradeCanvas) throw new Error("Recurso de imagem indisponível.");
+                const canvas = NexoGradeCanvas.criar(tabela, dados);
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, formato === "jpeg" ? "image/jpeg" : formato === "webp" ? "image/webp" : "image/png", 0.95));
                 if (!blob || (formato === "webp" && blob.type !== "image/webp")) throw new Error("Formato de imagem indisponível neste navegador.");
                 if (formato === "clipboard") {

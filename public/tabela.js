@@ -75,9 +75,10 @@ function gerarSvgTabela(dados){
 }
 
 async function gerarCanvasTabela(){
- if(!window.html2canvas)throw new Error("A biblioteca de imagem não carregou. Atualize a página e tente novamente.");
- coletar();const tabela=$("tabelaDados");
- return await html2canvas(tabela,{backgroundColor:getComputedStyle(document.body).backgroundColor||"#ffffff",scale:2,logging:false,windowWidth:Math.max(document.documentElement.clientWidth,tabela.scrollWidth+40),width:tabela.scrollWidth,height:tabela.scrollHeight,scrollX:0,scrollY:0});
+ coletar();const tabela=$("tabelaDados"),dados=dadosExportacao();
+ const matriz=[["#",...dados[0]],...dados.slice(1).map((linha,i)=>[String(i+1),...linha])];
+ if(!window.NexoGradeCanvas)throw new Error("O recurso de imagem não carregou. Atualize a página e tente novamente.");
+ return NexoGradeCanvas.criar(tabela,matriz);
 }
 async function copiarComoPng(){
  const botao=$("copiarJpg"),original=botao.textContent;botao.disabled=true;botao.textContent="Preparando PNG…";limparErro();
