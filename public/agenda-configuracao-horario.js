@@ -55,7 +55,15 @@
             });
             html += '</tr>';
         });
-        html += '</tbody></table></div>';
+        html += '</tbody></table></div>' +
+            '<div class="horario-exportar"><label class="sr-only" for="exportar-horario-formato">Formato</label>' +
+            '<select id="exportar-horario-formato" aria-label="Formato de exportação">' +
+            '<option value="xlsx">XLSX</option><option value="ods">ODS</option><option value="csv">CSV</option>' +
+            '<option value="txt">TXT</option><option value="pdf">PDF</option><option value="png">PNG</option>' +
+            '<option value="jpeg">JPEG</option><option value="webp">WebP</option><option value="svg">SVG</option></select>' +
+            '<button type="button" id="exportar-horario">Exportar</button>' +
+            '<button type="button" id="copiar-horario-png">Copiar PNG</button>' +
+            '<span id="status-exportar-horario" role="status" aria-live="polite"></span></div>';
         if (administrador || representante) {
             html += '<div class="horario-acoes-admin"><button type="button" id="editar-horario-turma">Editar horário da turma</button>' +
                 (gerenciaTurma() ? '<button type="button" id="gerenciar-materias-turma">Gerenciar matérias da turma</button>' : '') +
@@ -64,6 +72,65 @@
         container.innerHTML = html;
         document.getElementById("editar-horario-turma")?.addEventListener("click", abrirEditor);
         document.getElementById("gerenciar-materias-turma")?.addEventListener("click", abrirGerenciadorMaterias);
+        document.getElementById("exportar-horario")?.addEventListener("click", () => exportarGrade(document.getElementById("exportar-horario-formato").value));
+        document.getElementById("copiar-horario-png")?.addEventListener("click", () => exportarGrade("clipboard"));
+    }
+
+    function obterDadosGrade() {
+        return Array.from(obterContainer().querySelectorAll(".horario-tabela tr"), tr =>
+            Array.from(tr.cells, celula => celula.textContent.trim()));
+    }
+
+    function nomeArquivoHorario(extensao) {
+        const base = (configuracao?.turma || "horario").replace(/[<>:"/\\|?*]/g, "-").trim() || "horario";
+        return "Horario-" + base.replace(/\s+/g, "-") + "." + extensao;
+    }
+
+    function baixarHorario(blob, nome) {
+        const url = URL.createObjectURL(blob), link = document.createElement("a");
+        link.href = url; link.download = nome; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    async function exportarGrade(formato) {
+        const tabela = obterContainer()?.querySelector(".horario-tabela"), status = document.getElementById("status-exportar-horario");
+        if (!tabela || !status) return;
+        const dados = obterDadosGrade();
+        try {
+            if (formato === "csv" || formato === "txt") {
+                const separador = formato === "csv" ? "," : "\t";
+                const texto = dados.map(linha => linha.map(v => /[\r\n",\t]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v).join(separador)).join("\r\n");
+                baixarHorario(new Blob(["\uFEFF", texto], { type: "text/plain;charset=utf-8" }), nomeArquivoHorario(formato));
+            } else if (formato === "xlsx" || formato === "ods") {
+                if (!window.XLSX) throw new Error("Biblioteca de planilhas indisponível.");
+                const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dados), "Horário");
+                if (formato === "xlsx") XLSX.writeFile(wb, nomeArquivoHorario(formato));
+                else baixarHorario(new Blob([XLSX.write(wb, { bookType: "ods", type: "array" })], { type: "application/vnd.oasis.opendocument.spreadsheet" }), nomeArquivoHorario(formato));
+            } else if (formato === "pdf") {
+                if (!window.jspdf?.jsPDF) throw new Error("Biblioteca PDF indisponível.");
+                const doc = new jspdf.jsPDF({ orientation: dados[0].length > 5 ? "landscape" : "portrait" });
+                doc.text("Horário de aulas — " + configuracao.turma, 14, 14);
+                doc.autoTable({ head: [dados[0]], body: dados.slice(1), startY: 20, theme: "grid", styles: { fontSize: 9, cellPadding: 2 } });
+                doc.save(nomeArquivoHorario(formato));
+            } else if (formato === "svg") {
+                const xml = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" }[c]));
+                const colunas = dados[0].length, largura = 180, altura = 42;
+                const conteudo = dados.map((linha, i) => linha.map((valor, j) => `<rect x="${j * largura}" y="${i * altura}" width="${largura}" height="${altura}" fill="${i ? (i % 2 ? "#fff" : "#f2f2f2") : "#e8e8e8"}" stroke="#999"/><text x="${j * largura + 8}" y="${i * altura + 26}" font-family="Arial,sans-serif" font-size="13">${xml(valor)}</text>`).join("")).join("");
+                baixarHorario(new Blob([`<svg xmlns="http://www.w3.org/2000/svg" width="${colunas * largura}" height="${dados.length * altura}">${conteudo}</svg>`], { type: "image/svg+xml;charset=utf-8" }), nomeArquivoHorario(formato));
+            } else {
+                if (!window.html2canvas) throw new Error("Biblioteca de imagem indisponível.");
+                const canvas = await html2canvas(tabela, { scale: 2, backgroundColor: "#fff", logging: false });
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, formato === "jpeg" ? "image/jpeg" : formato === "webp" ? "image/webp" : "image/png", 0.95));
+                if (!blob || (formato === "webp" && blob.type !== "image/webp")) throw new Error("Formato de imagem indisponível neste navegador.");
+                if (formato === "clipboard") {
+                    if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
+                        baixarHorario(blob, nomeArquivoHorario("png")); status.textContent = "PNG baixado; cópia indisponível"; return;
+                    }
+                    try { await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]); }
+                    catch (_) { baixarHorario(blob, nomeArquivoHorario("png")); status.textContent = "PNG baixado; cópia bloqueada"; return; }
+                } else baixarHorario(blob, nomeArquivoHorario(formato));
+            }
+            status.textContent = formato === "clipboard" ? "PNG copiado" : "Exportado";
+        } catch (erro) { status.textContent = erro.message || "Falha ao exportar"; }
     }
 
     async function abrirGerenciadorMaterias() {

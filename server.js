@@ -203,7 +203,9 @@ app.get("/admin-index.html", (req, res) => {
     return res.redirect("/admin-panel.html");
 });
 
-app.use(express.static("public", { index: false }));
+// Resolve arquivos estáticos pelo diretório do projeto, independente de onde
+// o processo Node foi iniciado.
+app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
 app.get("/", (req, res) => {
     if (!req.session.usuario) return res.redirect("/login.html");

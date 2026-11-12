@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="navegacao-site.css?v=20261027-expec-hidden">
     <link rel="stylesheet" href="agenda-tema-claro-correcao.css?v=20260907-2">
     <link rel="stylesheet" href="agenda-painel-admin-estilos.css?v=20260907-1">
-    <link rel="stylesheet" href="agenda-horarios-estilos.css?v=20260907-1">
+    <link rel="stylesheet" href="agenda-horarios-estilos.css?v=20261112-export">
     
     <link rel="stylesheet" href="agenda-tema-claro-correcao-extra.css?v=20260907-1">
     <style>.tema-opcao[data-tema="forest"],.tema-opcao[data-tema="arctic"],.tema-opcao[data-tema="ancient"]{display:none!important;}</style>
@@ -96,7 +96,8 @@
     <section id="lista-tarefas"></section>
     <section id="modal-senha" class="modal-senha"><div class="conteudo-modal"><h2>Alterar senha</h2><p id="usuario-senha"></p><input type="password" id="senha-alterada" placeholder="Digite a nova senha"><div class="botoes-modal"><button onclick="confirmarAlteracaoSenha()">Alterar senha</button><button class="cancelar" onclick="fecharModalSenha()">Cancelar</button></div></div></section>
 </main>
-<script src="agenda-logica.js?v=20261024-admin-turmas"></script><script src="global-temas.js?v=20260907-lightfix5"></script><script src="agenda-temas-integracao.js?v=20260907-3"></script><script src="agenda-painel-admin.js?v=20260907-1"></script><script src="agenda-horarios.js?v=20260907-1"></script><script src="agenda-configuracao-horario.js?v=20261024-isolamento-turmas"></script><script src="global-notificacoes.js?v=20260918"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="agenda-logica.js?v=20261024-admin-turmas"></script><script src="global-temas.js?v=20260907-lightfix5"></script><script src="agenda-temas-integracao.js?v=20260907-3"></script><script src="agenda-painel-admin.js?v=20260907-1"></script><script src="agenda-horarios.js?v=20260907-1"></script><script src="agenda-configuracao-horario.js?v=20261112-export"></script><script src="global-notificacoes.js?v=20260918"></script>
 <script>
 (function () {
     const materias = () => Array.from(document.querySelectorAll('#painel-materias input[type="checkbox"]'));

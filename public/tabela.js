@@ -27,11 +27,17 @@ async function exportarTabela(){
  try{
   const nome=($( "nomePlanilha").value||"tabela").trim()||"tabela";
   const dados=dadosExportacao();
-  if(formato.value==="xlsx"){
+  if(formato.value==="xlsx"||formato.value==="ods"){
    if(!window.XLSX)throw new Error("A biblioteca Excel não carregou. Atualize a página e tente novamente.");
    const wb=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet(dados);
    ws["!cols"]=estado.colunas.map(c=>({wch:Math.max(12,Math.min(32,String(c).length+4))}));
-   XLSX.utils.book_append_sheet(wb,ws,nome.slice(0,31)||"Tabela");XLSX.writeFile(wb,nomeArquivo("xlsx"));
+   XLSX.utils.book_append_sheet(wb,ws,nome.slice(0,31)||"Tabela");
+   if(formato.value==="xlsx")XLSX.writeFile(wb,nomeArquivo("xlsx"));
+   else{const arquivo=XLSX.write(wb,{bookType:"ods",type:"array"});baixarBlob(new Blob([arquivo],{type:"application/vnd.oasis.opendocument.spreadsheet"}),nomeArquivo("ods"));}
+  }else if(formato.value==="csv"||formato.value==="txt"){
+   const delimitador=formato.value==="csv"?",":"\t";
+   const texto=dados.map(linha=>linha.map(valor=>{const celula=String(valor??"");return /[\r\n"\t,]/.test(celula)?'"'+celula.replace(/"/g,'""')+'"':celula;}).join(delimitador)).join("\r\n");
+   baixarBlob(new Blob(["\uFEFF",texto],{type:"text/"+(formato.value==="csv"?"csv":"plain")+";charset=utf-8"}),nomeArquivo(formato.value));
   }else if(formato.value==="pdf"){
    if(!window.jspdf?.jsPDF)throw new Error("A biblioteca PDF não carregou. Atualize a página e tente novamente.");
    const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:estado.colunas.length>5?"landscape":"portrait",unit:"mm",format:"a4"});
@@ -39,17 +45,33 @@ async function exportarTabela(){
    if(typeof doc.autoTable!=="function")throw new Error("O recurso de tabela PDF não carregou. Atualize a página.");
    doc.autoTable({head:[dados[0]],body:dados.slice(1),startY:20,theme:"grid",styles:{fontSize:Math.max(5,Math.min(9,10-estado.colunas.length*.25)),cellPadding:2,overflow:"linebreak"},headStyles:{fillColor:[55,65,81]},margin:{left:10,right:10},horizontalPageBreak:true,horizontalPageBreakRepeat:0});
    doc.save(nomeArquivo("pdf"));
+  }else if(formato.value==="svg"){
+   const svg=gerarSvgTabela(dados);
+   baixarBlob(new Blob([svg],{type:"image/svg+xml;charset=utf-8"}),nomeArquivo("svg"));
   }else{
    if(!window.html2canvas)throw new Error("A biblioteca de imagem não carregou. Atualize a página e tente novamente.");
    const canvas=await gerarCanvasTabela();
-   const mime=formato.value==="jpg"?"image/jpeg":"image/png";
+   const mime=formato.value==="jpeg"?"image/jpeg":formato.value==="webp"?"image/webp":"image/png";
    const blob=await new Promise(resolve=>canvas.toBlob(resolve,mime,0.95));
    if(!blob)throw new Error("Não foi possível gerar a imagem.");
+   if(formato.value==="webp"&&blob.type!=="image/webp")throw new Error("Este navegador não oferece suporte à exportação WebP.");
    baixarBlob(blob,nomeArquivo(formato.value));
   }
   $("statusSalvamento").textContent="Arquivo exportado";
  }catch(e){mostrarErro(e.message||"Não foi possível exportar a tabela.");}
  finally{botao.disabled=false;botao.textContent=original;}
+}
+
+function gerarSvgTabela(dados){
+ const largura=52+estado.colunas.length*180,altura=42+dados.slice(1).length*40;
+ const xml=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&apos;"}[c]));
+ const linhas=dados.map((linha,i)=>{
+  const y=i===0?0:42+(i-1)*40,alturaLinha=i===0?42:40;
+  const valores=i===0?["#",...linha]:[String(i),...linha];
+  let x=0;
+  return valores.map((valor,j)=>{const w=j===0?52:180,fill=i===0||j===0?"#252630":"#101116",color=i===0?"#ffffff":"#f5f5f5",cell=`<rect x="${x}" y="${y}" width="${w}" height="${alturaLinha}" fill="${fill}" stroke="#393942"/><text x="${x+10}" y="${y+alturaLinha/2}" fill="${color}" font-family="Arial,sans-serif" font-size="14" dominant-baseline="middle">${xml(valor)}</text>`;x+=w;return cell;}).join("");
+ }).join("");
+ return `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}" viewBox="0 0 ${largura} ${altura}"><title>${xml($("nomePlanilha").value||"Tabela")}</title>${linhas}</svg>`;
 }
 
 async function gerarCanvasTabela(){
