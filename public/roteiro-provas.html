@@ -9,7 +9,7 @@
 
   <link rel="stylesheet" href="/global-temas-estilos.css?v=20261012">
   <link rel="stylesheet" href="/navegacao-site.css?v=20261012">
-  <link rel="stylesheet" href="/roteiro-provas-estilos.css?v=20261115-filtros-data-ordem">
+  <link rel="stylesheet" href="/roteiro-provas-estilos.css?v=20261115-filtros-etapa-fase">
 
   <script>
     document.documentElement.dataset.theme =
@@ -154,6 +154,26 @@
           <input id="filtro-data" type="date">
         </label>
 
+        <label>
+          Etapa
+          <select id="filtro-etapa">
+            <option value="">Todas as etapas</option>
+            <option value="1">1ª etapa</option>
+            <option value="2">2ª etapa</option>
+            <option value="3">3ª etapa</option>
+            <option value="4">4ª etapa</option>
+          </select>
+        </label>
+
+        <label>
+          Fase
+          <select id="filtro-fase">
+            <option value="">Todas as fases</option>
+            <option value="parcial">Parcial</option>
+            <option value="bimestral">Bimestral</option>
+          </select>
+        </label>
+
         <button type="button" id="limpar-filtros" class="secundario">
           Limpar filtros
         </button>
@@ -167,6 +187,6 @@
 
   <script src="/global-materias.js?v=20261015-1"></script>
   <script src="/global-temas.js?v=20261012"></script>
-  <script src="/roteiro-provas-logica.js?v=20261115-filtros-data-ordem"></script>
+  <script src="/roteiro-provas-logica.js?v=20261115-filtros-etapa-fase"></script>
 </body>
 </html>
