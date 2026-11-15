@@ -37,7 +37,7 @@ function normalizarModoSsl(connectionString) {
 
 const pool = new Pool({
     connectionString: normalizarModoSsl(process.env.DATABASE_URL),
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: true }
 });
 
 const sessionMaxAge = 1000 * 60 * 60 * 24;
@@ -359,21 +359,29 @@ app.post("/api/login", async (req, res) => {
             return res.status(401).json({ sucesso: false, mensagem: "Usuário ou senha incorretos." });
         }
 
-        req.session.usuario = {
-            id: usuarioBanco.id,
-            usuario: usuarioBanco.usuario,
-            tipo: usuarioBanco.tipo
-        };
-
-        req.session.save(erroSessao => {
-            if (erroSessao) {
-                console.error("Erro ao salvar sessão de login:", erroSessao);
-                return res.status(500).json({ sucesso: false, mensagem: "Não foi possível manter a sessão de login." });
+        // Troca o identificador da sessão após autenticar para evitar session fixation.
+        req.session.regenerate(erroRegeneracao => {
+            if (erroRegeneracao) {
+                console.error("Erro ao regenerar sessão de login:", erroRegeneracao);
+                return res.status(500).json({ sucesso: false, mensagem: "Não foi possível iniciar sua sessão com segurança." });
             }
 
-            const tipoLog = usuarioBanco.tipo === "admin" ? "ADM" : "USER";
-            console.log(`[LOGIN] SUCESSO | Usuário: ${usuarioBanco.usuario} | Tipo: ${tipoLog}`);
-            res.json({ sucesso: true, tipo: usuarioBanco.tipo });
+            req.session.usuario = {
+                id: usuarioBanco.id,
+                usuario: usuarioBanco.usuario,
+                tipo: usuarioBanco.tipo
+            };
+
+            req.session.save(erroSessao => {
+                if (erroSessao) {
+                    console.error("Erro ao salvar sessão de login:", erroSessao);
+                    return res.status(500).json({ sucesso: false, mensagem: "Não foi possível manter a sessão de login." });
+                }
+
+                const tipoLog = usuarioBanco.tipo === "admin" ? "ADM" : "USER";
+                console.log(`[LOGIN] SUCESSO | Usuário: ${usuarioBanco.usuario} | Tipo: ${tipoLog}`);
+                res.json({ sucesso: true, tipo: usuarioBanco.tipo });
+            });
         });
     } catch (erro) {
         console.error("Erro no login:", erro);
@@ -782,9 +790,28 @@ app.delete("/api/admin/usuarios/:id", exigirAdmin, async (req, res) => {
 
 app.put("/api/admin/usuarios/:id/senha", exigirAdmin, async (req, res) => {
     try {
-        if (!req.body.senha) return res.status(400).json({ sucesso: false, mensagem: "Informe a nova senha." });
+        const id = Number(req.params.id);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            return res.status(400).json({ sucesso: false, mensagem: "Conta inválida." });
+        }
+        if (typeof req.body?.senha !== "string" || req.body.senha.length < 8 || req.body.senha.length > 128) {
+            return res.status(400).json({ sucesso: false, mensagem: "A senha deve ter entre 8 e 128 caracteres." });
+        }
+
         const senhaHash = await bcrypt.hash(req.body.senha, 10);
-        await pool.query("UPDATE usuarios SET senha = $1 WHERE id = $2", [senhaHash, req.params.id]);
+        const atualizada = await pool.query(
+            "UPDATE usuarios SET senha = $1 WHERE id = $2 RETURNING id",
+            [senhaHash, id]
+        );
+        if (!atualizada.rowCount) {
+            return res.status(404).json({ sucesso: false, mensagem: "Usuário não encontrado." });
+        }
+
+        // A troca de senha invalida todas as sessões anteriores da conta.
+        await pool.query(
+            "DELETE FROM sessoes WHERE sess->'usuario'->>'id' = $1",
+            [String(id)]
+        );
         res.json({ sucesso: true });
     } catch (erro) {
         console.error("Erro ao alterar senha:", erro);
@@ -1174,6 +1201,9 @@ app.delete("/api/planilhas/:id", exigirLogin, async (req, res) => {
 
 criarTabelas()
     .then(() => {
+        // Esta API cria trabalho_equipes com uma FK para usuarios.
+        // Registrá-la somente depois das tabelas-base existirem evita corrida na inicialização.
+        require("./rotas-trabalhos")(app, pool);
         console.log("[START] Tabelas verificadas/criadas. Iniciando Express...");
         app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
     })
