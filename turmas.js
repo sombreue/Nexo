@@ -135,10 +135,11 @@ module.exports = function registrarRotasTurmas(app, pool, exigirLogin, exigirAdm
             const usuarios = await client.query("DELETE FROM usuarios WHERE turma_id = $1", [id]);
             const tarefas = await client.query("DELETE FROM tarefas WHERE turma_id = $1", [id]);
             const trabalhos = await client.query("DELETE FROM trabalhos WHERE turma_id = $1", [id]);
-            await client.query("INSERT INTO auditoria_turmas (ator_usuario_id, turma_id, acao, entidade, entidade_id, detalhes) VALUES ($1, $2, 'turma_excluida', 'turma', $3, $4::jsonb)", [req.session.usuario.id, id, String(id), JSON.stringify({ nome: turma.rows[0].nome, anoLetivo: turma.rows[0].anoLetivo, usuarios: usuarios.rowCount, tarefas: tarefas.rowCount, trabalhos: trabalhos.rowCount })]);
+            const provas = await client.query("DELETE FROM roteiro_provas WHERE turma_id = $1", [id]);
+            await client.query("INSERT INTO auditoria_turmas (ator_usuario_id, turma_id, acao, entidade, entidade_id, detalhes) VALUES ($1, $2, 'turma_excluida', 'turma', $3, $4::jsonb)", [req.session.usuario.id, id, String(id), JSON.stringify({ nome: turma.rows[0].nome, anoLetivo: turma.rows[0].anoLetivo, usuarios: usuarios.rowCount, tarefas: tarefas.rowCount, trabalhos: trabalhos.rowCount, provas: provas.rowCount })]);
             await client.query("DELETE FROM turmas WHERE id = $1", [id]);
             await client.query("COMMIT");
-            res.json({ sucesso: true, mensagem: "Turma e dados vinculados excluídos permanentemente." });
+            res.json({ sucesso: true, mensagem: "Turma e dados vinculados, incluindo provas, excluídos permanentemente." });
         } catch (erro) {
             if (client) await client.query("ROLLBACK").catch(() => {});
             console.error("Erro ao excluir turma:", {
