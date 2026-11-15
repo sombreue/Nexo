@@ -28,3 +28,19 @@
 .prioridade-vazia,.prioridade-carregando{padding:12px;color:var(--theme-muted,#aaa);line-height:1.5}
 @media(max-width:700px){.prioridade-estudos{grid-template-columns:1fr;gap:15px;padding:15px}.prioridade-cabecalho h2{font-size:1.25rem}.prioridade-data>span{display:inline-block;margin-left:3px}}
 .seletor-turma-provas{display:flex;flex-direction:column;gap:7px;width:min(100%,360px);margin:0 0 20px;font-weight:700}.seletor-turma-provas[hidden]{display:none}.seletor-turma-provas select{padding:11px;border:1px solid var(--theme-border,#333);border-radius:9px;background:var(--theme-input,#202027);color:var(--theme-text,#fff);font:inherit}
+
+/* Filtros combináveis e feed cronológico do roteiro. */
+.roteiro-lista-cabecalho{align-items:flex-start;flex-wrap:wrap}
+.filtros-provas{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;flex:1;justify-content:flex-end}
+.filtro-materias{min-width:220px;max-width:100%;margin:0;padding:10px 12px;border:1px solid var(--theme-border,#333);border-radius:10px}
+.filtro-materias legend{padding:0 5px;font-weight:700}
+.filtro-materia-opcoes{display:flex;gap:8px 12px;flex-wrap:wrap;max-height:130px;overflow:auto}
+.filtro-materia-opcao{display:flex;align-items:center;gap:6px;font-size:.9rem;cursor:pointer}
+.filtro-materia-opcao input{accent-color:var(--theme-accent,#ef3340)}
+.filtro-ajuda{color:var(--theme-muted,#aaa);font-size:.88rem}
+.filtros-provas>label{display:flex;flex-direction:column;gap:7px;font-weight:700}
+.filtros-provas input[type=date]{min-width:160px;padding:10px;border:1px solid var(--theme-border,#333);border-radius:9px;background:var(--theme-input,#202027);color:var(--theme-text,#fff);font:inherit}
+#limpar-filtros{border:1px solid var(--theme-border,#444);border-radius:9px;padding:10px 13px;background:var(--theme-surface-3,#2a2a31);color:var(--theme-text,#fff);font-weight:700;cursor:pointer}
+.prova-card-ordenado .prova-item-cabecalho>div{display:flex;flex-direction:column;gap:5px}
+.prova-etapa-tipo{color:var(--theme-muted,#aaa);font-size:.85rem}
+@media(max-width:650px){.filtros-provas{justify-content:stretch;flex-direction:column;align-items:stretch}.filtro-materias{width:100%}.filtros-provas>label,.filtros-provas input[type=date]{width:100%}}
