@@ -44,3 +44,13 @@
 .prova-card-ordenado .prova-item-cabecalho>div{display:flex;flex-direction:column;gap:5px}
 .prova-etapa-tipo{color:var(--theme-muted,#aaa);font-size:.85rem}
 @media(max-width:650px){.filtros-provas{justify-content:stretch;flex-direction:column;align-items:stretch}.filtro-materias{width:100%}.filtros-provas>label,.filtros-provas input[type=date]{width:100%}}
+
+
+/* Lista vertical de matérias com checkbox ao lado de cada nome. */
+.filtro-materias{display:block;width:min(100%,280px);min-width:240px;padding:10px 12px}
+.filtro-materia-opcoes{display:flex;flex-direction:column;align-items:stretch;gap:0;max-height:210px;overflow-y:auto;overflow-x:hidden}
+.filtro-materia-opcao{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;width:100%;min-height:38px;padding:7px 5px;border-bottom:1px solid var(--theme-border,#333);font-size:.92rem;line-height:1.3;cursor:pointer}
+.filtro-materia-opcao:last-child{border-bottom:0}
+.filtro-materia-opcao input{flex:0 0 16px;width:16px;height:16px;margin:0;accent-color:var(--theme-accent,#ef3340);cursor:pointer}
+.filtro-materia-opcao span{flex:1;text-align:left}
+@media(max-width:650px){.filtro-materias{width:100%;min-width:0}.filtro-materia-opcoes{max-height:190px}}
