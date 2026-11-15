@@ -14,15 +14,52 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
         CREATE INDEX IF NOT EXISTS roteiro_provas_data_idx ON roteiro_provas (data_prova);
     `);
 
-    const migracaoColunas = tabelaPronta.then(() => pool.query(`
-        ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS etapa SMALLINT NOT NULL DEFAULT 1;
-        ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS tipo VARCHAR(12) NOT NULL DEFAULT 'parcial';
-        ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS turma_id BIGINT;
-        UPDATE roteiro_provas SET turma_id = (SELECT id FROM turmas ORDER BY id ASC LIMIT 1)
-        WHERE turma_id IS NULL AND EXISTS (SELECT 1 FROM turmas);
-        CREATE INDEX IF NOT EXISTS roteiro_provas_etapa_tipo_idx ON roteiro_provas (etapa, tipo, data_prova);
-        CREATE INDEX IF NOT EXISTS roteiro_provas_turma_data_idx ON roteiro_provas (turma_id, data_prova);
-    `));
+    const migracaoColunas = tabelaPronta.then(async () => {
+        await pool.query(`
+            ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS etapa SMALLINT NOT NULL DEFAULT 1;
+            ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS tipo VARCHAR(12) NOT NULL DEFAULT 'parcial';
+            ALTER TABLE roteiro_provas ADD COLUMN IF NOT EXISTS turma_id BIGINT;
+        `);
+
+        // Só associa registros antigos automaticamente quando existe exatamente uma turma.
+        // Com várias turmas, escolher uma arbitrariamente poderia misturar avaliações.
+        await pool.query(`
+            UPDATE roteiro_provas
+            SET turma_id = (SELECT MIN(id) FROM turmas)
+            WHERE turma_id IS NULL
+              AND (SELECT COUNT(*) FROM turmas) = 1
+        `);
+
+        // Preserva provas órfãs, mas remove vínculos inválidos antes de criar a FK.
+        const desvinculadas = await pool.query(`
+            UPDATE roteiro_provas rp
+            SET turma_id = NULL
+            WHERE rp.turma_id IS NOT NULL
+              AND NOT EXISTS (SELECT 1 FROM turmas t WHERE t.id = rp.turma_id)
+            RETURNING rp.id
+        `);
+        if (desvinculadas.rowCount) {
+            console.warn(`[ROTEIRO PROVAS] ${desvinculadas.rowCount} prova(s) ficaram sem turma porque o vínculo anterior não existia.`);
+        }
+
+        await pool.query(`
+            DO $
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'roteiro_provas_turma_fk'
+                      AND conrelid = 'roteiro_provas'::regclass
+                ) THEN
+                    ALTER TABLE roteiro_provas
+                    ADD CONSTRAINT roteiro_provas_turma_fk
+                    FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE CASCADE;
+                END IF;
+            END;
+            $;
+            CREATE INDEX IF NOT EXISTS roteiro_provas_etapa_tipo_idx ON roteiro_provas (etapa, tipo, data_prova);
+            CREATE INDEX IF NOT EXISTS roteiro_provas_turma_data_idx ON roteiro_provas (turma_id, data_prova);
+        `);
+    });
 
     function validar(body) {
         const materia = typeof body?.materia === 'string' ? body.materia.trim() : '';
@@ -31,7 +68,11 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
         const etapa = Number(body?.etapa);
         const tipo = typeof body?.tipo === 'string' ? body.tipo : '';
         if (!materia || materia.length > 80) return { erro: 'Informe uma matéria válida.' };
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || Number.isNaN(Date.parse(data + 'T00:00:00Z'))) return { erro: 'Informe uma data válida.' };
+        if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(data)) return { erro: 'Informe uma data válida.' };
+        const dataInterpretada = new Date(data + 'T00:00:00.000Z');
+        if (Number.isNaN(dataInterpretada.getTime()) || dataInterpretada.toISOString().slice(0, 10) !== data) {
+            return { erro: 'Informe uma data válida.' };
+        }
         if (!Number.isInteger(etapa) || etapa < 1 || etapa > 4) return { erro: 'Selecione uma etapa válida (1 a 4).' };
         if (!['parcial', 'bimestral'].includes(tipo)) return { erro: 'Selecione se a prova é parcial ou bimestral.' };
         if (conteudo.length > 10000) return { erro: 'O conteúdo deve ter no máximo 10.000 caracteres.' };
@@ -56,7 +97,7 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
                 }
             }
             if (!turmaId) return res.status(403).json({ sucesso: false, mensagem: "Sua conta não está vinculada a uma turma." });
-            const turma = await pool.query("SELECT id FROM turmas WHERE id = $1", [turmaId]);
+            const turma = await pool.query("SELECT id, ativa FROM turmas WHERE id = $1", [turmaId]);
             if (!turma.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Turma não encontrada." });
             const r = await pool.query(`
                 SELECT id, materia, TO_CHAR(data_prova, 'YYYY-MM-DD') AS data_prova,
@@ -65,7 +106,7 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
                 ORDER BY etapa ASC, CASE tipo WHEN 'parcial' THEN 1 ELSE 2 END, data_prova ASC, materia ASC, id ASC
             `, [turmaId]);
             res.set('Cache-Control', 'no-store');
-            res.json({ sucesso: true, provas: r.rows, podeEditar: ['admin', 'representante'].includes(usuario.tipo), podeAdicionar: ['admin', 'representante'].includes(usuario.tipo), turmaId: Number(turmaId) });
+            res.json({ sucesso: true, provas: r.rows, podeEditar: turma.rows[0].ativa === true && ['admin', 'representante'].includes(usuario.tipo), podeAdicionar: turma.rows[0].ativa === true && ['admin', 'representante'].includes(usuario.tipo), turmaId: Number(turmaId) });
         } catch (e) {
             console.error('Erro ao consultar roteiro de provas:', e);
             res.status(500).json({ sucesso: false, mensagem: 'Não foi possível carregar o roteiro de provas.' });
@@ -88,13 +129,14 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
                 turmaId = Number(principal.rows[0]?.id);
             } else turmaId = Number(req.body.turmaId);
             if (!Number.isSafeInteger(turmaId) || turmaId <= 0) return res.status(400).json({ sucesso: false, mensagem: "Selecione uma turma válida." });
-            const turma = await pool.query("SELECT id FROM turmas WHERE id = $1 AND ativa = TRUE", [turmaId]);
-            if (!turma.rowCount) return res.status(400).json({ sucesso: false, mensagem: "A turma selecionada não existe ou está inativa." });
             const r = await pool.query(`
                 INSERT INTO roteiro_provas (materia, data_prova, conteudo, etapa, tipo, turma_id)
-                VALUES ($1,$2,$3,$4,$5,$6)
+                SELECT $1, $2, $3, $4, $5, t.id
+                FROM turmas t
+                WHERE t.id = $6 AND t.ativa = TRUE
                 RETURNING id, materia, TO_CHAR(data_prova, 'YYYY-MM-DD') AS data_prova, conteudo, etapa, tipo, turma_id AS "turmaId"
             `, [d.materia, d.data, d.conteudo, d.etapa, d.tipo, turmaId]);
+            if (!r.rowCount) return res.status(409).json({ sucesso: false, mensagem: "A turma selecionada não existe ou está inativa." });
             res.status(201).json({ sucesso: true, prova: r.rows[0] });
         } catch (e) {
             console.error('Erro ao adicionar prova:', e);
@@ -115,11 +157,18 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
             const turmaId = usuario.tipo === 'representante' ? Number(usuario.turma_id) : Number(req.body?.turmaId);
             if (!Number.isSafeInteger(turmaId) || turmaId <= 0) return res.status(400).json({ sucesso: false, mensagem: "Selecione uma turma válida." });
             const r = await pool.query(`
-                UPDATE roteiro_provas SET materia=$1, data_prova=$2, conteudo=$3, etapa=$4, tipo=$5, atualizado_em=NOW()
+                UPDATE roteiro_provas
+                SET materia=$1, data_prova=$2, conteudo=$3, etapa=$4, tipo=$5, atualizado_em=NOW()
                 WHERE id=$6 AND turma_id=$7
+                  AND EXISTS (SELECT 1 FROM turmas t WHERE t.id=$7 AND t.ativa=TRUE)
                 RETURNING id, materia, TO_CHAR(data_prova, 'YYYY-MM-DD') AS data_prova, conteudo, etapa, tipo, turma_id AS "turmaId"
             `, [d.materia, d.data, d.conteudo, d.etapa, d.tipo, id, turmaId]);
-            if (!r.rowCount) return res.status(404).json({ sucesso: false, mensagem: 'Prova não encontrada.' });
+            if (!r.rowCount) {
+                const turma = await pool.query("SELECT ativa FROM turmas WHERE id=$1", [turmaId]);
+                if (!turma.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Turma não encontrada." });
+                if (!turma.rows[0].ativa) return res.status(409).json({ sucesso: false, mensagem: "Não é possível editar provas de uma turma arquivada." });
+                return res.status(404).json({ sucesso: false, mensagem: 'Prova não encontrada nesta turma.' });
+            }
             res.json({ sucesso: true, prova: r.rows[0] });
         } catch (e) {
             console.error('Erro ao editar prova:', e);
@@ -137,8 +186,18 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
             if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ sucesso: false, mensagem: 'Prova inválida.' });
             const turmaId = usuario.tipo === 'representante' ? Number(usuario.turma_id) : Number(req.query.turmaId);
             if (!Number.isSafeInteger(turmaId) || turmaId <= 0) return res.status(400).json({ sucesso: false, mensagem: "Selecione uma turma válida." });
-            const r = await pool.query('DELETE FROM roteiro_provas WHERE id=$1 AND turma_id=$2 RETURNING id', [id, turmaId]);
-            if (!r.rowCount) return res.status(404).json({ sucesso: false, mensagem: 'Prova não encontrada.' });
+            const r = await pool.query(`
+                DELETE FROM roteiro_provas
+                WHERE id=$1 AND turma_id=$2
+                  AND EXISTS (SELECT 1 FROM turmas t WHERE t.id=$2 AND t.ativa=TRUE)
+                RETURNING id
+            `, [id, turmaId]);
+            if (!r.rowCount) {
+                const turma = await pool.query("SELECT ativa FROM turmas WHERE id=$1", [turmaId]);
+                if (!turma.rowCount) return res.status(404).json({ sucesso: false, mensagem: "Turma não encontrada." });
+                if (!turma.rows[0].ativa) return res.status(409).json({ sucesso: false, mensagem: "Não é possível excluir provas de uma turma arquivada." });
+                return res.status(404).json({ sucesso: false, mensagem: 'Prova não encontrada nesta turma.' });
+            }
             res.json({ sucesso: true });
         } catch (e) {
             console.error('Erro ao excluir prova:', e);
