@@ -12,9 +12,9 @@ function preencherCatalogoMaterias(nomes=window.MATERIAS_AGENDA||[]){
  const selecionadas=new Set([...filtro.querySelectorAll('input:checked')].map(x=>x.value));
  filtro.innerHTML=nomes.length?nomes.map(nome=>'<label class="filtro-materia-opcao"><input type="checkbox" value="'+esc(nome)+'" '+(selecionadas.has(nome)?'checked':'')+'><span>'+esc(nome)+'</span></label>').join(''):'<span class="filtro-ajuda">Nenhuma matéria disponível.</span>';
 }
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 preencherCatalogoMaterias();
 window.addEventListener('nexo:materias-carregadas',evento=>preencherCatalogoMaterias(evento.detail));
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dataBR=iso=>{const [a,m,d]=iso.slice(0,10).split('-');return new Date(+a,+m-1,+d).toLocaleDateString('pt-BR');};
 const dataComDia=iso=>{const [a,m,d]=iso.slice(0,10).split('-').map(Number);const data=new Date(a,m-1,d);const dia=data.toLocaleDateString('pt-BR',{weekday:'long'});return dataBR(iso)+' ('+dia+')';};
 function quando(iso){const [a,m,d]=iso.slice(0,10).split('-').map(Number), alvo=new Date(a,m-1,d),hoje=new Date();hoje.setHours(0,0,0,0);const n=Math.round((alvo-hoje)/86400000);if(n<0)return 'Prova já realizada';if(n===0)return 'É hoje';if(n===1)return 'Amanhã';if(n<=7)return 'Faltam '+n+' dias';return 'Faltam '+n+' dias';}
