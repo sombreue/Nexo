@@ -43,7 +43,7 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
         }
 
         await pool.query(`
-            DO $
+            DO $body$
             BEGIN
                 IF NOT EXISTS (
                     SELECT 1 FROM pg_constraint
@@ -55,7 +55,7 @@ module.exports = function registrarProvas(app, pool, exigirLogin, exigirAdmin) {
                     FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE CASCADE;
                 END IF;
             END;
-            $;
+            $body$;
             CREATE INDEX IF NOT EXISTS roteiro_provas_etapa_tipo_idx ON roteiro_provas (etapa, tipo, data_prova);
             CREATE INDEX IF NOT EXISTS roteiro_provas_turma_data_idx ON roteiro_provas (turma_id, data_prova);
         `);
