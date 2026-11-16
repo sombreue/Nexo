@@ -9,7 +9,7 @@
 
   <link rel="stylesheet" href="/global-temas-estilos.css?v=20261012">
   <link rel="stylesheet" href="/navegacao-site.css?v=20261012">
-  <link rel="stylesheet" href="/roteiro-provas-estilos.css?v=20261115-filtros-etapa-fase">
+  <link rel="stylesheet" href="/roteiro-provas-estilos.css?v=20261115-filtros-agenda-ui">
 
   <script>
     document.documentElement.dataset.theme =
@@ -142,20 +142,29 @@
       <h2>Calendário de avaliações</h2>
 
       <div class="filtros-provas">
-        <fieldset class="filtro-materias">
-          <legend>Filtrar matérias</legend>
-          <div id="filtro-materia" class="filtro-materia-opcoes">
-            <span class="filtro-ajuda">Carregando matérias...</span>
+        <div class="filtro-campo">
+          <label for="botao-filtro-materias">Pesquisar por matéria:</label>
+          <div class="seletor-materias-provas">
+            <button type="button" id="botao-filtro-materias" class="botao-filtro-materias" aria-expanded="false" aria-controls="painel-filtro-materias">
+              <span id="resumo-filtro-materias">Todas as matérias</span>
+              <span class="seta" aria-hidden="true">▼</span>
+            </button>
+            <div id="painel-filtro-materias" class="painel-filtro-materias">
+              <div id="filtro-materia" class="lista-filtro-materias">
+                <span class="filtro-ajuda">Carregando matérias...</span>
+              </div>
+            </div>
           </div>
-        </fieldset>
+          <p class="ajuda-filtro-materias">Selecione quantas matérias quiser.</p>
+        </div>
 
-        <label>
-          Data da prova
+        <div class="filtro-campo">
+          <label for="filtro-data">Pesquisar por data:</label>
           <input id="filtro-data" type="date">
-        </label>
+        </div>
 
-        <label>
-          Etapa
+        <div class="filtro-campo">
+          <label for="filtro-etapa">Pesquisar por etapa:</label>
           <select id="filtro-etapa">
             <option value="">Todas as etapas</option>
             <option value="1">1ª etapa</option>
@@ -163,19 +172,19 @@
             <option value="3">3ª etapa</option>
             <option value="4">4ª etapa</option>
           </select>
-        </label>
+        </div>
 
-        <label>
-          Fase
+        <div class="filtro-campo">
+          <label for="filtro-fase">Pesquisar por fase:</label>
           <select id="filtro-fase">
             <option value="">Todas as fases</option>
             <option value="parcial">Parcial</option>
             <option value="bimestral">Bimestral</option>
           </select>
-        </label>
+        </div>
 
-        <button type="button" id="limpar-filtros" class="secundario">
-          Limpar filtros
+        <button type="button" id="limpar-filtros" class="botao-limpar-filtros">
+          Mostrar todas
         </button>
       </div>
     </section>
@@ -187,6 +196,6 @@
 
   <script src="/global-materias.js?v=20261015-1"></script>
   <script src="/global-temas.js?v=20261012"></script>
-  <script src="/roteiro-provas-logica.js?v=20261115-filtros-etapa-fase"></script>
+  <script src="/roteiro-provas-logica.js?v=20261115-filtros-agenda-ui"></script>
 </body>
 </html>
