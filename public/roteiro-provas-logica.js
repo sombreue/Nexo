@@ -3,6 +3,7 @@ const $ = id => document.getElementById(id);
 const form=$('form-roteiro-prova'), materia=$('prova-materia'), data=$('prova-data'), etapa=$('prova-etapa'), tipo=$('prova-tipo'), conteudo=$('prova-conteudo'), idCampo=$('prova-id'), lista=$('lista-provas'), filtro=$('filtro-materia'), filtroData=$('filtro-data'), filtroEtapa=$('filtro-etapa'), filtroFase=$('filtro-fase'), mensagem=$('status-form');
 let provas=[], podeEditar=false, podeAdicionar=false, turmaIdSelecionada='';
 const seletorTurma=$('prova-turma');
+const botaoFiltroMaterias=$('botao-filtro-materias'), painelFiltroMaterias=$('painel-filtro-materias'), resumoFiltroMaterias=$('resumo-filtro-materias');
 const queryTurma=new URLSearchParams(window.location.search).get('turmaId');
 function preencherCatalogoMaterias(nomes=window.MATERIAS_AGENDA||[]){
  const valorMateria=materia.value;
@@ -10,9 +11,16 @@ function preencherCatalogoMaterias(nomes=window.MATERIAS_AGENDA||[]){
  for(const nome of nomes){const o=document.createElement('option');o.value=nome;o.textContent=nome;materia.append(o);}
  if(valorMateria&&nomes.includes(valorMateria))materia.value=valorMateria;
  const selecionadas=new Set([...filtro.querySelectorAll('input:checked')].map(x=>x.value));
- filtro.innerHTML=nomes.length?nomes.map(nome=>'<label class="filtro-materia-opcao"><input type="checkbox" value="'+esc(nome)+'" '+(selecionadas.has(nome)?'checked':'')+'><span>'+esc(nome)+'</span></label>').join(''):'<span class="filtro-ajuda">Nenhuma matéria disponível.</span>';
+ filtro.innerHTML=nomes.length?nomes.map(nome=>'<label class="opcao-materia-prova"><input type="checkbox" value="'+esc(nome)+'" '+(selecionadas.has(nome)?'checked':'')+'><span>'+esc(nome)+'</span></label>').join(''):'<span class="filtro-ajuda">Nenhuma matéria disponível.</span>';
+ atualizarResumoMaterias();
 }
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function atualizarResumoMaterias(){
+ const selecionadas=[...filtro.querySelectorAll('input:checked')].map(x=>x.value);
+ if(!resumoFiltroMaterias)return;
+ resumoFiltroMaterias.textContent=!selecionadas.length?'Todas as matérias':selecionadas.length<=2?selecionadas.join(', '):selecionadas.length+' matérias selecionadas';
+}
+
 preencherCatalogoMaterias();
 window.addEventListener('nexo:materias-carregadas',evento=>preencherCatalogoMaterias(evento.detail));
 const dataBR=iso=>{const [a,m,d]=iso.slice(0,10).split('-');return new Date(+a,+m-1,+d).toLocaleDateString('pt-BR');};
@@ -35,7 +43,12 @@ async function carregar(){try{const sufixo=turmaIdSelecionada?'?turmaId='+encode
 async function inicializarTurmas(){try{const sessao=await api('/api/usuario');if(sessao.usuario?.tipo==='admin'){$('prova-turma-wrap').hidden=false;const d=await api('/api/turmas');const turmas=Array.isArray(d.turmas)?d.turmas:[];seletorTurma.innerHTML=turmas.map(t=>'<option value="'+esc(t.id)+'">'+esc(t.nome)+(t.anoLetivo?' · '+esc(t.anoLetivo):'')+(t.ativa?'':' · Arquivada')+'</option>').join('');const selecionada=turmas.find(t=>String(t.id)===String(queryTurma))||turmas.find(t=>t.ativa)||turmas[0];if(selecionada){turmaIdSelecionada=String(selecionada.id);seletorTurma.value=turmaIdSelecionada;}else{seletorTurma.innerHTML='<option value="">Nenhuma turma cadastrada</option>';}}}catch(e){console.warn('Não foi possível preparar a seleção de turmas do roteiro:',e);}await carregar();}
 function limpar(){form.reset();idCampo.value='';$('titulo-form-prova').textContent='Adicionar prova ao roteiro';$('salvar-prova').textContent='Adicionar ao roteiro';$('cancelar-edicao').hidden=true;}
 form.addEventListener('submit',async e=>{e.preventDefault();mensagem.textContent='Salvando...';const id=idCampo.value;try{await api(id?'/api/roteiro-provas/'+id:'/api/roteiro-provas',{method:id?'PUT':'POST',body:JSON.stringify({materia:materia.value,data_prova:data.value,etapa:Number(etapa.value),tipo:tipo.value,conteudo:conteudo.value,...(turmaIdSelecionada?{turmaId:Number(turmaIdSelecionada)}:{})})});mensagem.textContent=id?'Prova atualizada.':'Prova adicionada ao roteiro.';limpar();await carregar();}catch(err){mensagem.textContent=err.message;}});
-$('cancelar-edicao').addEventListener('click',limpar);filtro.addEventListener('change',desenhar);filtroData.addEventListener('change',desenhar);filtroEtapa.addEventListener('change',desenhar);filtroFase.addEventListener('change',desenhar);$('limpar-filtros').addEventListener('click',()=>{filtro.querySelectorAll('input').forEach(x=>x.checked=false);filtroData.value='';filtroEtapa.value='';filtroFase.value='';desenhar();});
+$('cancelar-edicao').addEventListener('click',limpar);
+filtro.addEventListener('change',()=>{atualizarResumoMaterias();desenhar();});
+filtroData.addEventListener('change',desenhar);filtroEtapa.addEventListener('change',desenhar);filtroFase.addEventListener('change',desenhar);
+botaoFiltroMaterias.addEventListener('click',()=>{const aberto=painelFiltroMaterias.classList.toggle('aberto');botaoFiltroMaterias.classList.toggle('aberto',aberto);botaoFiltroMaterias.setAttribute('aria-expanded',String(aberto));});
+document.addEventListener('click',evento=>{if(!evento.target.closest('.seletor-materias-provas')){painelFiltroMaterias.classList.remove('aberto');botaoFiltroMaterias.classList.remove('aberto');botaoFiltroMaterias.setAttribute('aria-expanded','false');}});
+$('limpar-filtros').addEventListener('click',()=>{filtro.querySelectorAll('input').forEach(x=>x.checked=false);filtroData.value='';filtroEtapa.value='';filtroFase.value='';atualizarResumoMaterias();painelFiltroMaterias.classList.remove('aberto');botaoFiltroMaterias.classList.remove('aberto');botaoFiltroMaterias.setAttribute('aria-expanded','false');desenhar();});
 lista.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const p=provas.find(x=>x.id===Number(b.dataset.editar||b.dataset.excluir));if(!p)return;if(b.dataset.editar!==undefined){idCampo.value=p.id;materia.value=p.materia;data.value=p.data_prova.slice(0,10);etapa.value=String(p.etapa||1);tipo.value=p.tipo||'parcial';conteudo.value=p.conteudo;$('titulo-form-prova').textContent='Editar prova';$('salvar-prova').textContent='Salvar alterações';$('cancelar-edicao').hidden=false;form.scrollIntoView({behavior:'smooth',block:'start'});return;}if(b.dataset.excluir!==undefined){if(!confirm('Excluir a prova de '+p.materia+' do roteiro?'))return;try{await api('/api/roteiro-provas/'+p.id+(turmaIdSelecionada?'?turmaId='+encodeURIComponent(turmaIdSelecionada):''),{method:'DELETE'});mensagem.textContent='Prova removida do roteiro.';await carregar();}catch(err){mensagem.textContent=err.message;}}});
 seletorTurma?.addEventListener('change',()=>{turmaIdSelecionada=seletorTurma.value;const url=new URL(window.location.href);if(turmaIdSelecionada)url.searchParams.set('turmaId',turmaIdSelecionada);else url.searchParams.delete('turmaId');window.history.replaceState({},'',url);carregar();});
 inicializarTurmas();
